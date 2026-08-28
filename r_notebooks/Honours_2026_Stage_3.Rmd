@@ -1,0 +1,33 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Evaluating Modelling Techniques to Detect Precursors to Landslides from InSAR-Based Data
+
+**2026 Honours Project -**
+
+```{r}
+
+# Load packages
+
+library(readxl)
+library(ggplot2)
+library(MASS)
+library(factoextra)
+library(gridExtra)
+library(cluster)
+library(clusterSim)
+library(dbscan)
+library(dtwclust)
+library(patchwork)
+library(ggplotify)
+library(zoo)
+
+
+set.seed(1234)
+```
+
+# Stage 3: Temporal Clustering
+
+## 1. Prepare the data

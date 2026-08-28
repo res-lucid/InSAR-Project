@@ -1,0 +1,3783 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Evaluating Modelling Techniques to Detect Precursors to Landslides from InSAR-Based Data
+
+**2026 Honours Project - Lucy Caluya**
+
+```{r}
+# Load packages
+
+library(readxl)
+library(ggplot2)
+library(MASS)
+library(factoextra)
+library(gridExtra)
+library(cluster)
+library(clusterSim)
+library(dbscan)
+library(dtwclust)
+library(patchwork)
+library(ggplotify)
+
+
+set.seed(1234)
+```
+
+------------------------------------------------------------------------
+
+# Stage 1: Clustering
+
+## 1. Prepare the data
+
+For simplicity and consistency, I will set up a pre-processing workflow to streamline data cleaning and preparation before applying any algorithms onto it.
+
+- Setup for clustering:
+
+  - Prepare data to compute distance matrix:
+
+    - Read data and extract only displacement columns
+
+    - Check for missing fields
+
+    - Summary statistics
+
+- Case studies:
+
+  - Cadia, 2018
+
+  - Peru, 2019 - 1 unfailed site, 1 failed site
+
+  - Feijao, Brazil (Brumadinho) - 2 datasets from 2 different orbit tracks
+
+### 1.1 Import case study data
+
+```{r}
+# Import and inspect the data
+
+cadia <- read_excel("../data/Cadia_PS_2018.xlsx")
+
+peru_failed <- read_excel("../data/Cobriza_Peru_Failed_2019.xlsx")
+
+peru_unfailed <- read_excel("../data/Cobriza_Peru_Unfailed_2019.xlsx")
+
+feijao_53 <- read_excel("../data/Feijao_PS_T53.xlsx")
+
+feijao_155 <- read_excel("../data/Feijao_PS_T155.xlsx")
+```
+
+```{r}
+
+# Cadia
+#str(cadia)
+head(cadia)
+dim(cadia)
+
+# Peru (failed)
+#str(peru_failed)
+head(peru_failed)
+dim(peru_failed)
+
+# Peru (unfailed)
+#str(peru_unfailed)
+head(peru_unfailed)
+dim(peru_unfailed)
+
+# Feijao (T53)
+#str(feijao_53)
+head(feijao_53)
+dim(feijao_53)
+
+# Feijao (T155)
+#str(feijao_155)
+head(feijao_155)
+dim(feijao_155)
+```
+
+### 1.2 Extract displacement columns
+
+```{r}
+# Cadia --------------
+
+d_cols <- grep("^D_", names(cadia), value = TRUE) # D_ for descending orbit track
+length(d_cols)
+head(d_cols)
+
+cadia_D <- cadia[, d_cols]
+
+# Inspect new dataset
+head(cadia_D)
+dim(cadia_D)
+
+# Check for missing vals
+sum(is.na(cadia_D))
+```
+
+```{r}
+# Peru - (Failed) ---------------------
+
+d_cols_peru_F <- grep("^D_", names(peru_failed), value = TRUE)
+length(d_cols_peru_F)
+head(d_cols_peru_F)
+
+peru_D_F <- peru_failed[, d_cols_peru_F]
+
+head(peru_D_F)
+dim(peru_D_F)
+
+# Check for missing vals
+sum(is.na(peru_D_F))
+
+# Peru - (Unfailed) ---------------------
+
+d_cols_peru_U <- grep("^D_", names(peru_unfailed), value = TRUE)
+length(d_cols_peru_U)
+head(d_cols_peru_U)
+
+peru_D_U <- peru_unfailed[, d_cols_peru_U]
+
+head(peru_D_U)
+dim(peru_D_U)
+
+# Check for missing vals
+sum(is.na(peru_D_U))
+```
+
+```{r}
+# Feijao - (T53) ---------------------
+
+d_cols_feijao_53 <- grep("^D_", names(feijao_53), value = TRUE)
+length(d_cols_feijao_53)
+head(d_cols_feijao_53)
+
+feijao_D_53 <- feijao_53[, d_cols_feijao_53]
+
+head(feijao_D_53)
+dim(feijao_D_53)
+
+# Check for missing vals
+sum(is.na(feijao_D_53))
+
+# Feijao - (T155) ---------------------
+
+d_cols_feijao_155 <- grep("^D_", names(feijao_155), value = TRUE)
+length(d_cols_feijao_155)
+head(d_cols_feijao_155)
+
+feijao_D_155 <- feijao_155[, d_cols_feijao_155]
+
+head(feijao_D_155)
+dim(feijao_D_155)
+
+# Check for missing vals
+sum(is.na(feijao_D_155))
+```
+
+### 1.3 Inspect the Data (EDA)
+
+```{r}
+# Cadia -------------------
+# Plot 3 points
+# example to show how each point may act sporatically or very differently to others
+
+par(mfrow=c(2,2))
+
+plot(as.numeric(cadia_D[1, ]),
+     type = "l",
+     xlab = "Time index",
+     ylab = "Displacement",
+     main = "Example time series")
+
+plot(as.numeric(cadia_D[2, ]),
+     type = "l",
+     xlab = "Time index",
+     ylab = "Displacement",
+     main = "Example time series")
+
+plot(as.numeric(cadia_D[3, ]),
+     type = "l",
+     xlab = "Time index",
+     ylab = "Displacement",
+     main = "Example time series")
+
+plot(as.numeric(cadia_D[4, ]),
+     type = "l",
+     xlab = "Time index",
+     ylab = "Displacement",
+     main = "Example time series")
+```
+
+```{r}
+# Mean displacement over time
+
+plot(colMeans(cadia_D), type = "l", ylab = "Mean displacement", xlab = "Time index", main = "Cadia: Mean displacement over time")
+
+################################
+
+par(mfrow=c(1,2))
+
+plot(colMeans(peru_D_F), type = "l", ylab = "Mean displacement", xlab = "Time index", main = "Peru (failed)")
+
+plot(colMeans(peru_D_U), type = "l", ylab = "Mean displacement", xlab = "Time index", main = "Peru (unfailed)")
+
+################################
+
+plot(colMeans(feijao_D_53), type = "l", ylab = "Mean displacement", xlab = "Time index", main = "Feijao (T53)")
+
+plot(colMeans(feijao_D_155), type = "l", ylab = "Mean displacement", xlab = "Time index", main = "Feijao (T155)")
+```
+
+```{r}
+# Sample the data to select smaller # of rows
+set.seed(1234)
+sample_rows <- sample(1:nrow(cadia_D), 10)
+
+# colours for each line
+cols <- rainbow(length(sample_rows))
+
+plot(as.numeric(cadia_D[sample_rows[1], ]), type = "l", xlab = "Time index", ylab = "Displacement",
+     main = "Cadia: Sample time series",
+     ylim = c(-60, 60),
+     col = cols[1])
+
+for (i in 2:length(sample_rows)) {
+  lines(as.numeric(cadia_D[sample_rows[i], ]), col = cols[i])}
+```
+
+### 1.4 Create Clustering Matrices
+
+```{r}
+cadia_D_mat <- as.matrix(cadia_D)
+
+peru_D_F_mat <- as.matrix(peru_D_F)
+
+peru_D_U_mat <- as.matrix(peru_D_U)
+
+feijao_D_53_mat <- as.matrix(feijao_D_53)
+
+feijao_D_155_mat <- as.matrix(feijao_D_155)
+
+```
+
+### 1.5 Remove baseline date column for clustering
+
+```{r}
+# Helper function for removing baseline date column
+
+remove_zero_var <- function(x) {
+  col_sd <- apply(x, 2, sd)
+  x[, col_sd > 0, drop = FALSE]
+}
+```
+
+```{r}
+cadia_D_clust <- remove_zero_var(cadia_D_mat)
+
+peru_D_F_clust <- remove_zero_var(peru_D_F_mat)
+
+peru_D_U_clust <- remove_zero_var(peru_D_U_mat)
+
+feijao_D_53_clust <- remove_zero_var(feijao_D_53_mat)
+
+feijao_D_155_clust <- remove_zero_var(feijao_D_155_mat)
+
+```
+
+## 2. Hierarchical Clustering
+
+We begin experimenting with clustering, unsupervised machine learning methods. We aim to find groupings or patterns of similarity, ideally focusing on the time-series data without incorporating any geographical information yet. However, these methods, although labelling the data is not necessary, may differ in "setup" as some require the number of clusters for the data to be split into to be specified. This is true for K-means clustering (next section).
+
+Hierarchical clustering methods involve a series of successive mergers (agglomerative) or successive divisions (divisive). Divisive hierarchical clustering is much more computationally intensive compared to its agglomerative counterpart. It starts with all observations in one cluster, then repeatedly calculated which cluster split is the "best", resulting in $2^N$\$2\^N\$\$2\^N\$\$2\^N\$\$2\^N\$ comparisons (from N total observations). This is much slower than in agglomerative hierarchical clustering. Agglomerative clustering starts with each observation as its own cluster, then calculates the $\frac{N(N-1)}{2}$ initial pairwise distances between clusters, then repeatedly merges the two most similar/closest clusters until only one cluster remains.
+
+The full process of agglomerative hierarchical clustering is:
+
+1.  Start with $n$ clusters, each containing a single observation and a $n * n$ matrix of distances (similarities) $\mathbf{D} = \{d_{ik}\}$
+2.  Search the distance matrix for the nearest pair of clusters $U$ and $V$
+3.  Merge clusters $U$ and $V$ and label it. Update the entries in the distance matrix by:
+    - Deleting the rows and columns corresponding to $U$ and $V$
+    - Adding a row and column giving the distances between $(UV)$ and the remaining clusters
+4.  Repeat steps 3 and 4 until one cluster remains (containing all observations). Record the identity of clusters that are merged and the levels (distances / similarities) of when each merge occurs.
+
+In defining the distances or similarities between clusters, we can use linkage methods:
+
+- Linkage methods define how the distance between clusters is calculated:
+
+  - Single linkage: Minimum distance between any two points in two clusters or nearest neighbour
+
+    - Tends to produce long, chain-like clusters that are sensitive to outliers and noise in the data.
+
+  - Average linkage: Average distance between all pairs of points in the two (current) clusters
+
+    - Tends to produce clusters that are similar to the long, chain-like clusters produced by single linkage and the compact, spherical clusters produced by complete linkage
+
+  - Complete linkage: Maximum distance between any two points in two clusters or farthest neighbour
+
+    - Tends to produce compact, spherical clusters that are less sensitive to outliers and noise in the data
+
+  - Ward linkage (minimum variance linkage): Determines distance between two clusters by minimising the increase in variance when two clusters are merged
+
+    - Tends to produce clusters that have similar variances and sizes
+
+Based on these characteristics and the nature of our data, we will test average linkage, complete linkage, and Ward linkage:
+
+- We avoid testing single linkage as the typical resulting cluster shapes (chains) may not best represent distinct deformation patterns, clustering based on nearest neighbour.
+
+### 2.1 Compute distance matrix
+
+```{r}
+# Distance matrix w/ distance measure: Euclidean
+
+d_mat_cadia <- dist(cadia_D_clust, method = "euclidean")
+d_mat_peru_F <- dist(peru_D_F_clust, method = "euclidean")
+d_mat_peru_U <- dist(peru_D_U_clust, method = "euclidean")
+d_mat_feijao_53 <- dist(feijao_D_53_clust, method = "euclidean")
+d_mat_feijao_155 <- dist(feijao_D_155_clust, method = "euclidean")
+```
+
+### 2.2 Ward linkage
+
+```{r}
+hc_ward_cadia <- hclust(d_mat_cadia, method="ward.D2")
+hc_ward_peru_F <- hclust(d_mat_peru_F, method="ward.D2")
+hc_ward_peru_U <- hclust(d_mat_peru_U, method="ward.D2")
+hc_ward_feijao_53 <- hclust(d_mat_feijao_53, method="ward.D2")
+hc_ward_feijao_155 <- hclust(d_mat_feijao_155, method="ward.D2")
+```
+
+**a) Dendrograms**
+
+```{r}
+plot(hc_ward_cadia, labels = FALSE)
+plot(hc_ward_peru_F, labels = FALSE)
+plot(hc_ward_peru_U, labels = FALSE)
+plot(hc_ward_feijao_53, labels = FALSE)
+plot(hc_ward_feijao_155, labels = FALSE)
+```
+
+```{r}
+p_hc_ward_cadia <- as.ggplot(
+  ~ plot(hc_ward_cadia, labels = FALSE, main = "Cadia: Ward linkage")
+)
+p_hc_ward_peru_F <- as.ggplot(
+  ~ plot(hc_ward_peru_F, labels = FALSE, main = "Peru (F): Ward linkage")
+)
+p_hc_ward_peru_U <- as.ggplot(
+  ~ plot(hc_ward_peru_U, labels = FALSE, main = "Peru (U): Ward linkage")
+)
+p_hc_ward_feijao_53 <- as.ggplot(
+  ~ plot(hc_ward_feijao_53, labels = FALSE, main = "Feijao (T53): Ward Linkage")
+)
+p_hc_ward_feijao_155 <- as.ggplot(
+  ~ plot(hc_ward_feijao_155, labels = FALSE, main = "Feijao (T155): Ward Linkage")
+)
+```
+
+### 2.3 Average linkage
+
+```{r}
+hc_avg_cadia <- hclust(d_mat_cadia, method="average")
+hc_avg_peru_F <- hclust(d_mat_peru_F, method="average")
+hc_avg_peru_U <- hclust(d_mat_peru_U, method="average")
+hc_avg_feijao_53 <- hclust(d_mat_feijao_53, method="average")
+hc_avg_feijao_155 <- hclust(d_mat_feijao_155, method="average")
+```
+
+**a) Dendrograms**
+
+```{r}
+plot(hc_avg_cadia, labels = FALSE)
+plot(hc_avg_peru_F, labels = FALSE)
+plot(hc_avg_peru_U, labels = FALSE)
+plot(hc_avg_feijao_53, labels = FALSE)
+plot(hc_avg_feijao_155, labels = FALSE)
+```
+
+```{r}
+p_hc_avg_cadia <- as.ggplot(
+  ~ plot(hc_avg_cadia, labels = FALSE, main = "Cadia: Average linkage")
+)
+p_hc_avg_peru_F <- as.ggplot(
+  ~ plot(hc_avg_peru_F, labels = FALSE, main = "Peru (F): Average linkage")
+)
+p_hc_avg_peru_U <- as.ggplot(
+  ~ plot(hc_avg_peru_U, labels = FALSE, main = "Peru (U): Average linkage")
+)
+p_hc_avg_feijao_53 <- as.ggplot(
+  ~ plot(hc_avg_feijao_53, labels = FALSE, main = "Feijao (T53): Average Linkage")
+)
+p_hc_avg_feijao_155 <- as.ggplot(
+  ~ plot(hc_avg_feijao_155, labels = FALSE, main = "Feijao (T155): Average Linkage")
+)
+```
+
+### 2.4 Complete linkage
+
+```{r}
+hc_comp_cadia <- hclust(d_mat_cadia, method="complete")
+hc_comp_peru_F <- hclust(d_mat_peru_F, method="complete")
+hc_comp_peru_U <- hclust(d_mat_peru_U, method="complete")
+hc_comp_feijao_53 <- hclust(d_mat_feijao_53, method="complete")
+hc_comp_feijao_155 <- hclust(d_mat_feijao_155, method="complete")
+```
+
+**a) Dendrograms**
+
+```{r}
+plot(hc_comp_cadia, labels = FALSE)
+plot(hc_comp_peru_F, labels = FALSE)
+plot(hc_comp_peru_U, labels = FALSE)
+plot(hc_comp_feijao_53, labels = FALSE)
+plot(hc_comp_feijao_155, labels = FALSE)
+```
+
+```{r}
+p_hc_comp_cadia <- as.ggplot(
+  ~ plot(hc_comp_cadia, labels = FALSE, main = "Cadia: Complete linkage")
+)
+p_hc_comp_peru_F <- as.ggplot(
+  ~ plot(hc_comp_peru_F, labels = FALSE, main = "Peru (F): Complete linkage")
+)
+p_hc_comp_peru_U <- as.ggplot(
+  ~ plot(hc_comp_peru_U, labels = FALSE, main = "Peru (U): Complete linkage")
+)
+p_hc_comp_feijao_53 <- as.ggplot(
+  ~ plot(hc_comp_feijao_53, labels = FALSE, main = "Feijao (T53): Complete Linkage")
+)
+p_hc_comp_feijao_155 <- as.ggplot(
+  ~ plot(hc_comp_feijao_155, labels = FALSE, main = "Feijao (T155): Complete Linkage")
+)
+```
+
+- Interpreting a dendrogram:
+
+  - The distance between the links shows dissimilarity between observations.
+
+  - Vertical lines express distances, horizontal lines represent agglomerations (when two cases are clustered).
+
+- Where do we make the cut in the dendrogram to split the clusters?
+
+  - How much would our grouping change if we made small deviations if we made a hypothetical horizontal running through the chart?
+
+    - We aim to create solutions that are relatively stable to small variations in our judgement (line) call.
+
+  - General rule: When drawing a horizontal line across the dendrogram, the number of links that have been broken represent the number of clusters (left).
+
+  - However, there is no definitive answer, as cluster analysis is generally an exploratory approach.
+
+- Advantages:
+
+  - No need for predetermined number of clusters.
+
+- Disadvantages:
+
+  - Scalability: Computational intensity grows with number of observations, and it is harder to visually interpret.
+
+Dendrogram comparison between all linkage types:
+
+- The structure of the dendrograms significantly differ between linkage type.
+
+- The pattern of successive merges in the dendrograms using Ward's method and complete linkage are more similar than the dendrograms that use average linkage. Their appearance matches the typical shape of a dendrogram that aims to grow in distance between cluster split levels/branches.
+
+- All dendrograms using Ward's method appear to create two distinct cluster groups branching from the top, and more pronounced gaps proceeding this level (compared to average linkage). This may make it easier to identify where to apply the cuts for cluster groupings.
+
+- The complete linkage dendrograms are less symmetric with less even distribution and several moderate jumps in linkage height, particularly for Cadia and both Peru datasets. These jumps separating cluster levels appear less pronounced than for Ward's method.
+
+- The clusters/branches in the average linkage dendrograms have less visual separation, particularly near the top of both Feijao dendrograms. There are less evenly distributed branches/cluster areas in both Peru cases, and for all dendrograms, generally a more gradual sequence of merges. It seems harder to make the selection of an appropriate cut height due to the less distinct boundaries between clusters.
+
+Although dendrograms provide a visualisation of our hierarchical clustering results, there is no definitive answer is using a dendrogram to choose how many clusters the data should be split into. Using them as a tool to select the number clusters involves some level of subjectivity and context.
+
+By comparing our dendrograms that used different linkage methods, we may narrow down the more appropriate methods for our data, and visually infer the possible number of clusters to use. The exploratory nature of clustering however, implies that this is not sufficient evidence to make decisions on the data. We can use our findings in combination with other exploratory clustering techniques (K-means, DBSCAN) to aggregate evidence and then make informed decisions and interpretations of results.
+
+Therefore, the dendrograms suggest that Ward's method may best suit the data when agglomerative hierarchical clustering, followed by complete linkage.
+
+We further inspect the dendrograms using Ward's method to identify possible cluster splits:
+
+```{r}
+plot(hc_ward_cadia, main = "Cadia Dendrogram", labels = FALSE)
+rect.hclust(hc_ward_cadia, k = 3, border = 1:3)
+```
+
+```{r}
+plot(hc_ward_peru_F, main = "Peru (F) Dendrogram", labels = FALSE)
+rect.hclust(hc_ward_peru_F, k = 3, border = 1:3)
+```
+
+```{r}
+plot(hc_ward_peru_U, main = "Peru (U) Dendrogram", labels = FALSE)
+rect.hclust(hc_ward_peru_U, k = 4, border = 1:3)
+```
+
+```{r}
+plot(hc_ward_feijao_53, main = "Feijao (T53) Dendrogram", labels = FALSE)
+rect.hclust(hc_ward_feijao_53, k = 4, border = 1:3)
+```
+
+```{r}
+plot(hc_ward_feijao_155, main = "Feijao (T155) Dendrogram", labels = FALSE)
+rect.hclust(hc_ward_feijao_155, k = 4, border = 1:3)
+```
+
+- Cadia: k = 2, 3, but also k = 4, 5
+
+- Peru (failed): k = 3, but also k = 2, 4
+
+- Peru (unfailed): k = 3, but also k = 2, 4
+
+- Feijao (T53): k = 2, 3 but also k = 4, 5
+
+- Feijao (T155): k = 2, 3 but also k = 4, 5
+
+Our inspection of all Ward's method dendrograms suggests several possible cluster solutions. A consistent range of k = 2, 3, 4, 5 appeared throughout most, and we may use these findings to aid our experiments with other clustering methods, or apply further validation methods to narrow it down more.
+
+### 2.5 Validation Methods / Indices
+
+We can further evaluate the effectiveness of our clustering using validation methods:
+
+#### **2.5.1 Silhouette Score**
+
+- Silhouette score quantifies the effectiveness of the applied clustering by gauging how similar a point is to its own cluster, compared to other clusters. The formula is:
+
+  - $$s(i) = \frac{b(i) - a(i)}{\max(a(i),b(i))}$$
+
+    - Where: $-1 ≤ s(i) ≤ 1$
+
+  - $a(i) =$ Average distance between i and all other points in its own cluster (within-cluster).
+
+  - $b(i) =$ Distance between i and its next nearest cluster centroid
+
+  - A silhouette score near -1 suggests poor overlapped clusters, where near +1 suggested tight, well-separated clusters.
+
+- We take the average silhouette score of all data points in a dataset to gauge the overall measure of cluster quality.
+
+By calculating the average silhouette score of all cluster splits within our range of 2 - 5, we can infer which best suits the data:
+
+```{r}
+# Average Silhouette Score Helper Function
+
+average_sil_score <- function(hc, d_mat, k_vals = 2:5){
+  
+  avg_sil <- numeric(length(k_vals))
+  
+  for(i in seq_along(k_vals)){
+    
+    clusters <- cutree(hc, k = k_vals[i])
+    sil_score <- silhouette(clusters, d_mat)
+    avg_sil[i] <- mean(sil_score[, 3])
+
+  }
+  
+  data.frame(
+    k = k_vals,
+    avg_silhouette_score = avg_sil
+  )
+}
+```
+
+```{r}
+cadia_sil_hc_ward <- average_sil_score(hc_ward_cadia, d_mat_cadia)
+peru_F_sil_hc_ward <- average_sil_score(hc_ward_peru_F, d_mat_peru_F)
+peru_U_sil_hc_ward <- average_sil_score(hc_ward_peru_U, d_mat_peru_U)
+feijao_53_sil_hc_ward <- average_sil_score(hc_ward_feijao_53, d_mat_feijao_53)
+feijao_155_sil_hc_ward <- average_sil_score(hc_ward_feijao_155, d_mat_feijao_155)
+```
+
+```{r}
+cadia_sil_hc_avg <- average_sil_score(hc_avg_cadia, d_mat_cadia)
+peru_F_sil_hc_avg <- average_sil_score(hc_avg_peru_F, d_mat_peru_F)
+peru_U_sil_hc_avg <- average_sil_score(hc_avg_peru_U, d_mat_peru_U)
+feijao_53_sil_hc_avg <- average_sil_score(hc_avg_feijao_53, d_mat_feijao_53)
+feijao_155_sil_hc_avg <- average_sil_score(hc_avg_feijao_155, d_mat_feijao_155)
+```
+
+```{r}
+cadia_sil_hc_comp <- average_sil_score(hc_comp_cadia, d_mat_cadia)
+peru_F_sil_hc_comp <- average_sil_score(hc_comp_peru_F, d_mat_peru_F)
+peru_U_sil_hc_comp <- average_sil_score(hc_comp_peru_U, d_mat_peru_U)
+feijao_53_sil_hc_comp <- average_sil_score(hc_comp_feijao_53, d_mat_feijao_53)
+feijao_155_sil_hc_comp <- average_sil_score(hc_comp_feijao_155, d_mat_feijao_155)
+```
+
+- Our average silhouette scores for each cluster split on the Cadia hierarchical clustering decrease as k increases, with k = 2 resulting in the highest score of 0.3773.
+
+- For Peru (failed), the same decreasing trend occurs, however with the k = 2 average silhouette score being 0.4563, and k = 5 dropping lower than Cadia's k = 5 result.
+
+- Peru (unfailed) follows the same decreasing trend, with its highest average silhouette score of 0.4022 for k = 2.
+
+- Feijao (T53) has a highest average silhouette score of 0.4166 for k = 2, and drops to the lowest out of all datasets for k = 5, resulting in a mean score of 0.1872.
+
+- Feijao (T155) results in a similar highest score, 0.4151 for k = 2, and a lowest mean score of 0.2144 for k = 5.
+
+Our average silhouette score results for all datasets from hierarchical clustering using Ward's method linkage are fairly consistent, with the highest score at k = 2, and a decreasing trend as k increases. This suggests that partitioning the data into 2 clusters results in the strongest separation, and introducing additional clusters may result in less distinct boundaries between clusters. However, it may still be useful to investigate solutions with k = 3, 4, and 5, as they may provide insight into less distinct deformation patterns not captured by a two-cluster solution. Thus, we keep this k range in mind and continue to test other clustering methods.
+
+#### **2.5.2** Cluster time-series comparison plots
+
+```{r}
+library(tidyr)
+library(dplyr)
+
+# Cluster memberships - Cadia w/ Ward linkage
+feijao_155_hc_3 <- cutree(hc_ward_feijao_155, k = 3)
+
+# Build plotting dataframe from ORIGINAL displacement series
+feijao_155_ts_plot_df <- as.data.frame(feijao_D_155)
+
+feijao_155_ts_plot_df$point <- seq_len(nrow(feijao_155_ts_plot_df))
+feijao_155_ts_plot_df$cluster <- factor(feijao_155_hc_3)
+
+# Long format
+feijao_155_ts_plot_long <- feijao_155_ts_plot_df |>
+  pivot_longer(
+    cols = -c(point, cluster),
+    names_to = "time",
+    values_to = "displacement"
+  )
+
+# Keep dates in correct order
+feijao_155_ts_plot_long$time <- factor(
+  feijao_155_ts_plot_long$time,
+  levels = colnames(feijao_D_155)
+)
+
+p_feijao_155_raw_hc3 <- ggplot(
+  feijao_155_ts_plot_long,
+  aes(
+    x = time,
+    y = displacement,
+    group = point
+  )
+) +
+  geom_line(
+    aes(colour = factor(point)),
+    alpha = 0.4) +
+  facet_wrap(~ cluster) +
+  guides(colour = "none") +
+  labs(
+    title = "Feijao (155): Raw HC, k = 3",
+    x = "Time",
+    y = "Cumulative displacement (mm)"
+  ) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()
+  )
+
+p_feijao_155_raw_hc3
+```
+
+```{r}
+ggsave(
+  "feijao_155_hc_3_ts_plot.png",
+  p_feijao_155_raw_hc3,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+### 2.6 Apply cluster IDs and export
+
+We apply cluster IDs to columns corresponding to the k-split chosen so we can project the cluster assignments onto a map.
+
+```{r}
+# Split into k clusters
+# Cadia
+cadia_hc_2 <- cutree(hc_ward_cadia, k=2)
+table(cadia_hc_2)
+cadia$hc_2 <- cadia_hc_2
+
+cadia_hc_3 <- cutree(hc_ward_cadia, k=3)
+table(cadia_hc_3)
+cadia$hc_3 <- cadia_hc_3
+
+cadia_hc_4 <- cutree(hc_ward_cadia, k=4)
+table(cadia_hc_4)
+cadia$hc_4 <- cadia_hc_4
+
+cadia_hc_5 <- cutree(hc_ward_cadia, k=5)
+table(cadia_hc_5)
+cadia$hc_5 <- cadia_hc_5
+```
+
+```{r}
+nrow(cadia)
+length(cadia_hc_2)
+```
+
+```{r}
+# Peru (failed)
+peru_F_hc_2 <- cutree(hc_ward_peru_F, k=2)
+table(peru_F_hc_2)
+peru_failed$hc_2 <- peru_F_hc_2
+
+peru_F_hc_3 <- cutree(hc_ward_peru_F, k=3)
+table(peru_F_hc_3)
+peru_failed$hc_3 <- peru_F_hc_3
+
+peru_F_hc_4 <- cutree(hc_ward_peru_F, k=4)
+table(peru_F_hc_4)
+peru_failed$hc_4 <- peru_F_hc_4
+
+peru_F_hc_5 <- cutree(hc_ward_peru_F, k=5)
+table(peru_F_hc_5)
+peru_failed$hc_5 <- peru_F_hc_5
+```
+
+```{r}
+nrow(peru_failed)
+length(peru_F_hc_2)
+```
+
+```{r}
+# Peru (unfailed)
+peru_U_hc_2 <- cutree(hc_ward_peru_U, k=2)
+table(peru_U_hc_2)
+peru_unfailed$hc_2 <- peru_U_hc_2
+
+peru_U_hc_3 <- cutree(hc_ward_peru_U, k=3)
+table(peru_U_hc_3)
+peru_unfailed$hc_3 <- peru_U_hc_3
+
+peru_U_hc_4 <- cutree(hc_ward_peru_U, k=4)
+table(peru_U_hc_4)
+peru_unfailed$hc_4 <- peru_U_hc_4
+
+peru_U_hc_5 <- cutree(hc_ward_peru_U, k=5)
+table(peru_U_hc_5)
+peru_unfailed$hc_5 <- peru_U_hc_5
+```
+
+```{r}
+nrow(peru_unfailed)
+length(peru_U_hc_2)
+```
+
+```{r}
+# Feijao (T53)
+feijao_53_hc_2 <- cutree(hc_ward_feijao_53, k=2)
+table(feijao_53_hc_2)
+feijao_53$hc_2 <- feijao_53_hc_2
+
+feijao_53_hc_3 <- cutree(hc_ward_feijao_53, k=3)
+table(feijao_53_hc_3)
+feijao_53$hc_3 <- feijao_53_hc_3
+
+feijao_53_hc_4 <- cutree(hc_ward_feijao_53, k=4)
+table(feijao_53_hc_4)
+feijao_53$hc_4 <- feijao_53_hc_4
+
+feijao_53_hc_5 <- cutree(hc_ward_feijao_53, k=5)
+table(feijao_53_hc_5)
+feijao_53$hc_5 <- feijao_53_hc_5
+```
+
+```{r}
+nrow(feijao_53)
+length(feijao_53_hc_2)
+```
+
+```{r}
+# Feijao (T155)
+feijao_155_hc_2 <- cutree(hc_ward_feijao_155, k=2)
+table(feijao_155_hc_2)
+feijao_155$hc_2 <- feijao_155_hc_2
+
+feijao_155_hc_3 <- cutree(hc_ward_feijao_155, k=3)
+table(feijao_155_hc_3)
+feijao_155$hc_3 <- feijao_155_hc_3
+
+feijao_155_hc_4 <- cutree(hc_ward_feijao_155, k=4)
+table(feijao_155_hc_4)
+feijao_155$hc_4 <- feijao_155_hc_4
+
+feijao_155_hc_5 <- cutree(hc_ward_feijao_155, k=5)
+table(feijao_155_hc_5)
+feijao_155$hc_5 <- feijao_155_hc_5
+```
+
+```{r}
+nrow(feijao_155)
+length(feijao_155_hc_2)
+```
+
+```{r}
+# Exporting csv's for each case
+write.csv(cadia, "cadia_hc.csv", row.names = FALSE)
+write.csv(peru_failed, "peru_F_hc.csv", row.names = FALSE)
+write.csv(peru_unfailed, "peru_U_hc.csv", row.names = FALSE)
+write.csv(feijao_53, "feijao_53_hc.csv", row.names = FALSE)
+write.csv(feijao_155, "feijao_155_hc.csv", row.names = FALSE)
+```
+
+#### 2.7 Export plots for summary
+
+```{r}
+library(dplyr)
+
+cadia_sil_combined <- bind_rows(
+  cadia_sil_hc_ward %>%
+    mutate(linkage = "Ward"),
+  
+  cadia_sil_hc_avg %>%
+    mutate(linkage = "Average"),
+  
+  cadia_sil_hc_comp %>%
+    mutate(linkage = "Complete")
+)
+
+peru_F_sil_combined <- bind_rows(
+  peru_F_sil_hc_ward %>%
+    mutate(linkage = "Ward"),
+  
+  peru_F_sil_hc_avg %>%
+    mutate(linkage = "Average"),
+  
+  peru_F_sil_hc_comp %>%
+    mutate(linkage = "Complete")
+)
+
+peru_U_sil_combined <- bind_rows(
+  peru_U_sil_hc_ward %>%
+    mutate(linkage = "Ward"),
+  
+  peru_U_sil_hc_avg %>%
+    mutate(linkage = "Average"),
+  
+  peru_U_sil_hc_comp %>%
+    mutate(linkage = "Complete")
+)
+
+feijao_53_sil_combined <- bind_rows(
+  feijao_53_sil_hc_ward %>%
+    mutate(linkage = "Ward"),
+  
+  feijao_53_sil_hc_avg %>%
+    mutate(linkage = "Average"),
+  
+  feijao_53_sil_hc_comp %>%
+    mutate(linkage = "Complete")
+)
+
+feijao_155_sil_combined <- bind_rows(
+  feijao_155_sil_hc_ward %>%
+    mutate(linkage = "Ward"),
+  
+  feijao_155_sil_hc_avg %>%
+    mutate(linkage = "Average"),
+  
+  feijao_155_sil_hc_comp %>%
+    mutate(linkage = "Complete")
+)
+```
+
+**Cadia HC**
+
+```{r}
+
+library(ggplot2)
+
+p_cadia_sil <- ggplot(
+  cadia_sil_combined,
+  aes(
+    x = k,
+    y = avg_silhouette_score,
+    group = linkage,
+    linetype = linkage,
+    shape = linkage
+  )
+) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Average silhouette score",
+    x = "Number of clusters",
+    y = "Average silhouette score",
+    linetype = "Linkage",
+    shape = "Linkage"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom"
+  )
+```
+
+```{r}
+p_cadia_sil
+```
+
+```{r}
+p_cadia_ward <- as.ggplot(
+  ~ plot(
+    hc_ward_cadia,
+    labels = FALSE,
+    main = "Ward linkage",
+    xlab = "",
+    sub = ""
+  )
+)
+
+p_cadia_avg <- as.ggplot(
+  ~ plot(
+    hc_avg_cadia,
+    labels = FALSE,
+    main = "Average linkage",
+    xlab = "",
+    sub = ""
+  )
+)
+
+p_cadia_comp <- as.ggplot(
+  ~ plot(
+    hc_comp_cadia,
+    labels = FALSE,
+    main = "Complete linkage",
+    xlab = "",
+    sub = ""
+  )
+)
+```
+
+```{r}
+fig_cadia_hc <- (
+  p_cadia_ward |
+    p_cadia_avg |
+    p_cadia_comp
+) /
+  p_cadia_sil +
+  plot_layout(
+    heights = c(1.1, 1)
+  ) +
+  plot_annotation(
+    title = "Cadia: Hierarchical clustering results",
+    theme = theme(
+      plot.title = element_text(
+        size = 16,
+        face = "bold",
+        margin = margin(b = 10)
+      )
+    )
+  )
+```
+
+```{r}
+fig_cadia_hc
+```
+
+```{r}
+ggsave(
+  filename = "cadia_hierarchical_summary.png",
+  plot = fig_cadia_hc,
+  width = 14,
+  height = 10,
+  units = "in",
+  dpi = 300
+)
+```
+
+**Peru (F) HC**
+
+```{r}
+peru_F_sil_combined
+```
+
+```{r}
+library(ggplot2)
+
+p_peru_F_sil <- ggplot(
+  peru_F_sil_combined,
+  aes(
+    x = k,
+    y = avg_silhouette_score,
+    group = linkage,
+    linetype = linkage,
+    shape = linkage
+  )
+) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Average silhouette score",
+    x = "Number of clusters",
+    y = "Average silhouette score",
+    linetype = "Linkage",
+    shape = "Linkage"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom"
+  )
+```
+
+```{r}
+p_peru_F_sil
+```
+
+```{r}
+library(ggplotify)
+
+p_peru_F_ward <- as.ggplot(
+  ~ plot(
+    hc_ward_peru_F,
+    labels = FALSE,
+    main = "Ward linkage",
+    xlab = "",
+    sub = ""
+  )
+)
+
+p_peru_F_avg <- as.ggplot(
+  ~ plot(
+    hc_avg_peru_F,
+    labels = FALSE,
+    main = "Average linkage",
+    xlab = "",
+    sub = ""
+  )
+)
+
+p_peru_F_comp <- as.ggplot(
+  ~ plot(
+    hc_comp_peru_F,
+    labels = FALSE,
+    main = "Complete linkage",
+    xlab = "",
+    sub = ""
+  )
+)
+```
+
+```{r}
+library(patchwork)
+
+fig_peru_F_hc <- (
+  p_peru_F_ward |
+    p_peru_F_avg |
+    p_peru_F_comp
+) /
+  p_peru_F_sil +
+  plot_layout(
+    heights = c(1.1, 1)
+  ) +
+  plot_annotation(
+    title = "Peru F: Hierarchical clustering results",
+    theme = theme(
+      plot.title = element_text(
+        size = 16,
+        face = "bold",
+        margin = margin(b = 10)
+      )
+    )
+  )
+```
+
+```{r}
+fig_peru_F_hc
+```
+
+```{r}
+ggsave(
+  filename = "peru_F_hierarchical_summary.png",
+  plot = fig_peru_F_hc,
+  width = 14,
+  height = 10,
+  units = "in",
+  dpi = 300
+)
+```
+
+**Peru (U) HC**
+
+```{r}
+p_peru_U_sil <- ggplot(
+  peru_U_sil_combined,
+  aes(
+    x = k,
+    y = avg_silhouette_score,
+    group = linkage,
+    linetype = linkage,
+    shape = linkage
+  )
+) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Average silhouette score",
+    x = "Number of clusters",
+    y = "Average silhouette score",
+    linetype = "Linkage",
+    shape = "Linkage"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom"
+  )
+```
+
+```{r}
+p_peru_U_sil
+```
+
+```{r}
+p_peru_U_ward <- as.ggplot(
+  ~ plot(
+    hc_ward_peru_U,
+    labels = FALSE,
+    main = "Ward linkage",
+    xlab = "",
+    sub = ""
+  )
+)
+
+p_peru_U_avg <- as.ggplot(
+  ~ plot(
+    hc_avg_peru_U,
+    labels = FALSE,
+    main = "Average linkage",
+    xlab = "",
+    sub = ""
+  )
+)
+
+p_peru_U_comp <- as.ggplot(
+  ~ plot(
+    hc_comp_peru_U,
+    labels = FALSE,
+    main = "Complete linkage",
+    xlab = "",
+    sub = ""
+  )
+)
+```
+
+```{r}
+fig_peru_U_hc <- (
+  p_peru_U_ward |
+    p_peru_U_avg |
+    p_peru_U_comp
+) /
+  p_peru_U_sil +
+  plot_layout(
+    heights = c(1.1, 1)
+  ) +
+  plot_annotation(
+    title = "Peru U: Hierarchical clustering results",
+    theme = theme(
+      plot.title = element_text(
+        size = 16,
+        face = "bold",
+        margin = margin(b = 10)
+      )
+    )
+  )
+```
+
+```{r}
+fig_peru_U_hc
+```
+
+```{r}
+ggsave(
+  filename = "peru_U_hierarchical_summary.png",
+  plot = fig_peru_U_hc,
+  width = 14,
+  height = 10,
+  units = "in",
+  dpi = 300
+)
+```
+
+**Feijao (T53) HC**
+
+```{r}
+p_feijao_53_sil <- ggplot(
+  feijao_53_sil_combined,
+  aes(
+    x = k,
+    y = avg_silhouette_score,
+    group = linkage,
+    linetype = linkage,
+    shape = linkage
+  )
+) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Average silhouette score",
+    x = "Number of clusters",
+    y = "Average silhouette score",
+    linetype = "Linkage",
+    shape = "Linkage"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom"
+  )
+```
+
+```{r}
+p_feijao_53_sil
+```
+
+```{r}
+p_feijao_53_ward <- as.ggplot(
+  ~ plot(
+    hc_ward_feijao_53,
+    labels = FALSE,
+    main = "Ward linkage",
+    xlab = "",
+    sub = ""
+  )
+)
+
+p_feijao_53_avg <- as.ggplot(
+  ~ plot(
+    hc_avg_feijao_53,
+    labels = FALSE,
+    main = "Average linkage",
+    xlab = "",
+    sub = ""
+  )
+)
+
+p_feijao_53_comp <- as.ggplot(
+  ~ plot(
+    hc_comp_feijao_53,
+    labels = FALSE,
+    main = "Complete linkage",
+    xlab = "",
+    sub = ""
+  )
+)
+```
+
+```{r}
+fig_feijao_53_hc <- (
+  p_feijao_53_ward |
+    p_feijao_53_avg |
+    p_feijao_53_comp
+) /
+  p_feijao_53_sil +
+  plot_layout(
+    heights = c(1.1, 1)
+  ) +
+  plot_annotation(
+    title = "Feijao (T53): Hierarchical clustering results",
+    theme = theme(
+      plot.title = element_text(
+        size = 16,
+        face = "bold",
+        margin = margin(b = 10)
+      )
+    )
+  )
+```
+
+```{r}
+fig_feijao_53_hc
+```
+
+```{r}
+ggsave(
+  filename = "feijao_53_hierarchical_summary.png",
+  plot = fig_feijao_53_hc,
+  width = 14,
+  height = 10,
+  units = "in",
+  dpi = 300
+)
+```
+
+**Feijao (T155) HC**
+
+```{r}
+p_feijao_155_sil <- ggplot(
+  feijao_155_sil_combined,
+  aes(
+    x = k,
+    y = avg_silhouette_score,
+    group = linkage,
+    linetype = linkage,
+    shape = linkage
+  )
+) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Average silhouette score",
+    x = "Number of clusters",
+    y = "Average silhouette score",
+    linetype = "Linkage",
+    shape = "Linkage"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom"
+  )
+```
+
+```{r}
+p_feijao_155_sil
+```
+
+```{r}
+p_feijao_155_ward <- as.ggplot(
+  ~ plot(
+    hc_ward_feijao_155,
+    labels = FALSE,
+    main = "Ward linkage",
+    xlab = "",
+    sub = ""
+  )
+)
+
+p_feijao_155_avg <- as.ggplot(
+  ~ plot(
+    hc_avg_feijao_155,
+    labels = FALSE,
+    main = "Average linkage",
+    xlab = "",
+    sub = ""
+  )
+)
+
+p_feijao_155_comp <- as.ggplot(
+  ~ plot(
+    hc_comp_feijao_155,
+    labels = FALSE,
+    main = "Complete linkage",
+    xlab = "",
+    sub = ""
+  )
+)
+```
+
+```{r}
+fig_feijao_155_hc <- (
+  p_feijao_155_ward |
+    p_feijao_155_avg |
+    p_feijao_155_comp
+) /
+  p_feijao_155_sil +
+  plot_layout(
+    heights = c(1.1, 1)
+  ) +
+  plot_annotation(
+    title = "Feijao (T155): Hierarchical clustering results",
+    theme = theme(
+      plot.title = element_text(
+        size = 16,
+        face = "bold",
+        margin = margin(b = 10)
+      )
+    )
+  )
+```
+
+```{r}
+fig_feijao_155_hc
+```
+
+```{r}
+ggsave(
+  filename = "feijao_155_hierarchical_summary.png",
+  plot = fig_feijao_155_hc,
+  width = 14,
+  height = 10,
+  units = "in",
+  dpi = 300
+)
+```
+
+### 2.8 Hierarchical Clustering with DTW
+
+Dynamic Time Warping (DTW) is an algorithm that compares time-based datasets based on the shape of their data to find similarities. It adjusts the timings of the data points to minimise the difference between the 2 datasets, allowing for comparison of sequences (of data) that are unequal lengths or out of-sync. It works well for both pattern matching and anomaly detection.
+
+DTW works by computing the distance between 2 time series by finding a path through a cost matrix that minimises the cumulative distances between them.
+
+1.  A distance matrix between the two sequences (time series) is constructed, usually Euclidean distance.
+
+    $$D[i, j] = d(x[i],y[j]) = (x[i] - y[j])^2$$
+
+2.  The cost matrix is created by accumulating the minimum distances from the start of the sequences to the current point. The accumulated cost represents the optimal path's cumulative distance up to that point.
+
+    $$C[i, j] = d(x[i], y[j]) + \min \left\{\begin{array}{l}C[i-1,j] \\C[i,j-1] \\C[i-1,j-1]\end{array}\right.$$
+
+    - D(i - 1, j) = an insertion
+    - D(i, j - 1) = a deletion
+    - D(i - 1, j - 1) = a match (diagonal move)
+
+3.  The optimal alignment path is found by tracing back from the last element in the cost matrix to the first element. The path represents the best alignment between the 2 sequences, minimising the total distance.
+
+    - Back track from D(n, m) to D(1, 1) by following the minimum cost direction at each step.
+
+4.  The warping path shows how one sequence can be warped (stretched) along the time axis to match other sequence best.
+
+DTW works with hierarchical clustering where we can recalculate the distance matrix for DTW and apply it to the same function as before, or we could use a separate package's function:
+
+- dtwclust package's tsclust() function: Performs time series clustering
+
+- tsclust() arguments:
+
+  - series: Takes a list of series, matrix or df
+
+  - type: Defines what type of clustering method (partitional, hierarchical, tadpole, fuzzy)
+
+  - k: Number of clusters (can take a vector of different vals)
+
+  - control: For hierarchical clustering, use hierarchical_control() and add the linkage type
+
+- We are skeptical using Ward's linkage with DTW as it is derived for squared Euclidean distances. Ward's linkage works by merging the pair that causes the smallest increase in within-cluster variance (sum of squares). This variance is defined using Euclidean geometry, so unsure how it would fair using a different distance measure.
+
+#### **2.8.1 Complete Linkage w/ DTW**
+
+**Peru (F)**
+
+- We tested with the failed Peru dataset first as it is significantly smaller than the Cadia and Feijao datasets, as using DTW with hierarchical clustering is a computationally intensive process.
+
+```{r}
+# Peru check
+class(peru_D_F_clust)
+dim(peru_D_F_clust)
+sum(is.na(peru_D_F_clust))
+sum(!is.finite(peru_D_F_clust))
+```
+
+```{r}
+# Peru (F) DTW - complete linkage
+peru_F_hc_dtw <- tsclust(series = peru_D_F_clust, type = "hierarchical", k = 2:5, distance = "dtw_basic", control = hierarchical_control(
+  method = "complete"
+),
+trace = TRUE
+)
+```
+
+- The operation took 243.909 seconds, which is significantly longer than hierarchical clustering with Euclidean distance.
+
+```{r}
+names(peru_F_hc_dtw) <- paste0("k_", 2:5)
+```
+
+```{r}
+saveRDS(
+  peru_F_hc_dtw,
+  "peru_F_hc_dtw.rds"
+)
+```
+
+**CVIs/Internal validation (metrics)**
+
+Internal CVIs only consider the partitioned data and try to define a measure of cluster purity, whereas external CVIs compare the obtained partition to the correct one (therefore requiring the ground truth). The dtwclust package implements several CVIs in the cvi function, which also uses the distance specified in the clustering (instead of automatically Euclidean distance). However, it is important to note that many CVIs assume symmetric distance functions.
+
+Note: Crisp partition = where each data point is assigned to its nearest cluster centre; fuzzy partition = soft memberships and points can belong to multiple groups/clusters.
+
+External CVIs in cvi():
+
+- "RI": Rand Index
+
+- "ARI": Adjusted Rand Index
+
+- "J": Jaccard Index
+
+- "FM": Fowlkes-Mallows
+
+- "VI": Variation of Information
+
+Internal CVIs in cvi():
+
+- "Sil": Silhouette index (aim for maximised)
+
+- "D": Dunn index (aim for maximised)
+
+- "COP": COP index
+
+- "DB": Davies-Bouldin index (aim for minimised)
+
+- "DBstar": Modified Davies-Bouldin index
+
+- "CH": Calinski-Harabasz index (aim for maximised)
+
+- "SF": Score Function
+
+```{r}
+peru_F_comp_cvi <- sapply(peru_F_hc_dtw,
+                          cvi,
+                          type = "internal"
+                          )
+```
+
+```{r}
+peru_F_comp_cvi
+```
+
+```{r}
+table(peru_F_hc_dtw$k_2@cluster)
+table(peru_F_hc_dtw$k_3@cluster)
+table(peru_F_hc_dtw$k_4@cluster)
+table(peru_F_hc_dtw$k_5@cluster)
+```
+
+```{r}
+plot(peru_F_hc_dtw$k_2, type = "series")
+```
+
+The above series plot shows the members of the chosen cluster. The x-axis is time aquisitions and the y-axis is cumulative displacement, and every line is one InSAR point.
+
+```{r}
+dend_dtw_comp <- as.dendrogram(peru_F_hc_dtw$k_2)
+
+p_dtw_comp <- as.ggplot(
+  ~ {plot(dend_dtw_comp, leaflab = "none", main = "Complete linkage", ylab = "Height")
+  }
+)
+```
+
+```{r}
+# Average Silhouette Score plot
+plot(
+  x = 2:5,
+  y = peru_F_comp_cvi["Sil", ],
+  type = "b",
+  pch = 19,
+  xlab = "Number of clusters (k)",
+  ylab = "Average silhouette score",
+  main = "Peru (F): DTW hierarchical clustering"
+)
+```
+
+```{r}
+# Create an object for combined silhouette plot later
+dtw_sil_comp_peru_F <- as.numeric(
+  peru_F_comp_cvi["Sil", ]
+)
+```
+
+- Interpretation after comparing with Euclidean results.
+
+**Peru (U)**
+
+```{r}
+# Peru (U) DTW - complete linkage
+peru_U_hc_dtw <- tsclust(series = peru_D_U_clust, type = "hierarchical", k = 2:5, distance = "dtw_basic", control = hierarchical_control(
+  method = "complete"
+),
+trace = TRUE
+)
+```
+
+- The operation took 157.959 seconds.
+
+```{r}
+names(peru_U_hc_dtw) <- paste0("k_", 2:5)
+```
+
+```{r}
+peru_U_comp_cvi <- sapply(peru_U_hc_dtw,
+                          cvi,
+                          type = "internal"
+)
+```
+
+```{r}
+peru_U_comp_cvi
+```
+
+```{r}
+table(peru_U_hc_dtw$k_2@cluster)
+table(peru_U_hc_dtw$k_3@cluster)
+table(peru_U_hc_dtw$k_4@cluster)
+table(peru_U_hc_dtw$k_5@cluster)
+```
+
+```{r}
+dend_peru_U_dtw_comp <- as.dendrogram(peru_U_hc_dtw$k_2)
+
+p_peru_U_dtw_comp <- as.ggplot(
+  ~ {plot(dend_peru_U_dtw_comp, leaflab = "none", main = "Complete linkage", ylab = "Height")
+  }
+)
+```
+
+```{r}
+p_peru_U_dtw_comp
+```
+
+```{r}
+# Create an object for combined silhouette plot later
+dtw_sil_comp_peru_U <- as.numeric(
+  peru_U_comp_cvi["Sil", ]
+)
+```
+
+**Cadia**
+
+```{r}
+# Cadia DTW - complete linkage
+cadia_hc_dtw <- tsclust(series = cadia_D_clust, type = "hierarchical", k = 2:5, distance = "dtw_basic", control = hierarchical_control(
+  method = "complete"
+),
+trace = TRUE
+)
+```
+
+#### **2.8.2 Average Linkage w/ DTW**
+
+```{r}
+# Peru (F) DTW - average linkage
+peru_F_hc_dtw_avg <- tsclust(series = peru_D_F_clust, type = "hierarchical", k = 2:5, distance = "dtw_basic", control = hierarchical_control(
+  method = "average"
+),
+trace = TRUE
+)
+```
+
+- The operation took 290 seconds.
+
+```{r}
+names(peru_F_hc_dtw_avg) <- paste0("k_", 2:5)
+```
+
+**Internal CVIs**
+
+```{r}
+peru_F_avg_cvi <- sapply(peru_F_hc_dtw_avg,
+                          cvi,
+                          type = "internal"
+)
+```
+
+```{r}
+peru_F_avg_cvi
+```
+
+```{r}
+table(peru_F_hc_dtw_avg$k_2@cluster)
+table(peru_F_hc_dtw_avg$k_3@cluster)
+table(peru_F_hc_dtw_avg$k_4@cluster)
+table(peru_F_hc_dtw_avg$k_5@cluster)
+```
+
+```{r}
+dend_dtw_avg <- as.dendrogram(peru_F_hc_dtw_avg$k_2)
+
+p_dtw_avg <- as.ggplot(
+  ~ {plot(dend_dtw_avg, leaflab = "none", main = "Average linkage", ylab = "Height")
+  }
+)
+```
+
+```{r}
+p_dtw_avg
+```
+
+```{r}
+# Average Silhouette Score plot
+plot(
+  x = 2:5,
+  y = peru_F_avg_cvi["Sil", ],
+  type = "b",
+  pch = 19,
+  xlab = "Number of clusters (k)",
+  ylab = "Average silhouette score",
+  main = "Peru (F): DTW hierarchical clustering (avg)"
+)
+```
+
+```{r}
+# Object for combined plot later
+dtw_sil_avg_peru_F <- as.numeric(
+  peru_F_avg_cvi["Sil", ]
+)
+```
+
+**Peru (U)**
+
+```{r}
+# Peru (U) DTW - average linkage
+peru_U_hc_dtw_avg <- tsclust(series = peru_D_U_clust, type = "hierarchical", k = 2:5, distance = "dtw_basic", control = hierarchical_control(
+  method = "average"
+),
+trace = TRUE
+)
+```
+
+- The operation took 168.499 seconds.
+
+```{r}
+names(peru_U_hc_dtw_avg) <- paste0("k_", 2:5)
+```
+
+```{r}
+peru_U_avg_cvi <- sapply(peru_U_hc_dtw_avg,
+                         cvi,
+                         type = "internal"
+)
+```
+
+```{r}
+peru_U_avg_cvi
+```
+
+```{r}
+table(peru_U_hc_dtw_avg$k_2@cluster)
+table(peru_U_hc_dtw_avg$k_3@cluster)
+table(peru_U_hc_dtw_avg$k_4@cluster)
+table(peru_U_hc_dtw_avg$k_5@cluster)
+```
+
+```{r}
+dend_peru_U_dtw_avg <- as.dendrogram(peru_U_hc_dtw_avg$k_2)
+
+p_peru_U_dtw_avg <- as.ggplot(
+  ~ {plot(dend_peru_U_dtw_avg, leaflab = "none", main = "Average linkage", ylab = "Height")
+  }
+)
+```
+
+```{r}
+p_peru_U_dtw_avg
+```
+
+```{r}
+# Object for combined plot later
+dtw_sil_avg_peru_U <- as.numeric(
+  peru_U_avg_cvi["Sil", ]
+)
+```
+
+#### **2.8.3 Ward Linkage w/ DTW**
+
+- Caution.
+
+```{r}
+# Peru (F) DTW - ward linkage
+peru_F_hc_dtw_ward <- tsclust(series = peru_D_F_clust, type = "hierarchical", k = 2:5, distance = "dtw_basic", control = hierarchical_control(
+  method = "ward.D2"
+),
+trace = TRUE
+)
+```
+
+- The operation took 253 seconds.
+
+```{r}
+names(peru_F_hc_dtw_ward) <- paste0("k_", 2:5)
+```
+
+**Internal CVIs**
+
+```{r}
+peru_F_ward_cvi <- sapply(peru_F_hc_dtw_ward,
+                         cvi,
+                         type = "internal"
+)
+```
+
+```{r}
+peru_F_ward_cvi
+```
+
+```{r}
+table(peru_F_hc_dtw_ward$k_2@cluster)
+table(peru_F_hc_dtw_ward$k_3@cluster)
+table(peru_F_hc_dtw_ward$k_4@cluster)
+table(peru_F_hc_dtw_ward$k_5@cluster)
+```
+
+```{r}
+dend_dtw_ward <- as.dendrogram(peru_F_hc_dtw_ward$k_2)
+
+p_dtw_ward <- as.ggplot(
+  ~{plot(dend_dtw_ward, leaflab = "none", main = "Ward linkage", ylab = "Height")
+  }
+)
+```
+
+```{r}
+# Ward Silhouette Score plot
+plot(
+  x = 2:5,
+  y = peru_F_ward_cvi["Sil", ],
+  type = "b",
+  pch = 19,
+  xlab = "Number of clusters (k)",
+  ylab = "Average silhouette score",
+  main = "Peru (F): DTW hierarchical clustering (Ward)"
+)
+```
+
+```{r}
+# Object for combined plot later
+dtw_sil_ward_peru_F <- as.numeric(
+  peru_F_ward_cvi["Sil", ]
+)
+```
+
+**Peru (U)**
+
+```{r}
+# Peru (U) DTW - ward linkage
+peru_U_hc_dtw_ward <- tsclust(series = peru_D_U_clust, type = "hierarchical", k = 2:5, distance = "dtw_basic", control = hierarchical_control(
+  method = "ward.D2"
+),
+trace = TRUE
+)
+```
+
+- The operation took 135.341 seconds.
+
+```{r}
+names(peru_U_hc_dtw_ward) <- paste0("k_", 2:5)
+```
+
+```{r}
+peru_U_ward_cvi <- sapply(peru_U_hc_dtw_ward,
+                          cvi,
+                          type = "internal"
+)
+```
+
+```{r}
+peru_U_ward_cvi
+```
+
+```{r}
+table(peru_U_hc_dtw_ward$k_2@cluster)
+table(peru_U_hc_dtw_ward$k_3@cluster)
+table(peru_U_hc_dtw_ward$k_4@cluster)
+table(peru_U_hc_dtw_ward$k_5@cluster)
+```
+
+```{r}
+dend_peru_U_dtw_ward <- as.dendrogram(peru_U_hc_dtw_ward$k_2)
+
+p_peru_U_dtw_ward <- as.ggplot(
+  ~{plot(dend_peru_U_dtw_ward, leaflab = "none", main = "Ward linkage", ylab = "Height")
+  }
+)
+```
+
+```{r}
+p_peru_U_dtw_ward
+```
+
+```{r}
+# Object for combined plot later
+dtw_sil_ward_peru_U <- as.numeric(
+  peru_U_ward_cvi["Sil", ]
+)
+```
+
+**Combining Peru (F) plots**
+
+```{r}
+# Combining silhouette scores for each linkage type
+peru_F_dtw_sil_plot_data <- data.frame(
+  k = rep(2:5, times = 3),
+  silhouette = c(
+    dtw_sil_ward,
+    dtw_sil_avg,
+    dtw_sil_comp
+  ),
+  linkage = rep(
+    c("Ward", "Average", "Complete"),
+    each = 4
+  )
+)
+```
+
+```{r}
+p_peru_F_dtw_sil <- ggplot(
+  peru_F_dtw_sil_plot_data,
+  aes(
+    x = k,
+    y = silhouette,
+    group = linkage,
+    linetype = linkage,
+    shape = linkage
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Average silhouette score",
+    x = "Number of clusters",
+    y = "Average silhouette score",
+    linetype = "Linkage",
+    shape = "Linkage"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom"
+  )
+```
+
+```{r}
+p_peru_F_dtw_sil
+```
+
+```{r}
+# Combined Dendrograms
+# Ward
+dend_peru_F_dtw_ward <- as.dendrogram(
+  peru_F_hc_dtw_ward$k_2
+)
+
+p_peru_F_dtw_ward <- as.ggplot(~{
+  par(mar = c(2, 4, 5, 1))
+  
+  plot(
+    dend_peru_F_dtw_ward,
+    leaflab = "none",
+    main = "Ward linkage",
+    xlab = "",
+    ylab = "Height"
+  )
+})
+
+dend_peru_F_dtw_avg <- as.dendrogram(
+  peru_F_hc_dtw_avg$k_2
+)
+
+p_peru_F_dtw_avg <- as.ggplot(~{
+  par(mar = c(2, 4, 5, 1))
+  
+  plot(
+    dend_peru_F_dtw_avg,
+    leaflab = "none",
+    main = "Average linkage",
+    xlab = "",
+    ylab = "Height"
+  )
+})
+
+dend_peru_F_dtw_comp <- as.dendrogram(
+  peru_F_hc_dtw$k_2
+)
+
+p_peru_F_dtw_comp <- as.ggplot(~{
+  par(mar = c(2, 4, 5, 1))
+  
+  plot(
+    dend_peru_F_dtw_comp,
+    leaflab = "none",
+    main = "Complete linkage",
+    xlab = "",
+    ylab = "Height"
+  )
+})
+```
+
+```{r}
+# Final Combined Plot
+
+fig_peru_F_dtw_hc <- (
+  p_peru_F_dtw_ward |
+    p_peru_F_dtw_avg |
+    p_peru_F_dtw_comp
+) /
+  p_peru_F_dtw_sil +
+  plot_layout(
+    heights = c(1.15, 1)
+  ) +
+  plot_annotation(
+    title = "Peru (F): DTW hierarchical clustering results",
+    theme = theme(
+      plot.title = element_text(
+        size = 16,
+        face = "bold",
+        margin = margin(b = 10)
+      )
+    )
+  )
+```
+
+```{r}
+fig_peru_F_dtw_hc
+```
+
+```{r}
+ggsave(
+  filename = "peru_F_DTW_hierarchical_summary.png",
+  plot = fig_peru_F_dtw_hc,
+  width = 14,
+  height = 9.5,
+  units = "in",
+  dpi = 300,
+  limitsize = FALSE
+)
+```
+
+**Combining Peru (U) plots**
+
+```{r}
+# Combining silhouette scores for each linkage type
+peru_U_dtw_sil_plot_data <- data.frame(
+  k = rep(2:5, times = 3),
+  silhouette = c(
+    dtw_sil_ward_peru_U,
+    dtw_sil_avg_peru_U,
+    dtw_sil_comp_peru_U
+  ),
+  linkage = rep(
+    c("Ward", "Average", "Complete"),
+    each = 4
+  )
+)
+```
+
+```{r}
+p_peru_U_dtw_sil <- ggplot(
+  peru_U_dtw_sil_plot_data,
+  aes(
+    x = k,
+    y = silhouette,
+    group = linkage,
+    linetype = linkage,
+    shape = linkage
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Average silhouette score",
+    x = "Number of clusters",
+    y = "Average silhouette score",
+    linetype = "Linkage",
+    shape = "Linkage"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom"
+  )
+```
+
+```{r}
+p_peru_U_dtw_sil
+```
+
+```{r}
+# Combined Dendrograms
+# Ward
+dend_peru_U_dtw_ward <- as.dendrogram(
+  peru_U_hc_dtw_ward$k_2
+)
+
+p_peru_U_dtw_ward <- as.ggplot(~{
+  par(mar = c(2, 4, 5, 1))
+  
+  plot(
+    dend_peru_U_dtw_ward,
+    leaflab = "none",
+    main = "Ward linkage",
+    xlab = "",
+    ylab = "Height"
+  )
+})
+
+dend_peru_U_dtw_avg <- as.dendrogram(
+  peru_U_hc_dtw_avg$k_2
+)
+
+p_peru_U_dtw_avg <- as.ggplot(~{
+  par(mar = c(2, 4, 5, 1))
+  
+  plot(
+    dend_peru_U_dtw_avg,
+    leaflab = "none",
+    main = "Average linkage",
+    xlab = "",
+    ylab = "Height"
+  )
+})
+
+dend_peru_U_dtw_comp <- as.dendrogram(
+  peru_U_hc_dtw$k_2
+)
+
+p_peru_U_dtw_comp <- as.ggplot(~{
+  par(mar = c(2, 4, 5, 1))
+  
+  plot(
+    dend_peru_U_dtw_comp,
+    leaflab = "none",
+    main = "Complete linkage",
+    xlab = "",
+    ylab = "Height"
+  )
+})
+```
+
+```{r}
+# Final Combined Plot
+
+fig_peru_U_dtw_hc <- (
+  p_peru_U_dtw_ward |
+    p_peru_U_dtw_avg |
+    p_peru_U_dtw_comp
+) /
+  p_peru_U_dtw_sil +
+  plot_layout(
+    heights = c(1.15, 1)
+  ) +
+  plot_annotation(
+    title = "Peru (U): DTW hierarchical clustering results",
+    theme = theme(
+      plot.title = element_text(
+        size = 16,
+        face = "bold",
+        margin = margin(b = 10)
+      )
+    )
+  )
+```
+
+```{r}
+fig_peru_U_dtw_hc
+```
+
+```{r}
+ggsave(
+  filename = "peru_U_DTW_hierarchical_summary.png",
+  plot = fig_peru_U_dtw_hc,
+  width = 14,
+  height = 9.5,
+  units = "in",
+  dpi = 300,
+  limitsize = FALSE
+)
+```
+
+#### **2.8.4 Export for ArcGIS**
+
+We choose to export our average linkage results for both Peru cases as they resulted in the best quantitative results for cluster separation (silhouette score), and the dendrograms visually improved from our Euclidean results.
+
+We can also export a series plot to examine:
+
+- We choose to only export plots for k = 2 and k = 3 as the validation metrics show that clsutering quality declines after k = 2.
+
+```{r}
+# Peru (F)
+# k = 2, 3, 4, 5
+peru_failed$dtw_avg_2 <- peru_F_hc_dtw_avg$k_2@cluster
+peru_failed$dtw_avg_3 <- peru_F_hc_dtw_avg$k_3@cluster
+peru_failed$dtw_avg_4 <- peru_F_hc_dtw_avg$k_4@cluster
+peru_failed$dtw_avg_5 <- peru_F_hc_dtw_avg$k_5@cluster
+```
+
+```{r}
+write.csv(peru_failed,
+          "peru_F_dtw_avg.csv",
+          row.names = FALSE)
+```
+
+```{r}
+# Peru (U)
+# k = 2, 3, 4, 5
+peru_unfailed$dtw_avg_2 <- peru_U_hc_dtw_avg$k_2@cluster
+peru_unfailed$dtw_avg_3 <- peru_U_hc_dtw_avg$k_3@cluster
+peru_unfailed$dtw_avg_4 <- peru_U_hc_dtw_avg$k_4@cluster
+peru_unfailed$dtw_avg_5 <- peru_U_hc_dtw_avg$k_5@cluster
+```
+
+```{r}
+write.csv(peru_unfailed,
+          "peru_U_dtw_avg.csv",
+          row.names = FALSE)
+```
+
+## 3. K-means Clustering
+
+We experiment with another unsupervised clustering algorithm, K-means clustering. It is an iterative process that aims to minimise the sum of distances between the data points anscd their cluster centroids (centres). It partitions a dataset into similar groups based on these distances. The centroid, or cluster centre, is either the mean of median of all the points within the cluster depending on the data.
+
+Like in hierarchical clustering, we can define the similarity using a distance measure. For consistency, we will use Euclidean distance, but this could be a future aspect of comparison. However, unlike our previous method, the number of clusters, k, must be determined before running the algorithm. A larger k value often results in smaller clusters with greater detail, while a lower k value results in larger clusters with less detail.
+
+The process is:
+
+1.  Initialise by randomly selecting/partitioning the data into k cluster centroids.
+2.  Assign each data point to its nearest centroid (Euclidean distance), forming clusters.
+3.  Recalculate the centroid of each cluster by averaging the points within it.
+4.  Repeat from step 2 until no more reassignments take place (and the cluster centroids stop moving).
+
+This method is considered simple but is also sensitive to initial conditions and outliers. Achieving the optimal number of clusters is a main problem due to its subjectivity and no definitive solution. We can apply a few methods that help in choosing the optimal k value, and check with other cluster evaluation metrics and compare with our previous method.
+
+### 3.1 Elbow Method
+
+We can explore an initial number of clusters to try and compare if it is within our k-range results from the hierarchical clustering. The elbow method is a graphical method for finding the optimal k value by plotting the within-cluster-sum-of-square (WCSS) values on the y-axis against different values of k on the x-axis. The "elbow" is where the plotted line bends, forming an "elbow" shape and representing where the optimal k improvement slows down.
+
+WCSS is the sum of square distance between data points in a cluster and the cluster centroid, measuring how close points are clustered around their corresponding centroid. WCSS always decreases as k increases because more clusters reduce the internal spread. The elbow indicates the point where adding more clusters no longer gives meaningful improvement. A larger/quicker WCSS drop means that the cluster spread is much better. The total within-cluster sum of squares is what we aim to minimise by performing k-means clustering.
+
+```{r}
+fviz_nbclust(cadia_D_clust, kmeans, method = "wss") + ggtitle("Optimal number of clusters: Cadia")
+fviz_nbclust(peru_D_F_clust, kmeans, method = "wss") + ggtitle("Optimal number of clusters: Peru (F)")
+fviz_nbclust(peru_D_U_clust, kmeans, method = "wss") + ggtitle("Optimal number of clusters: Peru (U)")
+fviz_nbclust(feijao_D_53_clust, kmeans, method = "wss") + ggtitle("Optimal number of clusters: Feijao (T53)")
+fviz_nbclust(feijao_D_155_clust, kmeans, method = "wss") + ggtitle("Optimal number of clusters: Feijao (T155)")
+```
+
+```{r}
+# Storing elbow plots for presentation
+
+p_elbow_cadia <- fviz_nbclust(cadia_D_clust, kmeans, method = "wss") + ggtitle("Optimal number of clusters: Cadia")
+
+p_elbow_peru_F <- fviz_nbclust(peru_D_F_clust, kmeans, method = "wss") + ggtitle("Optimal number of clusters: Peru (F)")
+
+p_elbow_peru_U <- fviz_nbclust(peru_D_U_clust, kmeans, method = "wss") + ggtitle("Optimal number of clusters: Peru (U)")
+
+p_elbow_feijao_53<- fviz_nbclust(feijao_D_53_clust, kmeans, method = "wss") + ggtitle("Optimal number of clusters: Feijao (T53)")
+
+p_elbow_feijao_155 <- fviz_nbclust(feijao_D_155_clust, kmeans, method = "wss") + ggtitle("Optimal number of clusters: Feijao (T155)")
+```
+
+- Cadia: Elbow around k = 3, 4
+
+- Peru (failed): Elbow around k = 3, 4
+
+- Peru (unfailed): Elbow around k = 3, 4
+
+- Feijao (T53): Elbow around k = 3, 4
+
+- Feijao (T155): Elbow around k = 3, 4
+
+Our resulting elbow plots are fairly consistent, even between datasets. The k range is within our k range from the hierarchical clustering dendrograms, however favouring k = 3, 4 rather than k = 2 (from the highest average silhouette scores).
+
+### 3.2 Average Silhouette Score
+
+We can calculate the average silhouette score as we did for hierarchical clustering, but can also plot our results in a form similar to the elbow method. The y-axis is the average silhouette width and the x-axis is the number of clusters k.
+
+```{r}
+fviz_nbclust(cadia_D_clust, kmeans, method = "silhouette") + ggtitle("Optimal number of clusters: Cadia")
+
+fviz_nbclust(peru_D_F_clust, kmeans, method = "silhouette") + ggtitle("Optimal number of clusters: Peru (F)")
+fviz_nbclust(peru_D_U_clust, kmeans, method = "silhouette") + ggtitle("Optimal number of clusters: Peru (U)")
+
+fviz_nbclust(feijao_D_53_clust, kmeans, method = "silhouette") + ggtitle("Optimal number of clusters: Feijao (T53)")
+
+fviz_nbclust(feijao_D_155_clust, kmeans, method = "silhouette") + ggtitle("Optimal number of clusters: Feijao (T155)")
+```
+
+```{r}
+# Storing the plots for presentation
+
+p_km_sil_cadia <- fviz_nbclust(cadia_D_clust, kmeans, method = "silhouette") + ggtitle("Avg Silhouette Score: Cadia")
+
+p_km_sil_peru_F <- fviz_nbclust(peru_D_F_clust, kmeans, method = "silhouette") + ggtitle("Avg Silhouette Score: Peru (F)")
+
+p_km_sil_peru_U <- fviz_nbclust(peru_D_U_clust, kmeans, method = "silhouette") + ggtitle("Avg Silhouette Score: Peru (U)")
+
+p_km_sil_feijao_53 <- fviz_nbclust(feijao_D_53_clust, kmeans, method = "silhouette") + ggtitle("Avg Silhouette Scores: Feijao (T53)")
+
+p_km_sil_feijao_155 <- fviz_nbclust(feijao_D_155_clust, kmeans, method = "silhouette") + ggtitle("Avg Silhouette Score: Feijao (T155)")
+```
+
+All resulting plots suggest k = 2 for the optimal number of clusters. The Feijao plots both show a steeper peak compared to the otehr plots, and the Cadia plot and Peru (unfailed) plot peaks' at k = 3 are similar height to k = 2.
+
+### 3.3 Applying K-means clustering
+
+We will apply k-means for each k value in our range (k = 2-5):
+
+- nstart = 20: Chosen over a lower value as a undesirable local optimum may be obtained.
+
+```{r}
+# Cadia
+set.seed(1234)
+
+cadia_km_2 <- kmeans(cadia_D_clust, centers = 2, nstart = 20)
+cadia_km_3 <- kmeans(cadia_D_clust, centers = 3, nstart = 20)
+cadia_km_4 <- kmeans(cadia_D_clust, centers = 4, nstart = 20)
+cadia_km_5 <- kmeans(cadia_D_clust, centers = 5, nstart = 20)
+```
+
+```{r}
+# Inspect cluster labels
+table(cadia_km_2$cluster)
+table(cadia_km_3$cluster)
+table(cadia_km_4$cluster)
+table(cadia_km_5$cluster)
+```
+
+```{r}
+# Peru (failed)
+peru_F_km_2 <- kmeans(peru_D_F_clust, centers = 2, nstart = 20)
+peru_F_km_3 <- kmeans(peru_D_F_clust, centers = 3, nstart = 20)
+peru_F_km_4 <- kmeans(peru_D_F_clust, centers = 4, nstart = 20)
+peru_F_km_5 <- kmeans(peru_D_F_clust, centers = 5, nstart = 20)
+```
+
+```{r}
+table(peru_F_km_2$cluster)
+table(peru_F_km_3$cluster)
+table(peru_F_km_4$cluster)
+table(peru_F_km_5$cluster)
+```
+
+```{r}
+# Peru (unfailed)
+peru_U_km_2 <- kmeans(peru_D_U_clust, centers = 2, nstart = 20)
+peru_U_km_3 <- kmeans(peru_D_U_clust, centers = 3, nstart = 20)
+peru_U_km_4 <- kmeans(peru_D_U_clust, centers = 4, nstart = 20)
+peru_U_km_5 <- kmeans(peru_D_U_clust, centers = 5, nstart = 20)
+```
+
+```{r}
+table(peru_U_km_2$cluster)
+table(peru_U_km_3$cluster)
+table(peru_U_km_4$cluster)
+table(peru_U_km_5$cluster)
+```
+
+```{r}
+# Feijao (T53)
+feijao_53_km_2 <- kmeans(feijao_D_53_clust, centers = 2, nstart = 20)
+feijao_53_km_3 <- kmeans(feijao_D_53_clust, centers = 3, nstart = 20)
+feijao_53_km_4 <- kmeans(feijao_D_53_clust, centers = 4, nstart = 20)
+feijao_53_km_5 <- kmeans(feijao_D_53_clust, centers = 5, nstart = 20)
+```
+
+```{r}
+table(feijao_53_km_2$cluster)
+table(feijao_53_km_3$cluster)
+table(feijao_53_km_4$cluster)
+table(feijao_53_km_5$cluster)
+```
+
+```{r}
+# Feijao (T155)
+feijao_155_km_2 <- kmeans(feijao_D_155_clust, centers = 2, nstart = 20)
+feijao_155_km_3 <- kmeans(feijao_D_155_clust, centers = 3, nstart = 20)
+feijao_155_km_4 <- kmeans(feijao_D_155_clust, centers = 4, nstart = 20)
+feijao_155_km_5 <- kmeans(feijao_D_155_clust, centers = 5, nstart = 20)
+```
+
+```{r}
+table(feijao_155_km_2$cluster)
+table(feijao_155_km_3$cluster)
+table(feijao_155_km_4$cluster)
+table(feijao_155_km_5$cluster)
+```
+
+### 3.4 Validation Metrics
+
+#### **3.4.1** PCA Plots
+
+We can try to plot our results using the function below.
+
+```{r}
+plot_cadia_km2 <- fviz_cluster(cadia_km_2,
+                   data = cadia_D_clust,
+                   geom = "point",
+                   ellipse.type = "convex",
+                   ggtheme = theme_bw()
+) + ggtitle("k = 2")
+plot_cadia_km3 <- fviz_cluster(cadia_km_3,
+                   data = cadia_D_clust,
+                   geom = "point",
+                   ellipse.type = "convex",
+                   ggtheme = theme_bw()
+) + ggtitle("k = 3")
+plot_cadia_km4 <- fviz_cluster(cadia_km_4,
+                   data = cadia_D_clust,
+                   geom = "point",
+                   ellipse.type = "convex",
+                   ggtheme = theme_bw()
+) + ggtitle("k = 4")
+plot_cadia_km5 <- fviz_cluster(cadia_km_5,
+                   data = cadia_D_clust,
+                   geom = "point",
+                   ellipse.type = "convex",
+                   ggtheme = theme_bw()
+) + ggtitle("k = 5")
+
+```
+
+```{r}
+# Combine and compare plots of clusters: Cadia
+grid.arrange(plot_cadia_km2, plot_cadia_km3, plot_cadia_km4, plot_cadia_km5, nrow = 2)
+```
+
+- As our data includes more than 2 variables, the function performs principal component analysis (PCA) and plots the data points according to the first 2 principal components that explain majority of the variance.
+
+#### **3.4.2 Silhouette Score**
+
+```{r}
+# Helper function for K-means
+average_sil_score_km <- function(km_models, d_mat){
+  
+  avg_sil <- numeric(length(km_models))
+  
+  for(i in seq_along(km_models)){
+    
+    sil_score <- silhouette(
+      km_models[[i]]$cluster,
+      d_mat
+    )
+    
+    avg_sil[i] <- mean(sil_score[,3])
+    
+  }
+  
+  data.frame(
+    k = 2:5,
+    avg_silhouette_score = avg_sil
+  )
+  
+}
+```
+
+```{r}
+(cadia_sil_km <- average_sil_score_km(
+  list(cadia_km_2,
+       cadia_km_3,
+       cadia_km_4,
+       cadia_km_5),
+  dist(cadia_D_clust)
+))
+```
+
+```{r}
+# Peru (failed)
+peru_F_sil_km <- average_sil_score_km(
+  list(
+    peru_F_km_2,
+    peru_F_km_3,
+    peru_F_km_4,
+    peru_F_km_5
+  ),
+  dist(peru_D_F_clust)
+)
+
+# Peru (unfailed)
+peru_U_sil_km <- average_sil_score_km(
+  list(
+    peru_U_km_2,
+    peru_U_km_3,
+    peru_U_km_4,
+    peru_U_km_5
+  ),
+  dist(peru_D_U_clust)
+)
+
+# Feijao (T53)
+feijao_53_sil_km <- average_sil_score_km(
+  list(
+    feijao_53_km_2,
+    feijao_53_km_3,
+    feijao_53_km_4,
+    feijao_53_km_5
+  ),
+  dist(feijao_D_53_clust)
+)
+
+# Feijao (T155)
+feijao_155_sil_km <- average_sil_score_km(
+  list(
+    feijao_155_km_2,
+    feijao_155_km_3,
+    feijao_155_km_4,
+    feijao_155_km_5
+  ),
+  dist(feijao_D_155_clust)
+)
+```
+
+```{r}
+library(dplyr)
+
+cadia_compare <- cadia_sil_hc_ward %>%
+  rename(Hierarchical = avg_silhouette_score) %>%
+  left_join(
+    cadia_sil_km %>%
+      rename(`K-means` = avg_silhouette_score),
+    by = "k"
+  )
+
+peru_F_compare <- peru_F_sil_hc_ward %>%
+  rename(Hierarchical = avg_silhouette_score) %>%
+  left_join(
+    peru_F_sil_km %>%
+      rename(`K-means` = avg_silhouette_score),
+    by = "k"
+  )
+
+peru_U_compare <- peru_U_sil_hc_ward %>%
+  rename(Hierarchical = avg_silhouette_score) %>%
+  left_join(
+    peru_U_sil_km %>%
+      rename(`K-means` = avg_silhouette_score),
+    by = "k"
+  )
+
+feijao_53_compare <- feijao_53_sil_hc_ward %>%
+  rename(Hierarchical = avg_silhouette_score) %>%
+  left_join(
+    feijao_53_sil_km %>%
+      rename(`K-means` = avg_silhouette_score),
+    by = "k"
+  )
+
+feijao_155_compare <- feijao_155_sil_hc_ward %>%
+  rename(Hierarchical = avg_silhouette_score) %>%
+  left_join(
+    feijao_155_sil_km %>%
+      rename(`K-means` = avg_silhouette_score),
+    by = "k"
+  )
+```
+
+```{r}
+cadia_compare
+peru_F_compare
+peru_U_compare
+feijao_53_compare
+feijao_155_compare
+```
+
+Interpretation:
+
+#### **3.4.3** Davies-Bouldin Index
+
+The Davies-Bouldin Index (DBI) is also used to evaluate the quality of clustering algorithms. It measures the average similarity between each cluster and its most similar one based on size and separation. A lower DBI value indicates better clustering quality, meaning well-separated and compact clusters.
+
+```{r}
+# Helper function
+dbi_km <- function(data, km_models, k_vals = 2:5) {
+  
+  db_vals <- numeric(length(km_models))
+  
+  for (i in seq_along(k_vals)) {
+    db_vals[i] <- index.DB(
+      data,
+      km_models[[i]]$cluster
+    )$DB
+  }
+  
+  data.frame(
+    k = k_vals,
+    davies_bouldin = db_vals
+  )
+}
+```
+
+```{r}
+# Cadia list
+cadia_db_km <- dbi_km(
+  cadia_D_clust,
+  list(
+    cadia_km_2,
+    cadia_km_3,
+    cadia_km_4,
+    cadia_km_5
+  )
+)
+
+# Peru (failed)
+peru_F_db_km <- dbi_km(
+  peru_D_F_clust,
+  list(
+    peru_F_km_2,
+    peru_F_km_3,
+    peru_F_km_4,
+    peru_F_km_5
+  )
+)
+
+# Peru (unfailed)
+peru_U_db_km <- dbi_km(
+  peru_D_U_clust,
+  list(
+    peru_U_km_2,
+    peru_U_km_3,
+    peru_U_km_4,
+    peru_U_km_5
+  )
+)
+
+# Feijao (T53)
+feijao_53_db_km <- dbi_km(
+  feijao_D_53_clust,
+  list(
+    feijao_53_km_2,
+    feijao_53_km_3,
+    feijao_53_km_4,
+    feijao_53_km_5
+  )
+)
+
+# Feijao (T155)
+feijao_155_db_km <- dbi_km(
+  feijao_D_155_clust,
+  list(
+    feijao_155_km_2,
+    feijao_155_km_3,
+    feijao_155_km_4,
+    feijao_155_km_5
+  )
+)
+```
+
+```{r}
+cadia_db_km
+peru_F_db_km
+peru_U_db_km
+feijao_53_db_km
+feijao_155_db_km
+```
+
+```{r}
+p_db_cadia <- ggplot(
+  cadia_db_km,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin index",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+
+p_db_peru_F <- ggplot(
+  peru_F_db_km,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin index",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+
+
+p_db_peru_U <- ggplot(
+  peru_U_db_km,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin index",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+
+p_db_feijao_53 <- ggplot(
+  feijao_53_db_km,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin index",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+
+p_db_feijao_155 <- ggplot(
+  feijao_155_db_km,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin index",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+```
+
+The DBI values range from different values for each dataset. In all cases, k = 2 results in the lowest DBI value, increasing as k increases. Combining this with our silhouette score results and elbow method results, our "ideal" k-value is somewhere within the range retrieved from the previous hierarchical clustering (k = 2, 3, 4, 5). As clustering remains exploratory, and it is difficult to made a clear decision on the "best" number of clusters for each method, we will continue to experiment with a range of k-values and compare.
+
+#### **3.4.4** Cluster time-series comparison plots
+
+```{r}
+
+cadia_km_plot <- as.data.frame(cadia_D)
+
+# Give every spatial point an ID
+cadia_km_plot$point <- seq_len(nrow(cadia_km_plot))
+
+# Add K-means cluster membership
+cadia_km_plot$cluster <- factor(cadia_km_3$cluster)
+
+
+# ----------------------------------------
+# 2. Convert from wide to long format
+# ----------------------------------------
+
+cadia_km_long <- cadia_km_plot |>
+  pivot_longer(
+    cols = -c(point, cluster),
+    names_to = "time",
+    values_to = "displacement"
+  )
+
+# Keep dates/times in their original order
+cadia_km_long$time <- factor(
+  cadia_km_long$time,
+  levels = colnames(cadia_D)
+)
+
+
+# ----------------------------------------
+# 3. Plot ALL time-series
+# ----------------------------------------
+
+p_cadia_raw_km3 <- ggplot(
+  cadia_km_long,
+  aes(
+    x = time,
+    y = displacement,
+    group = point,
+    colour = factor(point)
+  )
+) +
+  geom_line(alpha = 0.4) +
+  facet_wrap(~ cluster) +
+  guides(colour = "none") +
+  labs(
+    title = "Cadia: Raw K-means, k = 3",
+    x = "Time",
+    y = "Cumulative displacement (mm)"
+  ) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()
+  )
+
+p_cadia_raw_km3
+```
+
+```{r}
+ggsave(
+  "cadia_km_3_ts_plot.png",
+  p_cadia_raw_km3,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+### 3.5 Combine plots for presentation
+
+```{r}
+fig_kmeans_cadia <-
+  (
+    p_elbow_cadia |
+      p_km_sil_cadia |
+      p_db_cadia
+  ) +
+  plot_annotation(
+    title = "Cadia: K-means clustering evaluation"
+  )
+
+
+fig_kmeans_peru_F <-
+  (
+    p_elbow_peru_F |
+      p_km_sil_peru_F |
+      p_db_peru_F
+  ) +
+  plot_annotation(
+    title = "Peru F: K-means clustering evaluation"
+  )
+
+fig_kmeans_peru_U <-
+  (
+    p_elbow_peru_U |
+      p_km_sil_peru_U |
+      p_db_peru_U
+  ) +
+  plot_annotation(
+    title = "Peru U: K-means clustering evaluation"
+  )
+
+fig_kmeans_feijao_53 <-
+  (
+    p_elbow_feijao_53 |
+      p_km_sil_feijao_53 |
+      p_db_feijao_53
+  ) +
+  plot_annotation(
+    title = "Feijao (T53): K-means clustering evaluation"
+  )
+
+fig_kmeans_feijao_155 <-
+  (
+    p_elbow_feijao_155 |
+      p_km_sil_feijao_155 |
+      p_db_feijao_155
+  ) +
+  plot_annotation(
+    title = "Feijao (T155): K-means clustering evaluation"
+  )
+```
+
+```{r}
+ggsave(
+  "cadia_kmeans_summary.png",
+  fig_kmeans_cadia,
+  width = 14,
+  height = 5,
+  dpi = 300
+)
+```
+
+```{r}
+ggsave(
+  "peru_F_kmeans_summary.png",
+  fig_kmeans_peru_F,
+  width = 14,
+  height = 5,
+  dpi = 300
+)
+```
+
+```{r}
+ggsave(
+  "peru_U_kmeans_summary.png",
+  fig_kmeans_peru_U,
+  width = 14,
+  height = 5,
+  dpi = 300
+)
+```
+
+```{r}
+ggsave(
+  "feijao_53_kmeans_summary.png",
+  fig_kmeans_feijao_53,
+  width = 14,
+  height = 5,
+  dpi = 300
+)
+```
+
+```{r}
+ggsave(
+  "feijao_155_kmeans_summary.png",
+  fig_kmeans_feijao_155,
+  width = 14,
+  height = 5,
+  dpi = 300
+)
+```
+
+### 3.6 Apply cluster IDs and export
+
+```{r}
+cadia$km_2 <- cadia_km_2$cluster
+cadia$km_3 <- cadia_km_3$cluster
+cadia$km_4 <- cadia_km_4$cluster
+cadia$km_5 <- cadia_km_5$cluster
+
+write.csv(
+  cadia,
+  "cadia_km.csv",
+  row.names = FALSE
+)
+```
+
+```{r}
+nrow(cadia)
+length(cadia_km_2$cluster)
+```
+
+```{r}
+peru_failed$km_2 <- peru_F_km_2$cluster
+peru_failed$km_3 <- peru_F_km_3$cluster
+peru_failed$km_4 <- peru_F_km_4$cluster
+peru_failed$km_5 <- peru_F_km_5$cluster
+```
+
+```{r}
+write.csv(
+  peru_failed,
+  "peru_F_km.csv",
+  row.names = FALSE
+)
+```
+
+```{r}
+peru_unfailed$km_2 <- peru_U_km_2$cluster
+peru_unfailed$km_3 <- peru_U_km_3$cluster
+peru_unfailed$km_4 <- peru_U_km_4$cluster
+peru_unfailed$km_5 <- peru_U_km_5$cluster
+```
+
+```{r}
+write.csv(
+  peru_unfailed,
+  "peru_U_km.csv",
+  row.names = FALSE
+)
+```
+
+```{r}
+feijao_53$km_2 <- feijao_53_km_2$cluster
+feijao_53$km_3 <- feijao_53_km_3$cluster
+feijao_53$km_4 <- feijao_53_km_4$cluster
+feijao_53$km_5 <- feijao_53_km_5$cluster
+```
+
+```{r}
+write.csv(
+  feijao_53,
+  "feijao_53_km.csv",
+  row.names = FALSE
+)
+```
+
+```{r}
+feijao_155$km_2 <- feijao_155_km_2$cluster
+feijao_155$km_3 <- feijao_155_km_3$cluster
+feijao_155$km_4 <- feijao_155_km_4$cluster
+feijao_155$km_5 <- feijao_155_km_5$cluster
+```
+
+```{r}
+write.csv(
+  feijao_155,
+  "feijao_155_km.csv",
+  row.names = FALSE
+)
+```
+
+We will compare our results visually by projecting the cluster assignments on ArcGIS Pro.
+
+## 4. DBSCAN
+
+Density-Based Spatial Clustering of Applications with Noise (DBSCAN) is a density-based clustering algorithm that can identify clusters of any shape in data that contains noise and outliers. Our previous methods, K-means and hierarchical clustering, work well only for compact, well-separated, spherical clusters and are sensitive to outliers. DBSCAN works well with data containing outliers, as it can recognise arbitrary shapes and explicitly flag outliers as noise. It also does not require a predetermined number of clusters. Instead, it finds the clusters from the density.
+
+DBSCAN measures density as the number of points close to a given point, controlled by parameters:
+
+- epsilon (eps): The radius of the neighbourhood around a point
+
+- min_pts: The minimum number of points that must fall inside the radius for a region to count as "dense".
+
+The data points can also be categorised as:
+
+- A core point: A point that has at least min_pts number of neighbours within epsilon (meaning inside a dense region).
+
+- A border point: A point that has fewer than min_pts number of neighbours, but still lies within the $\epsilon$-neighbourhood.
+
+- A noise point (outlier): Neither core nor border point, and does not belong to a cluster.
+
+A long sequence of neighbouring core instances forms a single cluster: A core point that absorbs every point reachable through chains of overlapping dense neighbourhoods. The outliers do not reach the chains and are left as noise.
+
+### 4.1 Choosing minPts and epsilon
+
+The value for minPts is selected based on domain knowledge, but without such context, a general rule is:
+
+- Use the dimensions D (features) in the dataset and calculate 2 \* D or min_pts \>= D + 1.
+
+- A default for minPts is 5 when dealing with 2D data and multivariate/time-series data. We can increase it to make it harder for sparse or accidental groups to become clusters.
+
+- The general rule is that the larger and noisier the data, the larger its value should be. We can experiment with hyperparameters and compare results.
+
+Choosing the value for epsilon is important as if it is too small, dense clusters fracture into noise, and too large causes separate clusters to merge. We can use a k-nearest neighbours distance plot to choose epsilon.
+
+Process:
+
+- For every point, compute the distance to its k-th nearest neighbour (where k = min_pts).
+
+- Sort the resulting distances in ascending order and plot them.
+
+- Points inside a cluster have small k-NN distances and points in sparse regions have large k-NN distances.
+
+- The split/boundary between clusters and noise is generally therefore where the bend of the plot sharply moves upward, forming a "knee". We choose the "knee" value as epsilon.
+
+```{r}
+par(mfrow=c(1,2))
+p_knn_cadia <- as.ggplot(
+  ~ {
+    kNNdistplot(cadia_D_clust, k = 5)
+    abline(h = 40, col = "red", lty = 2)
+  }
+)
+```
+
+- The plot for Cadia suggests a split around distance 40.
+
+```{r}
+p_knn_peru_F <- as.ggplot(
+  ~ {
+    kNNdistplot(peru_D_F_clust, k = 5)
+    abline(h = 50, lty = 2, col = "red")
+  }
+)
+
+p_knn_peru_U <- as.ggplot(
+  ~ {
+    kNNdistplot(peru_D_U_clust, k = 5)
+    abline(h = 50, lty = 2, col = "red")
+  }
+)
+```
+
+- The plots for Peru's two datasets appear very similar, with a knee at around 50.
+
+```{r}
+p_knn_feijao_53 <- as.ggplot(
+  ~ {
+    kNNdistplot(feijao_D_53_clust, k = 5)
+    abline(h = 45, lty = 2, col = "red")
+  }
+)
+
+p_knn_feijao_155 <- as.ggplot(
+  ~ {
+    kNNdistplot(feijao_D_155_clust, k = 5)
+    abline(h = 45, lty = 2, col = "red")
+  }
+)
+```
+
+- The knee for Feijao's T53 dataset is appears slightly higher than the T155 dataset, but both are around 45.
+
+### 4.2 Applying DBSCAN
+
+For each case study, we apply the hyperparameters epsilon, retrieved from the k-NN plots, and minPts = 5 as a baseline:
+
+```{r}
+set.seed(1234)
+
+# Cadia
+cadia_dbs_30 <- dbscan(cadia_D_clust, eps = 30, minPts = 5)
+cadia_dbs_35 <- dbscan(cadia_D_clust, eps = 35, minPts = 5)
+cadia_dbs_40 <- dbscan(cadia_D_clust, eps = 40, minPts = 5)
+cadia_dbs_40_10 <- dbscan(cadia_D_clust, eps = 40, minPts = 10)
+
+cadia_dbs_30
+cadia_dbs_35
+cadia_dbs_40
+cadia_dbs_40_10
+```
+
+- The results split into very uneven distributed clusters.
+
+```{r}
+cadia_dbs_40_46 <- dbscan(cadia_D_clust, eps = 40, minPts = 46)
+cadia_dbs_40_46
+
+cadia_dbs_40_90 <- dbscan(cadia_D_clust, eps = 40, minPts = 90)
+cadia_dbs_40_90
+```
+
+<!-- -->
+
+- To try and split the data more evenly, we can see if scaling the data before clustering makes a difference:
+
+```{r}
+cadia_D_clust_scaled <- scale(cadia_D_clust)
+```
+
+```{r}
+kNNdistplot(cadia_D_clust_scaled, k = 5)
+```
+
+- Based on the plot, we can try eps values between 3 and 5.
+
+```{r}
+cadia_scaled_dbs_3 <- dbscan(cadia_D_clust_scaled, eps = 3.0, minPts = 5)
+cadia_scaled_dbs_4 <- dbscan(cadia_D_clust_scaled, eps = 4.0, minPts = 5)
+
+cadia_scaled_dbs_3
+```
+
+```{r}
+# Peru (failed)
+peru_F_dbs_30 <- dbscan(peru_D_F_clust, eps = 30, minPts = 5)
+peru_F_dbs_40 <- dbscan(peru_D_F_clust, eps = 40, minPts = 5)
+peru_F_dbs_45 <- dbscan(peru_D_F_clust, eps = 45, minPts = 5)
+peru_F_dbs_50 <- dbscan(peru_D_F_clust, eps = 50, minPts = 5)
+
+peru_F_dbs_30
+peru_F_dbs_40
+peru_F_dbs_45
+peru_F_dbs_50
+```
+
+```{r}
+# Peru (unfailed)
+peru_U_dbs_30 <- dbscan(peru_D_U_clust, eps = 30, minPts = 5)
+peru_U_dbs_40 <- dbscan(peru_D_U_clust, eps = 40, minPts = 5)
+peru_U_dbs_45 <- dbscan(peru_D_U_clust, eps = 45, minPts = 5)
+peru_U_dbs_50 <- dbscan(peru_D_U_clust, eps = 50, minPts = 5)
+
+peru_U_dbs_30
+peru_U_dbs_40
+peru_U_dbs_45
+peru_U_dbs_50
+```
+
+```{r}
+# Feijao (T53)
+feijao_53_dbs_40 <- dbscan(feijao_D_53_clust, eps = 40, minPts = 5)
+feijao_53_dbs_45 <- dbscan(feijao_D_53_clust, eps = 45, minPts = 5)
+feijao_53_dbs_50 <- dbscan(feijao_D_53_clust, eps = 50, minPts = 5)
+
+feijao_53_dbs_40
+feijao_53_dbs_45
+feijao_53_dbs_50
+```
+
+```{r}
+# Feijao (T155)
+feijao_155_dbs_38 <- dbscan(feijao_D_155_clust, eps = 38, minPts = 5)
+feijao_155_dbs_40 <- dbscan(feijao_D_155_clust, eps = 40, minPts = 5)
+feijao_155_dbs_45 <- dbscan(feijao_D_155_clust, eps = 45, minPts = 5)
+feijao_155_dbs_50 <- dbscan(feijao_D_155_clust, eps = 50, minPts = 5)
+
+feijao_155_dbs_38
+feijao_155_dbs_40
+feijao_155_dbs_45
+feijao_155_dbs_50
+```
+
+After applying DBSCAN, all 4 case studies (5 total datasets) exhibited similar behaviour as the eps parameter increased. In the outputs of dbscan, cluster 0 is reserved for noise. Smaller epsilon values produced a greater proportion of observations classified as noise and more clusters (with very little observations), while larger epsilon values reduced the noise but progressively merged observations into 1 dominant cluster.
+
+We experimented with several eps values and compared, and tested between minPts = 5 and minPts = 10, with no significant different in the latter. Without straying too far from the observed "knee" values as the eps value in our DBSCAN implementation, around 1 or at most 2 clusters were created, with a much larger proportion of observations in the first cluster, and varying proportions of noise.
+
+I also applied DBSCAN to a scaled version of the Cadia dataset with the same hyperparameters as the initial attempt to see if it created more separate clusters. The normalisation reduced the magnitude of distance values but didn't substantially alter the clustering behaviour and continued to identify one main cluster.
+
+These results and patterns from all cases suggest that the deformation observations do not form strongly separated density-based groups under Euclidean distance. It may be useful to compare with Dynamic Time Warping instead of Euclidean distance.
+
+```{r}
+
+```
+
+### 4.3 Combine plots/results for summary
+
+```{r}
+dbscan_summary_row <- function(
+    model,
+    eps,
+    minPts
+) {
+  data.frame(
+    eps = eps,
+    minPts = minPts,
+    clusters = max(model$cluster),
+    noise_points = sum(
+      model$cluster == 0
+    ),
+    noise_percent = round(
+      100 * mean(
+        model$cluster == 0
+      ),
+      2
+    )
+  )
+}
+```
+
+```{r}
+cadia_dbscan_summary <- bind_rows(
+  dbscan_summary_row(
+    cadia_dbs_30,
+    30,
+    5
+  ),
+  dbscan_summary_row(
+    cadia_dbs_35,
+    35,
+    5
+  ),
+  dbscan_summary_row(
+    cadia_dbs_40,
+    40,
+    5
+  ),
+  dbscan_summary_row(
+    cadia_dbs_40_10,
+    40,
+    10
+  )
+)
+```
+
+```{r}
+peru_F_dbscan_summary <- bind_rows(
+  dbscan_summary_row(
+    peru_F_dbs_30,
+    30,
+    5
+  ),
+  dbscan_summary_row(
+    peru_F_dbs_40,
+    40,
+    5
+  ),
+  dbscan_summary_row(
+    peru_F_dbs_45,
+    45,
+    5
+  ),
+  dbscan_summary_row(
+    peru_F_dbs_50,
+    50,
+    5
+  )
+)
+```
+
+```{r}
+peru_U_dbscan_summary <- bind_rows(
+  dbscan_summary_row(
+    peru_U_dbs_30,
+    30,
+    5
+  ),
+  dbscan_summary_row(
+    peru_U_dbs_40,
+    40,
+    5
+  ),
+  dbscan_summary_row(
+    peru_U_dbs_45,
+    45,
+    5
+  ),
+  dbscan_summary_row(
+    peru_U_dbs_50,
+    50,
+    5
+  )
+)
+```
+
+```{r}
+feijao_53_dbscan_summary <- bind_rows(
+  dbscan_summary_row(
+    feijao_53_dbs_40,
+    40,
+    5
+  ),
+  dbscan_summary_row(
+    feijao_53_dbs_45,
+    45,
+    5
+  ),
+  dbscan_summary_row(
+    feijao_53_dbs_50,
+    50,
+    5
+  )
+)
+```
+
+```{r}
+feijao_155_dbscan_summary <- bind_rows(
+  dbscan_summary_row(
+    feijao_155_dbs_40,
+    40,
+    5
+  ),
+  dbscan_summary_row(
+    feijao_155_dbs_45,
+    45,
+    5
+  ),
+  dbscan_summary_row(
+    feijao_155_dbs_50,
+    50,
+    5
+  )
+)
+```
+
+```{r}
+cadia_dbscan_summary
+peru_F_dbscan_summary
+peru_U_dbscan_summary
+feijao_53_dbscan_summary
+feijao_155_dbscan_summary
+```
+
+**Exporting the k-NN plots:**
+
+```{r}
+fig_dbscan_cadia <-
+  p_knn_cadia +
+  plot_annotation(
+    title = "Cadia: DBSCAN parameter selection"
+  )
+```
+
+```{r}
+ggsave(
+  "cadia_dbscan_summary.png",
+  fig_dbscan_cadia,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+```{r}
+fig_dbscan_peru_F <-
+  p_knn_peru_F +
+  plot_annotation(
+    title = "Peru F: DBSCAN parameter selection"
+  )
+```
+
+```{r}
+ggsave(
+  "peru_F_dbscan_summary.png",
+  fig_dbscan_peru_F,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+```{r}
+fig_dbscan_peru_U <-
+  p_knn_peru_U +
+  plot_annotation(
+    title = "Peru U: DBSCAN parameter selection"
+  )
+```
+
+```{r}
+ggsave(
+  "peru_U_dbscan_summary.png",
+  fig_dbscan_peru_U,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+```{r}
+fig_dbscan_feijao_53 <-
+  p_knn_feijao_53 +
+  plot_annotation(
+    title = "Feijao (T53): DBSCAN parameter selection"
+  )
+```
+
+```{r}
+ggsave(
+  "feijao_53_dbscan_summary.png",
+  fig_dbscan_feijao_53,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+```{r}
+fig_dbscan_feijao_155 <-
+  p_knn_feijao_155 +
+  plot_annotation(
+    title = "Feijao (T155): DBSCAN parameter selection"
+  )
+```
+
+```{r}
+ggsave(
+  "feijao_155_dbscan_summary.png",
+  fig_dbscan_feijao_155,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+### 4.4 Apply cluster IDs and export for ArcGIS
+
+The DBSCAN solution selected for each case study corresponds to the parameter combination chosen from the k-NN plots. We export the cluster assignments for spatial visualisation in ArcGIS.
+
+```{r}
+# Cadia
+cadia$dbscan <- cadia_dbs_40$cluster
+
+nrow(cadia)
+length(cadia_dbs_40$cluster)
+
+table(cadia$dbscan)
+```
+
+```{r}
+write.csv(cadia, "cadia_dbscan.csv", row.names = FALSE)
+```
+
+```{r}
+# Peru (failed)
+peru_failed$dbscan <- peru_F_dbs_45$cluster
+nrow(peru_failed)
+length(peru_F_dbs_45$cluster)
+
+table(peru_failed$dbscan)
+```
+
+```{r}
+write.csv(peru_failed, "peru_F_dbscan.csv", row.names = FALSE)
+```
+
+```{r}
+# Peru (unfailed)
+peru_unfailed$dbscan <- peru_U_dbs_45$cluster
+nrow(peru_unfailed)
+length(peru_U_dbs_45$cluster)
+
+table(peru_unfailed$dbscan)
+```
+
+```{r}
+write.csv(peru_unfailed, "peru_U_dbscan.csv", row.names = FALSE)
+```
+
+```{r}
+# Feijao (T53)
+feijao_53$dbscan <- feijao_53_dbs_45$cluster
+nrow(feijao_53)
+length(feijao_53_dbs_45$cluster)
+
+table(feijao_53$dbscan)
+```
+
+```{r}
+write.csv(feijao_53, "feijao_53_dbscan.csv", row.names = FALSE)
+```
+
+```{r}
+# Feijao (T155)
+feijao_155$dbscan <- feijao_155_dbs_40$cluster
+nrow(feijao_155)
+length(feijao_155_dbs_40$cluster)
+
+table(feijao_155$dbscan)
+```
+
+```{r}
+write.csv(feijao_155, "feijao_155_dbscan.csv", row.names = FALSE)
+```
+
+```{r}
+# Feijao (T155) 2
+feijao_155$dbscan_45 <- feijao_155_dbs_45$cluster
+nrow(feijao_155)
+length(feijao_155_dbs_45$cluster)
+
+table(feijao_155$dbscan_45)
+```
+
+```{r}
+write.csv(feijao_155, "feijao_155_dbscan2.csv", row.names = FALSE)
+```
+
+## 5. K-medoids w/ DTW
+
+We cannot use DTW with the standard k-means algorithm. K-means is designed for minimising variance, not arbitrary distances.
+
+K-Medoids / Partioning Around Medoids (PAM) is a clustering algorithm similar to K-means. However, instead of representing each cluster by its mean (centroid), PAM uses a medoid. A medoid is an actual data point (insted of average) within the dataset that minimises the total dissimilarity to all other observations in the cluster. It is a centroid that best represents the objects in a defined cluster.
+
+Process:
+
+1.  Initialise by randomly choose k initial medoids.
+2.  Assign each data point to its nearest medoid.
+3.  Update each point by trying to swap the medoid with another point, and if the total distance decreases, keep that new assignment
+4.  Repeat until medoids no longer change.
+
+Advantages of K-medoids:
+
+- It can be used with any similarity measure:
+
+  - K-means is mainly intended to be used with distances that are consistent with the mean.
+
+- It is more robust to outliers:
+
+  - The medoid used by k-medoids is a more robust estimate of a representative point than the mean used in k-means.
+
+However, k-medoids is much more expensive to run than k-means. This is because it must compute all pairwise distances.
+
+We will first try with the Peru datasets as they are much smaller than the others:
+
+```{r}
+# Peru (F)
+
+set.seed(1234)
+
+peru_F_dtw_pam <- tsclust(series = peru_D_F_clust, type = "partitional", k = 2:5, distance = "dtw_basic", centroid = "pam", trace = TRUE)
+
+```
+
+```{r}
+names(peru_F_dtw_pam) <- paste0("k_", 2:5)
+```
+
+```{r}
+# Peru (U)
+
+set.seed(1234)
+
+peru_U_dtw_pam <- tsclust(series = peru_D_U_clust, type = "partitional", k = 2:5, distance = "dtw_basic", centroid = "pam", trace = TRUE)
+```
+
+```{r}
+names(peru_U_dtw_pam) <- paste0("k_", 2:5)
+```
+
+We will attempt to run it using the Cadia dataset:
+
+```{r}
+# Cadia
+
+# set.seed(1234)
+
+#cadia_dtw_pam <- tsclust(series = cadia_D_clust, type = "partitional", k = 2:5, distance = "dtw_basic", centroid = "pam", trace = TRUE)
+```
+
+### 5.1 Validation Metrics
+
+Peru (F)
+
+```{r}
+# Silhouette Score
+peru_F_dtw_pam_sil <- sapply(peru_F_dtw_pam, cvi, type = "Sil")
+
+peru_F_dtw_pam_sil
+```
+
+```{r}
+# Davies-Bouldin Index
+peru_F_dtw_pam_db <- sapply(
+  peru_F_dtw_pam,
+  cvi,
+  type = "DB"
+)
+
+peru_F_dtw_pam_db
+```
+
+Peru (U)
+
+```{r}
+# Silhouette Score
+peru_U_dtw_pam_sil <- sapply(peru_U_dtw_pam, cvi, type = "Sil")
+
+peru_U_dtw_pam_sil
+```
+
+```{r}
+# Davies-Bouldin Index
+peru_U_dtw_pam_db <- sapply(
+  peru_U_dtw_pam,
+  cvi,
+  type = "DB"
+)
+
+peru_U_dtw_pam_db
+```
+
+**Plotting the time series of resulting clusters**
+
+First, we create the four plots to compare the hierarchical clustering using DTW with our results from the k-medoids approach:
+
+```{r}
+# Peru (F)
+
+# HC DTW w/ avg linkage
+p_F_hc_2 <- plot(
+  peru_F_hc_dtw_avg$k_2,
+  type = "series"
+) +
+  ggtitle("Hierarchical DTW — Average, k = 2") +
+  labs(
+    x =  "Time",
+    y = "Cumulative displacement (mm)"
+  )
+
+p_F_hc_3 <- plot(
+  peru_F_hc_dtw_avg$k_3,
+  type = "series"
+) +
+  ggtitle("Hierarchical DTW — Average, k = 3") +
+  labs(
+    x =  "Time",
+    y = "Cumulative displacement (mm)"
+  )
+
+
+# K-medoids DTW
+p_F_pam_2 <- plot(
+  peru_F_dtw_pam$k_2,
+  type = "series"
+) +
+  ggtitle("K-medoids DTW, k = 2") +
+  labs(
+    x =  "Time",
+    y = "Cumulative displacement (mm)"
+  )
+
+
+p_F_pam_3 <- plot(
+  peru_F_dtw_pam$k_3,
+  type = "series"
+) +
+  ggtitle("K-medoids DTW, k = 3") +
+  labs(
+    x =  "Time",
+    y = "Cumulative displacement (mm)"
+  )
+```
+
+```{r}
+fig_peru_F_dtw_series <-
+  (p_F_hc_2 | p_F_pam_2) /
+  (p_F_hc_3 | p_F_pam_3) +
+  plot_annotation(
+    title = "Peru (Failed): DTW cluster time-series comparison"
+  )
+
+fig_peru_F_dtw_series
+```
+
+```{r}
+ggsave(
+  filename = "peru_F_DTW_time_series_comparison.png",
+  plot = fig_peru_F_dtw_series,
+  width = 14,
+  height = 10,
+  units = "in",
+  dpi = 300
+)
+```
+
+```{r}
+# Peru (U)
+
+# HC DTW w/ avg linkage
+p_U_hc_2 <- plot(
+  peru_U_hc_dtw_avg$k_2,
+  type = "series"
+) +
+  ggtitle("Hierarchical DTW — Average, k = 2") +
+  labs(
+    x =  "Time",
+    y = "Cumulative displacement (mm)"
+  )
+
+p_U_hc_3 <- plot(
+  peru_U_hc_dtw_avg$k_3,
+  type = "series"
+) +
+  ggtitle("Hierarchical DTW — Average, k = 3") +
+  labs(
+    x =  "Time",
+    y = "Cumulative displacement (mm)"
+  )
+
+
+# K-medoids DTW
+p_U_pam_2 <- plot(
+  peru_U_dtw_pam$k_2,
+  type = "series"
+) +
+  ggtitle("K-medoids DTW, k = 2") +
+  labs(
+    x =  "Time",
+    y = "Cumulative displacement (mm)"
+  )
+
+
+p_U_pam_3 <- plot(
+  peru_U_dtw_pam$k_3,
+  type = "series"
+) +
+  ggtitle("K-medoids DTW, k = 3") +
+  labs(
+    x =  "Time",
+    y = "Cumulative displacement (mm)"
+  )
+```
+
+```{r}
+fig_peru_U_dtw_series <-
+  (p_U_hc_2 | p_U_pam_2) /
+  (p_U_hc_3 | p_U_pam_3) +
+  plot_annotation(
+    title = "Peru (Unfailed): DTW cluster time-series comparison"
+  )
+
+fig_peru_U_dtw_series
+```
+
+```{r}
+ggsave(
+  filename = "peru_U_DTW_time_series_comparison.png",
+  plot = fig_peru_U_dtw_series,
+  width = 14,
+  height = 10,
+  units = "in",
+  dpi = 300
+)
+```
+
+### 5.2 Apply cluster IDs and export
+
+```{r}
+# Peru (F)
+peru_failed$kmed_dtw_2 <- peru_F_dtw_pam$k_2@cluster
+peru_failed$kmed_dtw_3 <- peru_F_dtw_pam$k_3@cluster
+peru_failed$kmed_dtw_4 <- peru_F_dtw_pam$k_4@cluster
+peru_failed$kmed_dtw_5 <- peru_F_dtw_pam$k_5@cluster
+```
+
+```{r}
+write.csv(peru_failed,
+          "peru_F_kmed_dtw.csv",
+          row.names = FALSE)
+```
+
+```{r}
+# Peru (U)
+peru_unfailed$kmed_dtw_2 <- peru_U_dtw_pam$k_2@cluster
+peru_unfailed$kmed_dtw_3 <- peru_U_dtw_pam$k_3@cluster
+peru_unfailed$kmed_dtw_4 <- peru_U_dtw_pam$k_4@cluster
+peru_unfailed$kmed_dtw_5 <- peru_U_dtw_pam$k_5@cluster
+```
+
+```{r}
+write.csv(peru_unfailed,
+          "peru_U_kmed_dtw.csv",
+          row.names = FALSE)
+```

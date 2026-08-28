@@ -1,0 +1,1900 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Evaluating Modelling Techniques to Detect Precursors to Landslides from InSAR-Based Data
+
+**2026 Honours Project -**
+
+```{r}
+# Load packages
+
+library(readxl)
+library(ggplot2)
+library(MASS)
+library(factoextra)
+library(gridExtra)
+library(cluster)
+library(clusterSim)
+library(dbscan)
+library(dtwclust)
+library(patchwork)
+library(ggplotify)
+library(zoo)
+
+
+set.seed(1234)
+```
+
+# Stage 2: Experimenting with New Processing
+
+We will test a range of transformations on the data before clustering to see if it is able to create a more informative representation of deformation. The approaches are:
+
+1.  Moving average
+2.  Piecewise linear regression / linear spline regression
+3.  Feature selection
+4.  PCA ? - only if time
+
+We will also look at filtering the data based on coherence, as done in Rana et al.'s paper. Adding to our stage 1 clustering baseline, we will apply the same clustering, but on the standardised data. Although, our initial hypothesis with using the standardised data is that it may not be as informative as using the raw displacement values. This is due to all acquisitions being in the same scale, and therefore standardising the data may remove the meaningfulness of measurement difference.
+
+## 1. Prepare the data
+
+Taken from the Stage 1 notebook.
+
+```{r}
+cadia <- read_excel("cadia_2018_ps.xlsx")
+
+peru_failed <- read_excel("2019_Cobriza_Peru_Failed.xlsx")
+
+peru_unfailed <- read_excel("2019_Cobriza_Peru_Unfailed.xlsx")
+
+feijao_53 <- read_excel("Feijao_PS_T53.xlsx")
+
+feijao_155 <- read_excel("Feijao_PS_T155.xlsx")
+```
+
+```{r}
+head(cadia)
+dim(cadia)
+
+head(peru_failed)
+dim(peru_failed)
+
+head(peru_unfailed)
+dim(peru_unfailed)
+
+head(feijao_53)
+dim(feijao_53)
+
+head(feijao_155)
+dim(feijao_155)
+```
+
+**Extract the displacement columns:**
+
+```{r}
+# Cadia --------------
+
+d_cols <- grep("^D_", names(cadia), value = TRUE) # D_ for descending orbit track
+length(d_cols)
+head(d_cols)
+
+cadia_D <- cadia[, d_cols]
+
+# Inspect new dataset
+head(cadia_D)
+dim(cadia_D)
+
+# Check for missing vals
+sum(is.na(cadia_D))
+
+# Peru - (Failed) ---------------------
+
+d_cols_peru_F <- grep("^D_", names(peru_failed), value = TRUE)
+length(d_cols_peru_F)
+head(d_cols_peru_F)
+
+peru_D_F <- peru_failed[, d_cols_peru_F]
+
+head(peru_D_F)
+dim(peru_D_F)
+
+# Check for missing vals
+sum(is.na(peru_D_F))
+
+# Peru - (Unfailed) ---------------------
+
+d_cols_peru_U <- grep("^D_", names(peru_unfailed), value = TRUE)
+length(d_cols_peru_U)
+head(d_cols_peru_U)
+
+peru_D_U <- peru_unfailed[, d_cols_peru_U]
+
+head(peru_D_U)
+dim(peru_D_U)
+
+# Check for missing vals
+sum(is.na(peru_D_U))
+
+# Feijao - (T53) ---------------------
+
+d_cols_feijao_53 <- grep("^D_", names(feijao_53), value = TRUE)
+length(d_cols_feijao_53)
+head(d_cols_feijao_53)
+
+feijao_D_53 <- feijao_53[, d_cols_feijao_53]
+
+head(feijao_D_53)
+dim(feijao_D_53)
+
+# Check for missing vals
+sum(is.na(feijao_D_53))
+
+# Feijao - (T155) ---------------------
+
+d_cols_feijao_155 <- grep("^D_", names(feijao_155), value = TRUE)
+length(d_cols_feijao_155)
+head(d_cols_feijao_155)
+
+feijao_D_155 <- feijao_155[, d_cols_feijao_155]
+
+head(feijao_D_155)
+dim(feijao_D_155)
+
+# Check for missing vals
+sum(is.na(feijao_D_155))
+
+```
+
+**Create clustering matrices:**
+
+```{r}
+cadia_D_mat <- as.matrix(cadia_D)
+
+peru_D_F_mat <- as.matrix(peru_D_F)
+
+peru_D_U_mat <- as.matrix(peru_D_U)
+
+feijao_D_53_mat <- as.matrix(feijao_D_53)
+
+feijao_D_155_mat <- as.matrix(feijao_D_155)
+```
+
+**Remove baseline date column:**
+
+```{r}
+# Helper function for removing baseline date column
+
+remove_zero_var <- function(x) {
+  col_sd <- apply(x, 2, sd)
+  x[, col_sd > 0, drop = FALSE]
+}
+```
+
+```{r}
+cadia_D <- remove_zero_var(cadia_D_mat)
+
+peru_D_F <- remove_zero_var(peru_D_F_mat)
+
+peru_D_U <- remove_zero_var(peru_D_U_mat)
+
+feijao_D_53 <- remove_zero_var(feijao_D_53_mat)
+
+feijao_D_155 <- remove_zero_var(feijao_D_155_mat)
+```
+
+```{r}
+dim(cadia_D)
+dim(peru_D_F)
+dim(peru_D_U)
+dim(feijao_D_53)
+dim(feijao_D_155)
+```
+
+## 2. Moving Averages
+
+We will test three values of window size using moving average:
+
+- 2: 2 acquisitions are averaged out, meaning one window summarises 12 \* 2 = 24 days.
+
+- 3: 3 acquisitions are averaged out, meaning one window summarises 12 \* 3 = 36 days.
+
+- 5: 5 acquisitions are averaged out, meaning one window summarises 12 \* 5 = 60 days.
+
+```{r}
+# ---------- Cadia
+
+# MA(2)
+cadia_MA2 <- t(apply(cadia_D, 1, function(x) {
+  rollmean(x, k = 2, align = "right", fill = NA)
+}))
+
+#cadia_MA2 <- cadia_MA2[, -1]
+
+# MA(3)
+cadia_MA3 <- t(apply(cadia_D, 1, function(x) {
+  rollmean(x, k = 3, align = "right", fill = NA)
+}))
+
+#cadia_MA3 <- cadia_MA3[, -c(1:2)]
+```
+
+```{r}
+# Visualise a few points
+
+plot(
+  as.numeric(cadia_D[1, ]),
+  type = "l",
+  xlab = "Time",
+  ylab = "Cumulative displacement",
+  main = "Cadia: Raw vs Moving Average"
+)
+
+lines(
+  1:ncol(cadia_D),
+  cadia_MA2[1, ],
+  lty = 2
+)
+
+lines(
+  1:ncol(cadia_D),
+  cadia_MA3[1, ],
+  lty = 3
+)
+
+legend(
+  "topleft",
+  legend = c("Raw", "MA(2)", "MA(3)"),
+  lty = c(1, 2, 3)
+)
+```
+
+```{r}
+png(
+  "cadia_raw_vs_MA.png",
+  width = 2400,
+  height = 1800,
+  res = 300
+)
+
+plot(
+  as.numeric(cadia_D[1, ]),
+  type = "l",
+  xlab = "Time",
+  ylab = "Cumulative displacement",
+  main = "Cadia: Raw vs Moving Average"
+)
+
+lines(1:ncol(cadia_D), cadia_MA2[1, ], lty = 2)
+lines(1:ncol(cadia_D), cadia_MA3[1, ], lty = 3)
+
+legend(
+  "topleft",
+  legend = c("Raw", "MA(2)", "MA(3)"),
+  lty = c(1, 2, 3)
+)
+
+dev.off()
+```
+
+```{r}
+# Removing the NA values / columns
+cadia_MA2 <- cadia_MA2[, -1]
+cadia_MA3 <- cadia_MA3[, -c(1:2)]
+```
+
+### 2.1 Hierarchical Clustering
+
+```{r}
+# Distance matrix w/ Euclidean
+
+# Raw data - Baseline
+cadia_dist <- dist(cadia_D, method = "euclidean")
+cadia_hc <- hclust(cadia_dist, method = "ward.D2")
+
+# MA(2)
+cadia_MA2_dist <- dist(cadia_MA2, method = "euclidean")
+cadia_MA2_hc <- hclust(cadia_MA2_dist, method = "ward.D2")
+
+# MA(3)
+cadia_MA3_dist <- dist(cadia_MA3, method = "euclidean")
+cadia_MA3_hc <- hclust(cadia_MA3_dist, method = "ward.D2")
+```
+
+#### Dendrograms
+
+```{r}
+plot(cadia_hc, labels = FALSE)
+plot(cadia_MA2_hc, labels = FALSE)
+plot(cadia_MA3_hc, labels = FALSE)
+```
+
+- The dendrograms for Cadia reduce the gap between the second branch and the third branching, possibly making it more "suitable" for k = 3, compared to the obvious split of k = 2 in the baseline dendrogram.
+
+#### Silhouette Score
+
+```{r}
+# Average Silhouette Score Helper Function
+avg_sil_score <- function(hc, d_mat, k_vals = 2:5){
+  
+  avg_sil <- numeric(length(k_vals))
+  
+  for(i in seq_along(k_vals)){
+    
+    clusters <- cutree(hc, k = k_vals[i])
+    sil_score <- silhouette(clusters, d_mat)
+    avg_sil[i] <- mean(sil_score[, 3])
+    
+  }
+  
+  data.frame(
+    k = k_vals,
+    avg_silhouette_score = avg_sil
+  )
+}
+```
+
+We'll compute the silhouette score for k = 2, 3, 4 and 5.
+
+```{r}
+# Cadia
+cadia_hc_sil <- avg_sil_score(cadia_hc, cadia_dist)
+
+# MA(2)
+cadia_MA2_hc_sil <- avg_sil_score(
+  cadia_MA2_hc,
+  cadia_MA2_dist
+)
+
+# MA(3)
+cadia_MA3_hc_sil <- avg_sil_score(
+  cadia_MA3_hc,
+  cadia_MA3_dist
+)
+```
+
+```{r}
+cadia_hc_sil
+cadia_MA2_hc_sil
+cadia_MA3_hc_sil
+```
+
+The moving average dataset of the hierarchical clustering using a window size of 3 achieved the highest average silhouette score for k = 2. Both moving average datasets result in the highest silhouette score at k = 2 and as k increases, the silhouette score decreases.
+
+#### Apply cluster IDs and export
+
+```{r}
+# Cadia - MA(2)
+# k = 2
+cadia_MA2_hc_2 <- cutree(cadia_MA2_hc, k=2)
+table(cadia_MA2_hc_2)
+cadia$MA2_hc_2 <- cadia_MA2_hc_2
+
+# k = 3
+cadia_MA2_hc_3 <- cutree(cadia_MA2_hc, k=3)
+table(cadia_MA2_hc_3)
+cadia$MA2_hc_3 <- cadia_MA2_hc_3
+
+# k = 4
+cadia_MA2_hc_4 <- cutree(cadia_MA2_hc, k=4)
+table(cadia_MA2_hc_4)
+cadia$MA2_hc_4 <- cadia_MA2_hc_4
+
+# k = 5
+cadia_MA2_hc_5 <- cutree(cadia_MA2_hc, k=5)
+table(cadia_MA2_hc_5)
+cadia$MA2_hc_5 <- cadia_MA2_hc_5
+```
+
+```{r}
+# Cadia - MA(3)
+# k = 2
+cadia_MA3_hc_2 <- cutree(cadia_MA3_hc, k=2)
+table(cadia_MA3_hc_2)
+cadia$MA3_hc_2 <- cadia_MA3_hc_2
+
+# k = 3
+cadia_MA3_hc_3 <- cutree(cadia_MA3_hc, k=3)
+table(cadia_MA3_hc_3)
+cadia$MA3_hc_3 <- cadia_MA3_hc_3
+
+# k = 4
+cadia_MA3_hc_4 <- cutree(cadia_MA3_hc, k=4)
+table(cadia_MA3_hc_4)
+cadia$MA3_hc_4 <- cadia_MA3_hc_4
+
+# k = 5
+cadia_MA3_hc_5 <- cutree(cadia_MA3_hc, k=5)
+table(cadia_MA3_hc_5)
+cadia$MA3_hc_5 <- cadia_MA3_hc_5
+```
+
+```{r}
+# Export for each case
+write.csv(cadia, "cadia_MA_hc.csv", row.names = FALSE)
+```
+
+**Exporting plots**
+
+```{r}
+dend_raw <- as.dendrogram(cadia_hc)
+dend_MA2 <- as.dendrogram(cadia_MA2_hc)
+dend_MA3 <- as.dendrogram(cadia_MA3_hc)
+```
+
+```{r}
+p_raw <- as.ggplot(
+  ~ {
+    plot(
+      dend_raw,
+      leaflab = "none",
+      main = "Raw",
+      ylab = "Height"
+    )
+  }
+)
+
+p_MA2 <- as.ggplot(
+  ~ {
+    plot(
+      dend_MA2,
+      leaflab = "none",
+      main = "MA(2)",
+      ylab = "Height"
+    )
+  }
+)
+
+p_MA3 <- as.ggplot(
+  ~ {
+    plot(
+      dend_MA3,
+      leaflab = "none",
+      main = "MA(3)",
+      ylab = "Height"
+    )
+  }
+)
+```
+
+```{r}
+p_cadia_dend_compare <- p_raw + p_MA2 + p_MA3
+
+ggsave(
+  "cadia_MA_dendrograms.png",
+  p_cadia_dend_compare,
+  width = 18,
+  height = 5,
+  dpi = 300
+)
+```
+
+### 2.2 K-means clustering
+
+#### Elbow Plot
+
+```{r}
+p_cadia_elbow_raw <- fviz_nbclust(
+  cadia_D,
+  kmeans,
+  method = "wss"
+) +
+  ggtitle("Cadia: Raw")
+
+p_cadia_elbow_MA2 <- fviz_nbclust(
+  cadia_MA2,
+  kmeans,
+  method = "wss"
+) +
+  ggtitle("Cadia: MA(2)")
+
+p_cadia_elbow_MA3 <- fviz_nbclust(
+  cadia_MA3,
+  kmeans,
+  method = "wss"
+) +
+  ggtitle("Cadia: MA(3)")
+```
+
+- The overall elbow structure remains similar after moving-average smoothing, while silhouette scores improve somewhat.
+
+```{r}
+ggsave(
+  "cadia_elbow_raw.png",
+  p_cadia_elbow_raw,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+ggsave(
+  "cadia_elbow_MA2.png",
+  p_cadia_elbow_MA2,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+ggsave(
+  "cadia_elbow_MA3.png",
+  p_cadia_elbow_MA3,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+#### Silhouette Score Plot
+
+```{r}
+fviz_nbclust(cadia_D, kmeans, method = "silhouette") + ggtitle("Optimal number of clusters: Cadia")
+
+fviz_nbclust(cadia_MA2, kmeans, method = "silhouette") + ggtitle("Optimal number of clusters: Cadia")
+
+fviz_nbclust(cadia_MA3, kmeans, method = "silhouette") + ggtitle("Optimal number of clusters: Cadia")
+```
+
+- Moving from the raw dataset to the MA(2) and MA(3) datasets, the slope of the silhouette score plots becomes less steep, however, they remain almost the same shape.
+
+```{r}
+p_cadia_sil_raw <- fviz_nbclust(
+  cadia_D,
+  kmeans,
+  method = "silhouette"
+) +
+  ggtitle("Cadia: Raw")
+
+p_cadia_sil_MA2 <- fviz_nbclust(
+  cadia_MA2,
+  kmeans,
+  method = "silhouette"
+) +
+  ggtitle("Cadia: MA(2)")
+
+p_cadia_sil_MA3 <- fviz_nbclust(
+  cadia_MA3,
+  kmeans,
+  method = "silhouette"
+) +
+  ggtitle("Cadia: MA(3)")
+```
+
+```{r}
+ggsave("cadia_sil_raw.png",
+       p_cadia_sil_raw, width = 7, height = 5, dpi = 300)
+
+ggsave("cadia_sil_MA2.png",
+       p_cadia_sil_MA2, width = 7, height = 5, dpi = 300)
+
+ggsave("cadia_sil_MA3.png",
+       p_cadia_sil_MA3, width = 7, height = 5, dpi = 300)
+```
+
+#### Applying K-means clustering
+
+```{r}
+set.seed(1234)
+
+# Raw
+cadia_km_2 <- kmeans(cadia_D, centers = 2, nstart = 20)
+cadia_km_3 <- kmeans(cadia_D, centers = 3, nstart = 20)
+cadia_km_4 <- kmeans(cadia_D, centers = 4, nstart = 20)
+cadia_km_5 <- kmeans(cadia_D, centers = 5, nstart = 20)
+
+# MA(2)
+cadia_MA2_km_2 <- kmeans(cadia_MA2, centers = 2, nstart = 20)
+cadia_MA2_km_3 <- kmeans(cadia_MA2, centers = 3, nstart = 20)
+cadia_MA2_km_4 <- kmeans(cadia_MA2, centers = 4, nstart = 20)
+cadia_MA2_km_5 <- kmeans(cadia_MA2, centers = 5, nstart = 20)
+
+# MA(3)
+cadia_MA3_km_2 <- kmeans(cadia_MA3, centers = 2, nstart = 20)
+cadia_MA3_km_3 <- kmeans(cadia_MA3, centers = 3, nstart = 20)
+cadia_MA3_km_4 <- kmeans(cadia_MA3, centers = 4, nstart = 20)
+cadia_MA3_km_5 <- kmeans(cadia_MA3, centers = 5, nstart = 20)
+```
+
+#### Silhouette Score
+
+```{r}
+# Helper function for K-means
+avg_sil_score_km <- function(km_models, d_mat){
+  
+  avg_sil <- numeric(length(km_models))
+  
+  for(i in seq_along(km_models)){
+    
+    sil_score <- silhouette(
+      km_models[[i]]$cluster,
+      d_mat
+    )
+    
+    avg_sil[i] <- mean(sil_score[,3])
+    
+  }
+  
+  data.frame(
+    k = 2:5,
+    avg_silhouette_score = avg_sil
+  )
+  
+}
+```
+
+```{r}
+cadia_km_sil <- avg_sil_score_km(
+  list(cadia_km_2,
+       cadia_km_3,
+       cadia_km_4,
+       cadia_km_5),
+  cadia_dist
+)
+
+cadia_MA2_km_sil <- avg_sil_score_km(
+  list(cadia_MA2_km_2,
+       cadia_MA2_km_3,
+       cadia_MA2_km_4,
+       cadia_MA2_km_5),
+  cadia_MA2_dist
+)
+
+cadia_MA3_km_sil <- avg_sil_score_km(
+  list(cadia_MA3_km_2,
+       cadia_MA3_km_3,
+       cadia_MA3_km_4,
+       cadia_MA3_km_5),
+  cadia_MA3_dist
+)
+```
+
+```{r}
+cadia_km_sil
+cadia_MA2_km_sil
+cadia_MA3_km_sil
+```
+
+#### Davies-Bouldin Index
+
+```{r}
+# Davies-Bouldin Index Helper function
+dbi_km <- function(data, km_models, k_vals = 2:5) {
+  
+  db_vals <- numeric(length(km_models))
+  
+  for (i in seq_along(k_vals)) {
+    db_vals[i] <- index.DB(
+      data,
+      km_models[[i]]$cluster
+    )$DB
+  }
+  
+  data.frame(
+    k = k_vals,
+    davies_bouldin = db_vals
+  )
+}
+```
+
+```{r}
+cadia_km_db <- dbi_km(
+  cadia_D,
+  list(cadia_km_2,
+       cadia_km_3,
+       cadia_km_4,
+       cadia_km_5)
+)
+
+cadia_MA2_km_db <- dbi_km(
+  cadia_MA2,
+  list(cadia_MA2_km_2,
+       cadia_MA2_km_3,
+       cadia_MA2_km_4,
+       cadia_MA2_km_5)
+)
+
+cadia_MA3_km_db <- dbi_km(
+  cadia_MA3,
+  list(cadia_MA3_km_2,
+       cadia_MA3_km_3,
+       cadia_MA3_km_4,
+       cadia_MA3_km_5)
+)
+```
+
+```{r}
+cadia_km_db
+cadia_MA2_km_db
+cadia_MA3_km_db
+```
+
+- Comment
+
+```{r}
+p_db_cadia <- ggplot(
+  cadia_km_db,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin Index: Cadia (Raw)",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+
+p_db_cadia_MA2 <- ggplot(
+  cadia_MA2_km_db,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin Index: Cadia (MA2)",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+
+p_db_cadia_MA3 <- ggplot(
+  cadia_MA3_km_db,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin Index: Cadia (MA3)",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+ggsave(
+  "cadia_dbi_piecewise_raw.png",
+  p_db_cadia,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+```{r}
+ggsave(
+  "cadia_dbi_piecewise_MA2.png",
+  p_db_cadia_MA2,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+```{r}
+ggsave(
+  "cadia_dbi_piecewise_MA3.png",
+  p_db_cadia_MA3,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+#### Apply cluster IDs and export
+
+```{r}
+# MA(2) K-means cluster IDs
+cadia$MA2_km_2 <- cadia_MA2_km_2$cluster
+cadia$MA2_km_3 <- cadia_MA2_km_3$cluster
+cadia$MA2_km_4 <- cadia_MA2_km_4$cluster
+cadia$MA2_km_5 <- cadia_MA2_km_5$cluster
+
+# MA(3)
+cadia$MA3_km_2 <- cadia_MA3_km_2$cluster
+cadia$MA3_km_3 <- cadia_MA3_km_3$cluster
+cadia$MA3_km_4 <- cadia_MA3_km_4$cluster
+cadia$MA3_km_5 <- cadia_MA3_km_5$cluster
+
+
+write.csv(
+  cadia,
+  "cadia_MA_km.csv",
+  row.names = FALSE
+)
+```
+
+## 3. Piecewise Linear Regression
+
+As clustering can be strongly influenced by displacement magnitude and fluctuations, we continue to test methods that smooth out and work with outliers.
+
+The spline approach represents each time series by its rate of deformation over successive time intervals. It may be able to identify and distinguish different deformation behaviours based on changes in velocity/slope.
+
+We'll use the data represented in matrices that still include the baseline date with 0 to use for the first slope.
+
+```{r}
+dim(cadia_D_mat)
+```
+
+```{r}
+# Extracting actual date names
+  # note that all dates are from a descending orbit track
+
+cadia_dates <- as.Date(sub("D_", "", colnames(cadia_D_mat)), format = "%Y%m%d")
+
+cadia_dates
+```
+
+Piecewise linear models partition the data into segments and fit separate linear regression models to each segment. It allows for broad average trends in the data to be captured while maintaining simplicity and interpretability.
+
+Each segment is divided to make almost linear sections. An index feature is used to model the marginal change of one unit of time. When a series has break points in the trend, we add a knot to each break point:
+
+- A knot feature allows us to inform the model of a change in the trend slope.
+
+- Left to the knot point equals 0, right to the knot is an arbitrage numbers that increase as a function of time.
+
+Instead of treating the columns as observations 1, 2, 3..., we will use elapsed days: 0, 12, 24, 36, 60, etc.
+
+```{r}
+cadia_time <- as.numeric(cadia_dates - cadia_dates[1])
+
+cadia_time
+```
+
+```{r}
+diff(cadia_dates)
+```
+
+We choose fixed knots, initially testing 60-day intervals (and the satellite capturing measurements in 12-day intervals).
+
+Define our knots:
+
+```{r}
+cadia_knots <- seq(60, max(cadia_time) - 60, by = 60)
+
+cadia_knots
+```
+
+```{r}
+# Apply spline regression
+
+y <- cadia_D_mat[1, ]
+
+X <- data.frame(time = cadia_time)
+
+for(k in cadia_knots) {
+  X[[paste0("knot_", k)]] <- pmax(0, cadia_time - k)
+}
+
+cadia_model_data <- cbind(data.frame(displacement = y), X)
+
+cadia_test_fit <- lm(displacement ~ ., data = cadia_model_data)
+```
+
+```{r}
+png(
+  "cadia_piecewise_dendrogram.png",
+  width = 2400,
+  height = 1800,
+  res = 300
+)
+
+plot(
+  cadia_dates,
+  y,
+  type = "o",
+  xlab = "Date",
+  ylab = "Cumulative displacement (mm)",
+  main = "Cadia: Piecewise Linear Fit"
+)
+
+lines(
+  cadia_dates,
+  fitted(cadia_test_fit),
+  lwd = 2
+)
+
+abline(
+  v = cadia_dates[1] + cadia_knots,
+  lty = 2
+)
+
+dev.off()
+```
+
+Extracting the slopes from the fitted model for clustering:
+
+```{r}
+cadia_coefs <- coef(cadia_test_fit)
+
+cadia_coefs
+```
+
+```{r}
+# Remove intercept
+cadia_slope_changes <- cadia_coefs[-1]
+
+# convert slope changes into actual slope for each interval
+cadia_test_slopes <- cumsum(cadia_slope_changes)
+
+cadia_test_slopes
+```
+
+```{r}
+# ^^^^ Process as a function
+
+extract_piecewise_slopes <- function(displacement, time, knots) {
+  
+  # Design matrix
+  X <- data.frame(time = time)
+  
+  for(k in knots) {
+    X[[paste0("knot_", k)]] <- pmax(0, time - k)
+  }
+  
+  # Add displacement
+  model_data <- cbind(
+    data.frame(displacement = displacement),
+    X
+  )
+  
+  # Fit continuous piecewise-linear regression
+  fit <- lm(
+    displacement ~ .,
+    data = model_data
+  )
+  
+  # Remove intercept
+  slope_changes <- coef(fit)[-1]
+  
+  # Actual slope in each interval
+  interval_slopes <- cumsum(slope_changes)
+  
+  names(interval_slopes) <- paste0(
+    "Slope_", seq_along(interval_slopes)
+  )
+  
+  return(interval_slopes)
+}
+```
+
+```{r}
+test_slopes <- extract_piecewise_slopes(
+  displacement = cadia_D_mat[1, ],
+  time = cadia_time,
+  knots = cadia_knots
+)
+
+test_slopes
+```
+
+```{r}
+cadia_test_slopes
+```
+
+```{r}
+# apply to every cadia ob
+
+cadia_piecewise <- t(apply(cadia_D_mat, 1, extract_piecewise_slopes, time = cadia_time, knots = cadia_knots))
+```
+
+```{r}
+dim(cadia_piecewise)
+
+head(cadia_piecewise)
+
+anyNA(cadia_piecewise)
+```
+
+We've converted the original data from 12502 x 45 displacement values to 12502 x \~9 slope values.
+
+### 3.1 Hierarchical Clustering
+
+```{r}
+# Cadia
+
+cadia_piecewise_dist <- dist(cadia_piecewise, method = "euclidean")
+
+cadia_piecewise_hc <- hclust(cadia_piecewise_dist, method = "ward.D2")
+```
+
+#### Dendrograms
+
+```{r}
+plot(cadia_piecewise_hc, labels = FALSE)
+```
+
+```{r}
+png(
+  "cadia_piecewise_dendrogram2.png",
+  width = 2400,
+  height = 1800,
+  res = 300
+)
+
+plot(
+  cadia_piecewise_hc,
+  labels = FALSE,
+  main = "Cadia: Piecewise Linear Regression",
+  xlab = "",
+  sub = "",
+  ylab = "Height"
+)
+
+dev.off()
+```
+
+#### Silhouette Score
+
+```{r}
+cadia_piecewise_hc_sil <- avg_sil_score(
+  cadia_piecewise_hc,
+  cadia_piecewise_dist
+)
+
+cadia_piecewise_hc_sil
+```
+
+#### Apply cluster IDs and export
+
+```{r}
+# Cadia
+# k = 2
+cadia_piecwise_hc_2 <- cutree(cadia_piecewise_hc, k=2)
+table(cadia_piecwise_hc_2)
+cadia$piecewise_hc_2 <- cadia_piecwise_hc_2
+
+# k = 3
+cadia_piecwise_hc_3 <- cutree(cadia_piecewise_hc, k=3)
+table(cadia_piecwise_hc_3)
+cadia$piecewise_hc_3 <- cadia_piecwise_hc_3
+
+# k = 4
+cadia_piecwise_hc_4 <- cutree(cadia_piecewise_hc, k=4)
+table(cadia_piecwise_hc_4)
+cadia$piecewise_hc_4 <- cadia_piecwise_hc_4
+
+# k = 5
+cadia_piecwise_hc_5 <- cutree(cadia_piecewise_hc, k=5)
+table(cadia_piecwise_hc_5)
+cadia$piecewise_hc_5 <- cadia_piecwise_hc_5
+```
+
+```{r}
+# Export for each case
+write.csv(cadia, "cadia_piece_wise_hc.csv", row.names = FALSE)
+```
+
+**Export plots**
+
+### 3.2 K-means clustering
+
+#### Elbow Plot
+
+```{r}
+fviz_nbclust(cadia_D, kmeans, method = "wss") + ggtitle("Optimal number of clusters: Cadia (Raw)")
+fviz_nbclust(cadia_piecewise, kmeans, method = "wss") + ggtitle("Optimal number of clusters: Cadia Piecewise")
+```
+
+```{r}
+p_cadia_elbow_pw <- fviz_nbclust(
+  cadia_piecewise,
+  kmeans,
+  method = "wss"
+) +
+  ggtitle("Cadia: Piecewise Linear Regression")
+```
+
+```{r}
+ggsave(
+  "cadia_elbow_pw.png",
+  p_cadia_elbow_pw,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+- The overall elbow structure remains similar after moving-average smoothing, while silhouette scores improve somewhat.
+
+#### Silhouette Score Plot
+
+```{r}
+fviz_nbclust(cadia_D, kmeans, method = "silhouette") + ggtitle("Optimal number of clusters: Cadia")
+
+fviz_nbclust(cadia_piecewise, kmeans, method = "silhouette") + ggtitle("Optimal number of clusters: Cadia")
+```
+
+```{r}
+p_cadia_sil_pw <- fviz_nbclust(
+  cadia_piecewise,
+  kmeans,
+  method = "silhouette"
+) +
+  ggtitle("Cadia: Piecewise Linear Regression")
+```
+
+```{r}
+ggsave("cadia_sil_pw.png",
+       p_cadia_sil_pw, width = 7, height = 5, dpi = 300)
+```
+
+- Moving from the raw dataset to the MA(2) and MA(3) datasets, the slope of the silhouette score plots becomes less steep, however, they remain almost the same shape.
+
+#### Applying K-means clustering
+
+```{r}
+set.seed(1234)
+
+cadia_piecewise_km_2 <- kmeans(
+  cadia_piecewise,
+  centers = 2,
+  nstart = 20
+)
+
+cadia_piecewise_km_3 <- kmeans(
+  cadia_piecewise,
+  centers = 3,
+  nstart = 20
+)
+
+cadia_piecewise_km_4 <- kmeans(
+  cadia_piecewise,
+  centers = 4,
+  nstart = 20
+)
+
+cadia_piecewise_km_5 <- kmeans(
+  cadia_piecewise,
+  centers = 5,
+  nstart = 20
+)
+```
+
+#### Silhouette Score
+
+```{r}
+cadia_piecewise_km_sil <- avg_sil_score_km(
+  list(cadia_piecewise_km_2,
+       cadia_piecewise_km_3,
+       cadia_piecewise_km_4,
+       cadia_piecewise_km_5),
+  cadia_piecewise_dist
+)
+```
+
+```{r}
+#cadia_km_sil
+cadia_piecewise_km_sil
+```
+
+#### Davies-Bouldin Index
+
+```{r}
+cadia_piecewise_km_db <- dbi_km(
+  cadia_piecewise,
+  list(cadia_piecewise_km_2,
+       cadia_piecewise_km_3,
+       cadia_piecewise_km_4,
+       cadia_piecewise_km_5)
+)
+```
+
+```{r}
+cadia_piecewise_km_db
+```
+
+```{r}
+p_db_cadia_pw <- ggplot(
+  cadia_piecewise_km_db,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin Index: Cadia (Piecewise Linear Regression)",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+ggsave(
+  "cadia_dbi_piecewise.png",
+  p_db_cadia_pw,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+#### Apply cluster IDs and export
+
+```{r}
+cadia$piecewise_km_2 <- cadia_piecewise_km_2$cluster
+cadia$piecewise_km_3 <- cadia_piecewise_km_3$cluster
+cadia$piecewise_km_4 <- cadia_piecewise_km_4$cluster
+cadia$piecewise_km_5 <- cadia_piecewise_km_5$cluster
+
+write.csv(
+  cadia,
+  "cadia_piecewise_km.csv",
+  row.names = FALSE
+)
+```
+
+## 4. Internal Velocity
+
+### 4.1 Calculations
+
+Using the full displacement matrix:
+
+```{r}
+cadia_dates
+```
+
+```{r}
+cadia_time_diff <- as.numeric(diff(cadia_dates))
+
+cadia_time_diff
+```
+
+```{r}
+# Calculating displacement differences
+
+cadia_disp_diff <- t(apply(
+  cadia_D_mat,
+  1,
+  diff
+))
+```
+
+```{r}
+dim(cadia_disp_diff)
+```
+
+```{r}
+# Calculate velocity between each value
+cadia_vel <- sweep(
+  cadia_disp_diff,
+  2,
+  cadia_time_diff,
+  FUN = "/"
+)
+```
+
+```{r}
+# checks
+dim(cadia_vel)
+
+#head(cadia_vel)
+
+#summary(cadia_vel)
+
+anyNA(cadia_vel)
+```
+
+```{r}
+# renaming for easier interp later
+colnames(cadia_vel) <- paste0(
+  "V_",
+  format(cadia_dates[-1], "%Y%m%d")
+)
+
+# = velocity over the interval ending on that date
+```
+
+After our internal velocity calculations, we inspect a few velocity trajectories:
+
+```{r}
+png(
+  "cadia_internal_vel_ex.png",
+  width = 2400,
+  height = 1800,
+  res = 300
+)
+
+plot(
+  cadia_dates[-1],
+  cadia_vel[1, ],
+  type = "o",
+  xlab = "Date",
+  ylab = "Velocity (mm/day)",
+  main = "Cadia: Interval Velocity"
+)
+
+abline(h = 0, lty = 2)
+
+dev.off()
+```
+
+```{r}
+png(
+  "cadia_internal_vel_ex2.png",
+  width = 2400,
+  height = 1800,
+  res = 300
+)
+
+plot(
+  cadia_dates[-1],
+  cadia_vel[100, ],
+  type = "o",
+  xlab = "Date",
+  ylab = "Velocity (mm/day)",
+  main = "Cadia: Interval Velocity"
+)
+
+dev.off()
+```
+
+### 4.2 Hierarchical Clustering
+
+```{r}
+cadia_vel_dist <- dist(cadia_vel, method = "euclidean")
+```
+
+```{r}
+cadia_vel_hc <- hclust(cadia_vel_dist, method = "ward.D2")
+```
+
+#### Dendrograms
+
+```{r}
+plot(cadia_vel_hc, labels = FALSE, main = "Cadia: Internal Velocity")
+```
+
+```{r}
+png(
+  "cadia_internal_vel_dendrogram.png",
+  width = 2400,
+  height = 1800,
+  res = 300
+)
+
+plot(
+  cadia_vel_hc,
+  labels = FALSE,
+  main = "Cadia: Internal Velocity",
+  xlab = "",
+  sub = "",
+  ylab = "Height"
+)
+
+dev.off()
+```
+
+#### Silhouette Score
+
+```{r}
+cadia_vel_hc_sil <- avg_sil_score(cadia_vel_hc, cadia_vel_dist)
+
+cadia_vel_hc_sil
+```
+
+- The dendrogram looks much more linked, branch-wise, with the first two branches more significant gap-wise compared to the small, gradual branching after these 2-3 initial branches.
+
+- The silhouette scores are significantly smaller than any of our stage 1 clustering results. k = 2 results in the highest score and as k increases, silhouette score decreases.
+
+#### Apply cluster IDs and export
+
+```{r}
+# Cadia
+# k = 2
+cadia_vel_hc_2 <- cutree(cadia_vel_hc, k=2)
+table(cadia_vel_hc_2)
+cadia$vel_hc_2 <- cadia_vel_hc_2
+
+# k = 3
+cadia_vel_hc_3 <- cutree(cadia_vel_hc, k=3)
+table(cadia_vel_hc_3)
+cadia$vel_hc_3 <- cadia_vel_hc_3
+
+# k = 4
+cadia_vel_hc_4 <- cutree(cadia_vel_hc, k=4)
+table(cadia_vel_hc_4)
+cadia$vel_hc_4 <- cadia_vel_hc_4
+
+# k = 5
+cadia_vel_hc_5 <- cutree(cadia_vel_hc, k=5)
+table(cadia_vel_hc_5)
+cadia$vel_hc_5 <- cadia_vel_hc_5
+```
+
+```{r}
+# Export for each case
+write.csv(cadia, "cadia_vel_hc.csv", row.names = FALSE)
+```
+
+### 4.3 K-means clustering
+
+#### Elbow Plot
+
+```{r}
+fviz_nbclust(cadia_D, kmeans, method = "wss") + ggtitle("Optimal number of clusters: Cadia (Raw)")
+
+fviz_nbclust(cadia_piecewise, kmeans, method = "wss") + ggtitle("Optimal number of clusters: Cadia Piecewise")
+
+fviz_nbclust(cadia_vel, kmeans, method = "wss") + ggtitle("Optimal number of clusters: Cadia Internal Velocity")
+```
+
+```{r}
+p_cadia_elbow_vel <- fviz_nbclust(
+  cadia_vel,
+  kmeans,
+  method = "wss"
+) +
+  ggtitle("Cadia: Internal Velocity")
+```
+
+```{r}
+ggsave(
+  "cadia_elbow_vel.png",
+  p_cadia_elbow_vel,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+#### Silhouette Score Plot
+
+```{r}
+fviz_nbclust(cadia_D, kmeans, method = "silhouette") + ggtitle("Optimal number of clusters: Cadia")
+
+fviz_nbclust(cadia_piecewise, kmeans, method = "silhouette") + ggtitle("Optimal number of clusters: Cadia")
+
+fviz_nbclust(cadia_vel, kmeans, method = "silhouette") + ggtitle("Optimal number of clusters: Cadia")
+```
+
+```{r}
+p_cadia_sil_vel <- fviz_nbclust(
+  cadia_vel,
+  kmeans,
+  method = "silhouette"
+) +
+  ggtitle("Cadia: Internal Velocity")
+```
+
+```{r}
+ggsave("cadia_sil_vel.png",
+       p_cadia_sil_vel, width = 7, height = 5, dpi = 300)
+```
+
+#### Applying K-means clustering
+
+```{r}
+set.seed(1234)
+
+cadia_vel_km_2 <- kmeans(
+  cadia_vel,
+  centers = 2,
+  nstart = 20
+)
+
+cadia_vel_km_3 <- kmeans(
+  cadia_vel,
+  centers = 3,
+  nstart = 20
+)
+
+cadia_vel_km_4 <- kmeans(
+  cadia_vel,
+  centers = 4,
+  nstart = 20
+)
+
+cadia_vel_km_5 <- kmeans(
+  cadia_vel,
+  centers = 5,
+  nstart = 20
+)
+```
+
+#### Silhouette Score
+
+```{r}
+cadia_vel_km_sil <- avg_sil_score_km(
+  list(cadia_vel_km_2,
+       cadia_vel_km_3,
+       cadia_vel_km_4,
+       cadia_vel_km_5),
+  cadia_vel_dist
+)
+
+cadia_vel_km_sil
+```
+
+#### Davies-Bouldin Index
+
+```{r}
+cadia_vel_km_db <- dbi_km(
+  cadia_vel,
+  list(cadia_vel_km_2,
+       cadia_vel_km_3,
+       cadia_vel_km_4,
+       cadia_vel_km_5)
+)
+
+cadia_vel_km_db
+```
+
+```{r}
+p_db_cadia_vel <- ggplot(
+  cadia_vel_km_db,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin Index: Cadia (Internal Velocity)",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+ggsave(
+  "cadia_dbi_vel.png",
+  p_db_cadia_vel,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+#### Apply cluster IDs and export
+
+```{r}
+cadia$vel_km_2 <- cadia_vel_km_2$cluster
+cadia$vel_km_3 <- cadia_vel_km_3$cluster
+cadia$vel_km_4 <- cadia_vel_km_4$cluster
+cadia$vel_km_5 <- cadia_vel_km_5$cluster
+```
+
+```{r}
+write.csv(
+  cadia,
+  "cadia_vel_km.csv",
+  row.names = FALSE
+)
+```
+
+```{r}
+cadia_vel_km_test <- read.csv("cadia_vel_km.csv")
+```
+
+```{r}
+dim(cadia_vel_km_test)
+```
+
+## 5. Standardised Data
+
+We standardise each row's displacement values:
+
+```{r}
+# Cadia
+cadia_std <- t(
+  scale(
+    t(cadia_D)
+  )
+)
+
+dim(cadia_std)
+anyNA(cadia_std)
+```
+
+- NA = TRUE. We identify this row(s) and decide whether to change the row values or delete it entirely.
+
+```{r}
+# Standard deviation of each time series
+cadia_row_sd <- apply(cadia_D, 1, sd)
+
+# Rows that can actually be standardised
+cadia_valid_rows <- cadia_row_sd != 0
+
+sum(!cadia_valid_rows)
+```
+
+- As it is only one row, we delete it.
+
+```{r}
+cadia_std <- t(
+  scale(
+    t(cadia_D[cadia_valid_rows, ])
+  )
+)
+
+dim(cadia_std)
+anyNA(cadia_std)
+```
+
+### 5.1 Hierarchical Clustering
+
+#### Dendrograms
+
+```{r}
+# dist matrix
+cadia_std_dist <- dist(
+  cadia_std,
+  method = "euclidean"
+)
+
+# Ward HC
+cadia_std_hc <- hclust(
+  cadia_std_dist,
+  method = "ward.D2"
+)
+
+png(
+  "cadia_std_dendrogram.png",
+  width = 2400,
+  height = 1800,
+  res = 300
+)
+
+# Dendrogram
+plot(
+  cadia_std_hc,
+  labels = FALSE,
+  main = "Cadia: Standardised Raw Data",
+  xlab = "",
+  sub = "",
+  ylab = "Height"
+)
+
+dev.off()
+```
+
+#### Silhouette Score
+
+```{r}
+cadia_std_hc_sil <- avg_sil_score(
+  cadia_std_hc,
+  cadia_std_dist
+)
+
+cadia_std_hc_sil
+```
+
+#### Apply cluster IDs and export
+
+```{r}
+cadia_std_hc_2 <- cutree(cadia_std_hc, k = 2)
+cadia_std_hc_3 <- cutree(cadia_std_hc, k = 3)
+cadia_std_hc_4 <- cutree(cadia_std_hc, k = 4)
+cadia_std_hc_5 <- cutree(cadia_std_hc, k = 5)
+```
+
+```{r}
+# Create empty columns for all 12,502 original points
+cadia$std_hc_2 <- NA_integer_
+cadia$std_hc_3 <- NA_integer_
+cadia$std_hc_4 <- NA_integer_
+cadia$std_hc_5 <- NA_integer_
+
+# Fill memberships only for the 12,501 rows that were standardised
+cadia$std_hc_2[cadia_valid_rows] <- cadia_std_hc_2
+cadia$std_hc_3[cadia_valid_rows] <- cadia_std_hc_3
+cadia$std_hc_4[cadia_valid_rows] <- cadia_std_hc_4
+cadia$std_hc_5[cadia_valid_rows] <- cadia_std_hc_5
+```
+
+```{r}
+cadia[7424, c(
+  "std_hc_2",
+  "std_hc_3",
+  "std_hc_4",
+  "std_hc_5"
+)]
+```
+
+```{r}
+table(cadia$std_hc_2, useNA = "ifany")
+```
+
+```{r}
+write.csv(
+  cadia,
+  "cadia_std_hc.csv",
+  row.names = FALSE
+)
+```
+
+### 5.2 K-means Clustering
+
+#### Elbow Plot
+
+```{r}
+fviz_nbclust(cadia_std, kmeans, method = "wss") + ggtitle("Optimal number of clusters: Cadia Standardised")
+```
+
+```{r}
+p_cadia_elbow_std <- fviz_nbclust(
+  cadia_std,
+  kmeans,
+  method = "wss"
+) +
+  ggtitle("Cadia: Standardised")
+```
+
+```{r}
+ggsave(
+  "cadia_elbow_std.png",
+  p_cadia_elbow_std,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+#### Silhouette Score Plot
+
+```{r}
+fviz_nbclust(
+  cadia_std,
+  kmeans,
+  method = "silhouette"
+) + 
+  ggtitle("Optimal number of clusters: Cadia (Standardised)")
+```
+
+```{r}
+p_cadia_sil_std <- fviz_nbclust(
+  cadia_std,
+  kmeans,
+  method = "silhouette"
+) + 
+  ggtitle("Optimal number of clusters: Cadia (Standardised)")
+```
+
+```{r}
+ggsave("cadia_sil_std.png",
+       p_cadia_sil_std, width = 7, height = 5, dpi = 300)
+```
+
+#### Applying K-means clustering
+
+```{r}
+set.seed(1234)
+
+cadia_std_km_2 <- kmeans(
+  cadia_std,
+  centers = 2,
+  nstart = 20
+)
+
+cadia_std_km_3 <- kmeans(
+  cadia_std,
+  centers = 3,
+  nstart = 20
+)
+
+cadia_std_km_4 <- kmeans(
+  cadia_std,
+  centers = 4,
+  nstart = 20
+)
+
+cadia_std_km_5 <- kmeans(
+  cadia_std,
+  centers = 5,
+  nstart = 20
+)
+```
+
+#### Silhouette Score
+
+```{r}
+cadia_std_km_sil <- avg_sil_score_km(
+  list(cadia_std_km_2,
+       cadia_std_km_3,
+       cadia_std_km_4,
+       cadia_std_km_5),
+  cadia_std_dist
+)
+
+cadia_std_km_sil
+```
+
+#### Davies-Bouldin Index
+
+```{r}
+cadia_std_km_db <- dbi_km(
+  cadia_std,
+  list(cadia_std_km_2,
+       cadia_std_km_3,
+       cadia_std_km_4,
+       cadia_std_km_5)
+)
+
+cadia_std_km_db
+```
+
+```{r}
+p_db_cadia_std <- ggplot(
+  cadia_std_km_db,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin Index: Cadia (Standardised)",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+ggsave(
+  "cadia_dbi_std.png",
+  p_db_cadia_std,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+#### Apply cluster IDs and export
+
+We have to keep in mind that after standardising, one of the rows was deleted as it led to only zero values. So applying the cluster IDs is a different process here.
+
+```{r}
+# Create empty cols
+cadia$std_km_2 <- NA_integer_
+cadia$std_km_3 <- NA_integer_
+cadia$std_km_4 <- NA_integer_
+cadia$std_km_5 <- NA_integer_
+
+# Fill only rows that were included in standardisation
+cadia$std_km_2[cadia_valid_rows] <- cadia_std_km_2$cluster
+cadia$std_km_3[cadia_valid_rows] <- cadia_std_km_3$cluster
+cadia$std_km_4[cadia_valid_rows] <- cadia_std_km_4$cluster
+cadia$std_km_5[cadia_valid_rows] <- cadia_std_km_5$cluster
+```
+
+```{r}
+cadia[7424, c(
+  "std_km_2",
+  "std_km_3",
+  "std_km_4",
+  "std_km_5"
+)]
+```
+
+```{r}
+table(cadia$std_km_2, useNA = "ifany")
+```
+
+```{r}
+write.csv(
+  cadia,
+  "cadia_std_km.csv",
+  row.names = FALSE
+)
+```
