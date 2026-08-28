@@ -12,7 +12,7 @@ A study investigating data science techniques (particularly unsupervised cluster
 
 ## R Setup
 
-All analyses were conducted in R/RStudio (Version: 2026.08.0+187)
+All analyses were conducted in R/RStudio (Version: 2026.08.0+187).
 
 Required packages for running the notebooks:
 
