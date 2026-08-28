@@ -43,15 +43,15 @@ We will also look at filtering the data based on coherence, as done in Rana et a
 Taken from the Stage 1 notebook.
 
 ```{r}
-cadia <- read_excel("cadia_2018_ps.xlsx")
+cadia <- read_excel("../data/Cadia_PS_2018.xlsx")
 
-peru_failed <- read_excel("2019_Cobriza_Peru_Failed.xlsx")
+peru_failed <- read_excel("../data/Cobriza_Peru_Failed_2019.xlsx")
 
-peru_unfailed <- read_excel("2019_Cobriza_Peru_Unfailed.xlsx")
+peru_unfailed <- read_excel("../data/Cobriza_Peru_Unfailed_2019.xlsx")
 
-feijao_53 <- read_excel("Feijao_PS_T53.xlsx")
+feijao_53 <- read_excel("../data/Feijao_PS_T53.xlsx")
 
-feijao_155 <- read_excel("Feijao_PS_T155.xlsx")
+feijao_155 <- read_excel("../data/Feijao_PS_T155.xlsx")
 ```
 
 ```{r}
@@ -203,7 +203,7 @@ We will test three values of window size using moving average:
 - 5: 5 acquisitions are averaged out, meaning one window summarises 12 \* 5 = 60 days.
 
 ```{r}
-# ---------- Cadia
+# Cadia
 
 # MA(2)
 cadia_MA2 <- t(apply(cadia_D, 1, function(x) {
@@ -218,6 +218,56 @@ cadia_MA3 <- t(apply(cadia_D, 1, function(x) {
 }))
 
 #cadia_MA3 <- cadia_MA3[, -c(1:2)]
+```
+
+```{r}
+# ---- Peru (failed)
+
+# MA(2)
+peru_F_MA2 <- t(apply(peru_D_F, 1, function(x) {
+  rollmean(x, k = 2, align = "right", fill = NA)
+}))
+
+# MA(3)
+peru_F_MA3 <- t(apply(peru_D_F, 1, function(x) {
+  rollmean(x, k = 3, align = "right", fill = NA)
+}))
+
+# ---- Peru (unfailed)
+
+# MA(2)
+peru_U_MA2 <- t(apply(peru_D_U, 1, function(x) {
+  rollmean(x, k = 2, align = "right", fill = NA)
+}))
+
+# MA(3)
+peru_U_MA3 <- t(apply(peru_D_U, 1, function(x) {
+  rollmean(x, k = 3, align = "right", fill = NA)
+}))
+
+# ---- Feijao (T53)
+
+# MA(2)
+feijao_53_MA2 <- t(apply(feijao_D_53, 1, function(x) {
+  rollmean(x, k = 2, align = "right", fill = NA)
+}))
+
+# MA(3)
+feijao_53_MA3 <- t(apply(feijao_D_53, 1, function(x) {
+  rollmean(x, k = 3, align = "right", fill = NA)
+}))
+
+# ---- Feijao (T155)
+
+# MA(2)
+feijao_155_MA2 <- t(apply(feijao_D_155, 1, function(x) {
+  rollmean(x, k = 2, align = "right", fill = NA)
+}))
+
+# MA(3)
+feijao_155_MA3 <- t(apply(feijao_D_155, 1, function(x) {
+  rollmean(x, k = 3, align = "right", fill = NA)
+}))
 ```
 
 ```{r}
@@ -240,6 +290,118 @@ lines(
 lines(
   1:ncol(cadia_D),
   cadia_MA3[1, ],
+  lty = 3
+)
+
+legend(
+  "topleft",
+  legend = c("Raw", "MA(2)", "MA(3)"),
+  lty = c(1, 2, 3)
+)
+```
+
+```{r}
+par(mfrow=c(1,2))
+
+plot(
+  as.numeric(peru_D_F[1, ]),
+  type = "l",
+  xlab = "Time",
+  ylab = "Cumulative displacement",
+  main = "Peru (F): Raw vs Moving Average"
+)
+
+lines(
+  1:ncol(peru_D_F),
+  peru_F_MA2[1, ],
+  lty = 2
+)
+
+lines(
+  1:ncol(peru_D_F),
+  peru_F_MA3[1, ],
+  lty = 3
+)
+
+legend(
+  "topleft",
+  legend = c("Raw", "MA(2)", "MA(3)"),
+  lty = c(1, 2, 3)
+)
+
+plot(
+  as.numeric(peru_D_U[1, ]),
+  type = "l",
+  xlab = "Time",
+  ylab = "Cumulative displacement",
+  main = "Peru (U): Raw vs Moving Average"
+)
+
+lines(
+  1:ncol(peru_D_U),
+  peru_U_MA2[1, ],
+  lty = 2
+)
+
+lines(
+  1:ncol(peru_D_U),
+  peru_U_MA3[1, ],
+  lty = 3
+)
+
+legend(
+  "topleft",
+  legend = c("Raw", "MA(2)", "MA(3)"),
+  lty = c(1, 2, 3)
+)
+```
+
+```{r}
+par(mfrow=c(1,2))
+
+plot(
+  as.numeric(feijao_D_53[1, ]),
+  type = "l",
+  xlab = "Time",
+  ylab = "Cumulative displacement",
+  main = "Feijao (T53): Raw vs Moving Average"
+)
+
+lines(
+  1:ncol(feijao_D_53),
+  feijao_53_MA2[1, ],
+  lty = 2
+)
+
+lines(
+  1:ncol(feijao_D_53),
+  feijao_53_MA3[1, ],
+  lty = 3
+)
+
+legend(
+  "topleft",
+  legend = c("Raw", "MA(2)", "MA(3)"),
+  lty = c(1, 2, 3)
+)
+
+plot(
+  as.numeric(feijao_D_155[1, ]),
+  type = "l",
+  xlab = "Time",
+  ylab = "Cumulative displacement",
+  main = "Feijao (155): Raw vs Moving Average"
+)
+
+lines(
+  1:ncol(feijao_D_155),
+  feijao_155_MA2[1, ],
+  lty = 2
+)
+
+lines(
+  1:ncol(feijao_D_155),
+  feijao_155_MA3[1, ],
   lty = 3
 )
 
@@ -282,6 +444,18 @@ dev.off()
 # Removing the NA values / columns
 cadia_MA2 <- cadia_MA2[, -1]
 cadia_MA3 <- cadia_MA3[, -c(1:2)]
+
+peru_F_MA2 <- peru_F_MA2[, -1]
+peru_F_MA3 <- peru_F_MA3[, -c(1:2)]
+
+peru_U_MA2 <- peru_U_MA2[, -1]
+peru_U_MA3 <- peru_U_MA3[, -c(1:2)]
+
+feijao_53_MA2 <- feijao_53_MA2[, -1]
+feijao_53_MA3 <- feijao_53_MA3[, -c(1:2)]
+
+feijao_155_MA2 <- feijao_155_MA2[, -1]
+feijao_155_MA3 <- feijao_155_MA3[, -c(1:2)]
 ```
 
 ### 2.1 Hierarchical Clustering
@@ -302,6 +476,62 @@ cadia_MA3_dist <- dist(cadia_MA3, method = "euclidean")
 cadia_MA3_hc <- hclust(cadia_MA3_dist, method = "ward.D2")
 ```
 
+```{r}
+# Raw data - Baseline
+peru_F_dist <- dist(peru_D_F, method = "euclidean")
+peru_F_hc <- hclust(peru_F_dist, method = "ward.D2")
+
+# MA(2)
+peru_F_MA2_dist <- dist(peru_F_MA2, method = "euclidean")
+peru_F_MA2_hc <- hclust(peru_F_MA2_dist, method = "ward.D2")
+
+# MA(3)
+peru_F_MA3_dist <- dist(peru_F_MA3, method = "euclidean")
+peru_F_MA3_hc <- hclust(peru_F_MA3_dist, method = "ward.D2")
+```
+
+```{r}
+# Raw data - Baseline
+peru_U_dist <- dist(peru_D_U, method = "euclidean")
+peru_U_hc <- hclust(peru_U_dist, method = "ward.D2")
+
+# MA(2)
+peru_U_MA2_dist <- dist(peru_U_MA2, method = "euclidean")
+peru_U_MA2_hc <- hclust(peru_U_MA2_dist, method = "ward.D2")
+
+# MA(3)
+peru_U_MA3_dist <- dist(peru_U_MA3, method = "euclidean")
+peru_U_MA3_hc <- hclust(peru_U_MA3_dist, method = "ward.D2")
+```
+
+```{r}
+# Raw data - Baseline
+feijao_53_dist <- dist(feijao_D_53, method = "euclidean")
+feijao_53_hc <- hclust(feijao_53_dist, method = "ward.D2")
+
+# MA(2)
+feijao_53_MA2_dist <- dist(feijao_53_MA2, method = "euclidean")
+feijao_53_MA2_hc <- hclust(feijao_53_MA2_dist, method = "ward.D2")
+
+# MA(3)
+feijao_53_MA3_dist <- dist(feijao_53_MA3, method = "euclidean")
+feijao_53_MA3_hc <- hclust(feijao_53_MA3_dist, method = "ward.D2")
+```
+
+```{r}
+# Raw data - Baseline
+feijao_155_dist <- dist(feijao_D_155, method = "euclidean")
+feijao_155_hc <- hclust(feijao_155_dist, method = "ward.D2")
+
+# MA(2)
+feijao_155_MA2_dist <- dist(feijao_155_MA2, method = "euclidean")
+feijao_155_MA2_hc <- hclust(feijao_155_MA2_dist, method = "ward.D2")
+
+# MA(3)
+feijao_155_MA3_dist <- dist(feijao_155_MA3, method = "euclidean")
+feijao_155_MA3_hc <- hclust(feijao_155_MA3_dist, method = "ward.D2")
+```
+
 #### Dendrograms
 
 ```{r}
@@ -311,6 +541,30 @@ plot(cadia_MA3_hc, labels = FALSE)
 ```
 
 - The dendrograms for Cadia reduce the gap between the second branch and the third branching, possibly making it more "suitable" for k = 3, compared to the obvious split of k = 2 in the baseline dendrogram.
+
+```{r}
+plot(peru_F_hc, labels = FALSE)
+plot(peru_F_MA2_hc, labels = FALSE)
+plot(peru_F_MA3_hc, labels = FALSE)
+```
+
+```{r}
+plot(peru_U_hc, labels = FALSE)
+plot(peru_U_MA2_hc, labels = FALSE)
+plot(peru_U_MA3_hc, labels = FALSE)
+```
+
+```{r}
+plot(feijao_53_hc, labels = FALSE)
+plot(feijao_53_MA2_hc, labels = FALSE)
+plot(feijao_53_MA3_hc, labels = FALSE)
+```
+
+```{r}
+plot(feijao_155_hc, labels = FALSE)
+plot(feijao_155_MA2_hc, labels = FALSE)
+plot(feijao_155_MA3_hc, labels = FALSE)
+```
 
 #### Silhouette Score
 
@@ -355,9 +609,95 @@ cadia_MA3_hc_sil <- avg_sil_score(
 ```
 
 ```{r}
+# ------ Peru (F)
+peru_F_hc_sil <- avg_sil_score(peru_F_hc, peru_F_dist)
+
+# MA(2)
+peru_F_MA2_hc_sil <- avg_sil_score(
+  peru_F_MA2_hc,
+  peru_F_MA2_dist
+)
+
+# MA(3)
+peru_F_MA3_hc_sil <- avg_sil_score(
+  peru_F_MA3_hc,
+  peru_F_MA3_dist
+)
+
+# ------ Peru (U)
+peru_U_hc_sil <- avg_sil_score(peru_U_hc, peru_U_dist)
+
+# MA(2)
+peru_U_MA2_hc_sil <- avg_sil_score(
+  peru_U_MA2_hc,
+  peru_U_MA2_dist
+)
+
+# MA(3)
+peru_U_MA3_hc_sil <- avg_sil_score(
+  peru_U_MA3_hc,
+  peru_U_MA3_dist
+)
+
+# ------ Feijao (T53)
+feijao_53_hc_sil <- avg_sil_score(feijao_53_hc, feijao_53_dist)
+
+# MA(2)
+feijao_53_MA2_hc_sil <- avg_sil_score(
+  feijao_53_MA2_hc,
+  feijao_53_MA2_dist
+)
+
+# MA(3)
+feijao_53_MA3_hc_sil <- avg_sil_score(
+  feijao_53_MA3_hc,
+  feijao_53_MA3_dist
+)
+
+# ------ Feijao (T155)
+feijao_155_hc_sil <- avg_sil_score(feijao_155_hc, feijao_155_dist)
+
+# MA(2)
+feijao_155_MA2_hc_sil <- avg_sil_score(
+  feijao_155_MA2_hc,
+  feijao_155_MA2_dist
+)
+
+# MA(3)
+feijao_155_MA3_hc_sil <- avg_sil_score(
+  feijao_155_MA3_hc,
+  feijao_155_MA3_dist
+)
+```
+
+```{r}
 cadia_hc_sil
 cadia_MA2_hc_sil
 cadia_MA3_hc_sil
+```
+
+```{r}
+peru_F_hc_sil
+peru_F_MA2_hc_sil
+peru_F_MA3_hc_sil
+```
+
+```{r}
+peru_U_hc_sil
+peru_U_MA2_hc_sil
+peru_U_MA3_hc_sil
+```
+
+```{r}
+feijao_53_hc_sil
+feijao_53_MA2_hc_sil
+feijao_53_MA3_hc_sil
+```
+
+```{r}
+feijao_155_hc_sil
+feijao_155_MA2_hc_sil
+feijao_155_MA3_hc_sil
 ```
 
 The moving average dataset of the hierarchical clustering using a window size of 3 achieved the highest average silhouette score for k = 2. Both moving average datasets result in the highest silhouette score at k = 2 and as k increases, the silhouette score decreases.
@@ -411,8 +751,153 @@ cadia$MA3_hc_5 <- cadia_MA3_hc_5
 ```
 
 ```{r}
+# Peru (F) - MA(2)
+# k = 2
+peru_F_MA2_hc_2 <- cutree(peru_F_MA2_hc, k=2)
+table(peru_F_MA2_hc_2)
+peru_failed$MA2_hc_2 <- peru_F_MA2_hc_2
+
+# k = 3
+peru_F_MA2_hc_3 <- cutree(peru_F_MA2_hc, k=3)
+table(peru_F_MA2_hc_3)
+peru_failed$MA2_hc_3 <- peru_F_MA2_hc_3
+
+# k = 4
+peru_F_MA2_hc_4 <- cutree(peru_F_MA2_hc, k=4)
+table(peru_F_MA2_hc_4)
+peru_failed$MA2_hc_4 <- peru_F_MA2_hc_4
+
+# k = 5
+peru_F_MA2_hc_5 <- cutree(peru_F_MA2_hc, k=5)
+table(peru_F_MA2_hc_5)
+peru_failed$MA2_hc_5 <- peru_F_MA2_hc_5
+```
+
+```{r}
+# Peru (F) - MA(3)
+# k = 2
+peru_F_MA3_hc_2 <- cutree(peru_F_MA3_hc, k=2)
+table(peru_F_MA3_hc_2)
+peru_failed$MA3_hc_2 <- peru_F_MA3_hc_2
+
+# k = 3
+peru_F_MA3_hc_3 <- cutree(peru_F_MA3_hc, k=3)
+table(peru_F_MA3_hc_3)
+peru_failed$MA3_hc_3 <- peru_F_MA3_hc_3
+
+# k = 4
+peru_F_MA3_hc_4 <- cutree(peru_F_MA3_hc, k=4)
+table(peru_F_MA3_hc_4)
+peru_failed$MA3_hc_4 <- peru_F_MA3_hc_4
+
+# k = 5
+peru_F_MA3_hc_5 <- cutree(peru_F_MA3_hc, k=5)
+table(peru_F_MA3_hc_4)
+peru_failed$MA3_hc_5 <- peru_F_MA3_hc_4
+```
+
+```{r}
+# Feijao (T53) - MA(2)
+# k = 2
+feijao_53_MA2_hc_2 <- cutree(feijao_53_MA2_hc, k=2)
+table(feijao_53_MA2_hc_2)
+feijao_53$MA2_hc_2 <- feijao_53_MA2_hc_2
+
+# k = 3
+feijao_53_MA2_hc_3 <- cutree(feijao_53_MA2_hc, k=3)
+table(feijao_53_MA2_hc_3)
+feijao_53$MA2_hc_3 <- feijao_53_MA2_hc_3
+
+# k = 4
+feijao_53_MA2_hc_4 <- cutree(feijao_53_MA2_hc, k=4)
+table(feijao_53_MA2_hc_4)
+feijao_53$MA2_hc_4 <- feijao_53_MA2_hc_4
+
+# k = 5
+feijao_53_MA2_hc_5 <- cutree(feijao_53_MA2_hc, k=5)
+table(feijao_53_MA2_hc_5)
+feijao_53$MA2_hc_5 <- feijao_53_MA2_hc_5
+```
+
+```{r}
+# Feijao (T53) - MA(3)
+# k = 2
+feijao_53_MA3_hc_2 <- cutree(feijao_53_MA3_hc, k=2)
+table(feijao_53_MA3_hc_2)
+feijao_53$MA3_hc_2 <- feijao_53_MA3_hc_2
+
+# k = 3
+feijao_53_MA3_hc_3 <- cutree(feijao_53_MA3_hc, k=3)
+table(feijao_53_MA3_hc_3)
+feijao_53$MA3_hc_3 <- feijao_53_MA3_hc_3
+
+# k = 4
+feijao_53_MA3_hc_4 <- cutree(feijao_53_MA3_hc, k=4)
+table(feijao_53_MA3_hc_4)
+feijao_53$MA3_hc_4 <- feijao_53_MA3_hc_4
+
+# k = 5
+feijao_53_MA3_hc_5 <- cutree(feijao_53_MA3_hc, k=5)
+table(feijao_53_MA3_hc_5)
+feijao_53$MA3_hc_5 <- feijao_53_MA3_hc_5
+```
+
+```{r}
+# Feijao (T155) - MA(2)
+# k = 2
+feijao_155_MA2_hc_2 <- cutree(feijao_155_MA2_hc, k=2)
+table(feijao_155_MA2_hc_2)
+feijao_155$MA2_hc_2 <- feijao_155_MA2_hc_2
+
+# k = 3
+feijao_155_MA2_hc_3 <- cutree(feijao_155_MA2_hc, k=3)
+table(feijao_155_MA2_hc_3)
+feijao_155$MA2_hc_3 <- feijao_155_MA2_hc_3
+
+# k = 4
+feijao_155_MA2_hc_4 <- cutree(feijao_155_MA2_hc, k=4)
+table(feijao_155_MA2_hc_4)
+feijao_155$MA2_hc_4 <- feijao_155_MA2_hc_4
+
+# k = 5
+feijao_155_MA2_hc_5 <- cutree(feijao_155_MA2_hc, k=5)
+table(feijao_155_MA2_hc_5)
+feijao_155$MA2_hc_5 <- feijao_155_MA2_hc_5
+```
+
+```{r}
+# Feijao (T155) - MA(3)
+# k = 2
+feijao_155_MA3_hc_2 <- cutree(feijao_155_MA3_hc, k=2)
+table(feijao_155_MA3_hc_2)
+feijao_155$MA3_hc_2 <- feijao_155_MA3_hc_2
+
+# k = 3
+feijao_155_MA3_hc_3 <- cutree(feijao_155_MA3_hc, k=3)
+table(feijao_155_MA3_hc_3)
+feijao_155$MA3_hc_3 <- feijao_155_MA3_hc_3
+
+# k = 4
+feijao_155_MA3_hc_4 <- cutree(feijao_155_MA3_hc, k=4)
+table(feijao_155_MA3_hc_4)
+feijao_155$MA3_hc_4 <- feijao_155_MA3_hc_4
+
+# k = 5
+feijao_155_MA3_hc_5 <- cutree(feijao_155_MA3_hc, k=5)
+table(feijao_155_MA3_hc_5)
+feijao_155$MA3_hc_5 <- feijao_155_MA3_hc_5
+```
+
+```{r}
 # Export for each case
 write.csv(cadia, "cadia_MA_hc.csv", row.names = FALSE)
+```
+
+```{r}
+write.csv(peru_failed, "peru_F_MA_hc.csv", row.names = FALSE)
+write.csv(peru_unfailed, "peru_U_MA_hc.csv", row.names = FALSE)
+write.csv(feijao_53, "feijao_53_MA_hc.csv", row.names = FALSE)
+write.csv(feijao_155, "feijao_155_MA_hc.csv", row.names = FALSE)
 ```
 
 **Exporting plots**

@@ -30,4 +30,12 @@ set.seed(1234)
 
 # Stage 3: Temporal Clustering
 
+We attempt to introduce a temporal aspect to our previous clustering methods by using an "expanding window" approach and tracking the cluster membership tracking.
+
 ## 1. Prepare the data
+
+We prepare the data the same as we have in Stages 1 and 2.
+
+```{r}
+
+```
