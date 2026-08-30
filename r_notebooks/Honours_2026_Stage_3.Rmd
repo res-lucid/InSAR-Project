@@ -23,6 +23,8 @@ library(dtwclust)
 library(patchwork)
 library(ggplotify)
 library(zoo)
+library(tidyr)
+library(dplyr)
 
 
 set.seed(1234)
@@ -37,5 +39,444 @@ We attempt to introduce a temporal aspect to our previous clustering methods by 
 We prepare the data the same as we have in Stages 1 and 2.
 
 ```{r}
+cadia <- read_excel("../data/Cadia_PS_2018.xlsx")
 
+peru_failed <- read_excel("../data/Cobriza_Peru_Failed_2019.xlsx")
+
+peru_unfailed <- read_excel("../data/Cobriza_Peru_Unfailed_2019.xlsx")
+
+feijao_53 <- read_excel("../data/Feijao_PS_T53.xlsx")
+
+feijao_155 <- read_excel("../data/Feijao_PS_T155.xlsx")
+```
+
+```{r}
+head(cadia)
+dim(cadia)
+
+head(peru_failed)
+dim(peru_failed)
+
+head(peru_unfailed)
+dim(peru_unfailed)
+
+head(feijao_53)
+dim(feijao_53)
+
+head(feijao_155)
+dim(feijao_155)
+```
+
+**Extract the displacement columns:**
+
+```{r}
+
+# Cadia --------------
+
+d_cols <- grep("^D_", names(cadia), value = TRUE) # D_ for descending orbit track
+length(d_cols)
+head(d_cols)
+
+cadia_D <- cadia[, d_cols]
+
+# Inspect new dataset
+head(cadia_D)
+dim(cadia_D)
+
+# Check for missing vals
+sum(is.na(cadia_D))
+
+# Peru - (Failed) ---------------------
+
+d_cols_peru_F <- grep("^D_", names(peru_failed), value = TRUE)
+length(d_cols_peru_F)
+head(d_cols_peru_F)
+
+peru_D_F <- peru_failed[, d_cols_peru_F]
+
+head(peru_D_F)
+dim(peru_D_F)
+
+# Check for missing vals
+sum(is.na(peru_D_F))
+
+# Peru - (Unfailed) ---------------------
+
+d_cols_peru_U <- grep("^D_", names(peru_unfailed), value = TRUE)
+length(d_cols_peru_U)
+head(d_cols_peru_U)
+
+peru_D_U <- peru_unfailed[, d_cols_peru_U]
+
+head(peru_D_U)
+dim(peru_D_U)
+
+# Check for missing vals
+sum(is.na(peru_D_U))
+
+# Feijao - (T53) ---------------------
+
+d_cols_feijao_53 <- grep("^D_", names(feijao_53), value = TRUE)
+length(d_cols_feijao_53)
+head(d_cols_feijao_53)
+
+feijao_D_53 <- feijao_53[, d_cols_feijao_53]
+
+head(feijao_D_53)
+dim(feijao_D_53)
+
+# Check for missing vals
+sum(is.na(feijao_D_53))
+
+# Feijao - (T155) ---------------------
+
+d_cols_feijao_155 <- grep("^D_", names(feijao_155), value = TRUE)
+length(d_cols_feijao_155)
+head(d_cols_feijao_155)
+
+feijao_D_155 <- feijao_155[, d_cols_feijao_155]
+
+head(feijao_D_155)
+dim(feijao_D_155)
+
+# Check for missing vals
+sum(is.na(feijao_D_155))
+```
+
+**Transform into matrices:**
+
+```{r}
+cadia_D_mat <- as.matrix(cadia_D)
+
+peru_D_F_mat <- as.matrix(peru_D_F)
+
+peru_D_U_mat <- as.matrix(peru_D_U)
+
+feijao_D_53_mat <- as.matrix(feijao_D_53)
+
+feijao_D_155_mat <- as.matrix(feijao_D_155)
+```
+
+**Remove baseline date column:**
+
+```{r}
+# Helper function for removing baseline date column
+
+remove_zero_var <- function(x) {
+  col_sd <- apply(x, 2, sd)
+  x[, col_sd > 0, drop = FALSE]
+}
+```
+
+```{r}
+cadia_D <- remove_zero_var(cadia_D_mat)
+
+peru_D_F <- remove_zero_var(peru_D_F_mat)
+
+peru_D_U <- remove_zero_var(peru_D_U_mat)
+
+feijao_D_53 <- remove_zero_var(feijao_D_53_mat)
+
+feijao_D_155 <- remove_zero_var(feijao_D_155_mat)
+```
+
+```{r}
+dim(cadia_D)
+dim(peru_D_F)
+dim(peru_D_U)
+dim(feijao_D_53)
+dim(feijao_D_155)
+```
+
+## 2. K-means clustering w/ time
+
+### 2.1 Setup
+
+First attempt: Cadia only
+
+We'll set our initial parameters for attempting K-means clustering (k = 2):
+
+```{r}
+set.seed(1234)
+
+k <- 2
+start_window <- 10
+
+n_pts <- nrow(cadia_D)
+n_dates <- ncol(cadia_D)
+
+n_iters <- n_dates - start_window + 1
+```
+
+```{r}
+n_dates
+n_iters
+```
+
+We will set a matrix to store our cluster memberships:
+
+```{r}
+cluster_membership_mat <- matrix(
+  NA,
+  nrow = n_pts,
+  ncol = n_iters
+)
+
+# rename the columns to correspond to dates
+
+iter_dates <- colnames(cadia_D)[start_window:n_dates]
+
+colnames(cluster_membership_mat) <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates)
+)
+```
+
+```{r}
+head(cluster_membership_mat)
+dim(cluster_membership_mat)
+```
+
+### 2.2 Temporal Clustering Loop
+
+```{r}
+for (i in start_window:n_dates) {
+  x <- cadia_D[, 1:i, drop = FALSE]
+  
+  # k-means
+  km <- kmeans(x, centers = k, nstart = 20)
+  
+  # displacement at newest date
+  
+  latest_disp <- x[, ncol(x)]
+  
+  # median newest displacement for each cluster
+  cluster_medians <- tapply(
+    latest_disp,
+    km$cluster,
+    median
+  )
+  
+  # order clusters from lower to higher median disp
+  cluster_order <- order(cluster_medians)
+  
+  # replace arbitrary K-means labels w/ ordered labels
+  ordered_clusters <- match(
+    km$cluster,
+    cluster_order
+  )
+  
+  # store memberships
+  iter <- i - start_window + 1
+  
+  cluster_membership_mat[, iter] <- ordered_clusters
+}
+```
+
+```{r}
+head(cluster_membership_mat)
+```
+
+```{r}
+table(cluster_membership_mat[, 1])
+table(cluster_membership_mat[, 2])
+table(cluster_membership_mat[, ncol(cluster_membership_mat)])
+```
+
+The goal of storing the cluster memberships in such a matrix is to be able to compare the clusters and see if we can identify any noticeable patterns between clusters and within clusters. We aim to do so using ArcGIS and compare the cluster memberships with the actual deformation behaviour, as we did before, but adding the time element. A possible output of this is through an animation, showing the cluster memberships over time.
+
+ArcGIS requires the input data to be formatted in a certain way to be able to easily correspond an observation with its geographical position and attribute of interest, at a certain time. The dataset must be recognised as a time-enabled dataset. However, with our current dataset, ArcGIS sees each cluster date as separate attributes of one feature, whereas it's easier to create a time-enabled animation if each cluster membership at each date is a separate observation. These separate observations have a corresponding single Date field that ArcGIS can use.
+
+- Each point must contain its own assigned time value.
+
+```{r}
+# Change matrix to calculate summary stats
+
+# create empty matrix
+change_mat <- matrix(
+  0,
+  nrow = nrow(cluster_membership_mat),
+  ncol = ncol(cluster_membership_mat)
+)
+
+# compute every iter w/ the previous iter
+  # store TRUE or FALSE if current col is same as previous col
+change_mat[, 2:ncol(change_mat)] <- 
+  cluster_membership_mat[, 2:ncol(cluster_membership_mat)] !=
+  cluster_membership_mat[, 1:(ncol(cluster_membership_mat) - 1)]
+
+# convert T/F to 1 or 0
+change_mat <- change_mat * 1
+
+colnames(change_mat) <- paste0(
+  "changed_",
+  sub("^D_", "", iter_dates)
+)
+```
+
+```{r}
+dim(change_mat)
+head(change_mat)
+```
+
+```{r}
+colSums(change_mat)
+```
+
+```{r}
+# Plotting the changes
+cadia_dates <- as.Date(
+  sub("D_", "", iter_dates),
+  format = "%Y%m%d")
+
+changes_per_date <- colSums(change_mat)
+
+plot(
+  cadia_dates,
+  changes_per_date,
+  type = "b",
+  xlab = "Date",
+  ylab = "Number of points changing cluster",
+  main = "Cadia: Temporal cluster membership changes")
+
+```
+
+- The resulting plot contains the number of cluster membership changes per date, including only 35 dates, as we cluster the first 10 dates initially.
+
+- Interesting that the general trend of the plot is a decline over time. This may be due to:
+
+  - Earlier cluster comparisons involves less overall observations, so increasing the number of dates may be more influential.
+
+    - For example, increasing from 10 to 11 dates means the new observation is 1/11 of the information going into the second clustering. This is much more influential than going from 40 dates to 41 dates, where the new observation is only 1/41 of the information.
+
+  - Increasing the number of observations may result in the time-series shapes/clusters becoming better established/stabilised.
+
+    - K-means involves calculating the cluster centroids, and a larger total number of observations may better represent the sub-populations of a dataset.
+
+However, the spatial representation of these changes may be more informative than this summary.
+
+We convert the data from wide to long format for convenience when we use ArcGIS:
+
+```{r}
+# convert
+cadia_cluster_long <- as.data.frame(cluster_membership_mat)
+
+cadia_cluster_long$PT_ID <- seq_len(nrow(cadia_cluster_long))
+
+cadia_cluster_long <- cadia_cluster_long %>%
+  pivot_longer(
+    cols = starts_with("cluster_"),
+    names_to = "Date",
+    values_to = "Cluster"
+  )
+```
+
+```{r}
+head(cadia_cluster_long)
+```
+
+```{r}
+# convert cluster date text to ACTUAL date
+cadia_cluster_long$Date <- sub(
+  "^cluster_",
+  "",
+  cadia_cluster_long$Date
+)
+
+cadia_cluster_long$Date <- as.Date(
+  cadia_cluster_long$Date,
+  format = "%Y%m%d"
+)
+```
+
+```{r}
+str(cadia_cluster_long)
+```
+
+We now create a new dataset containing only essential geographical information and cluster change information.
+
+```{r}
+cadia_change_long <- as.data.frame(change_mat)
+
+cadia_change_long$PT_ID <- seq_len(nrow(cadia_change_long))
+
+cadia_change_long <- cadia_change_long %>%
+  pivot_longer(
+    cols = starts_with("changed_"),
+    names_to = "Date",
+    values_to = "Changed"
+  )
+
+cadia_change_long$Date <- sub(
+  "^changed_",
+  "",
+  cadia_change_long$Date
+)
+
+cadia_change_long$Date <- as.Date(
+  cadia_change_long$Date,
+  format = "%Y%m%d"
+)
+```
+
+```{r}
+View(cadia_change_long)
+```
+
+```{r}
+# combine cluster + change info
+
+cadia_cluster_summary <- cadia_cluster_long %>%
+  left_join(
+    cadia_change_long,
+    by = c("PT_ID", "Date")
+  )
+
+head(cadia_cluster_summary)
+```
+
+```{r}
+cadia_data_summary <- data.frame(
+  PT_ID = seq_len(nrow(cadia)),
+  lon = cadia$lon,
+  lat = cadia$lat,
+  coherence = cadia$coherence
+)
+```
+
+```{r}
+# combine geographical info w/ cluster info
+cadia_cluster_summary <- cadia_cluster_summary %>%
+  left_join(
+    cadia_data_summary,
+    by = "PT_ID"
+  )
+```
+
+```{r}
+View(cadia_cluster_summary)
+```
+
+```{r}
+# rearrange cols to be similar to original data
+cadia_cluster_summary <- cadia_cluster_summary %>%
+  select(
+    PT_ID,
+    coherence,
+    lon,
+    lat,
+    Date,
+    Cluster,
+    Changed
+  )
+```
+
+#### Export the data
+
+```{r}
+write.csv(
+  cadia_cluster_summary,
+  "../outputs/cadia_temporal_clust_long.csv",
+  row.names = FALSE
+)
 ```

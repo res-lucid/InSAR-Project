@@ -521,15 +521,15 @@ feijao_53_MA3_hc <- hclust(feijao_53_MA3_dist, method = "ward.D2")
 ```{r}
 # Raw data - Baseline
 feijao_155_dist <- dist(feijao_D_155, method = "euclidean")
-feijao_155_hc <- hclust(feijao_155_dist, method = "ward.D2")
+#feijao_155_hc <- hclust(feijao_155_dist, method = "ward.D2")
 
 # MA(2)
 feijao_155_MA2_dist <- dist(feijao_155_MA2, method = "euclidean")
-feijao_155_MA2_hc <- hclust(feijao_155_MA2_dist, method = "ward.D2")
+#feijao_155_MA2_hc <- hclust(feijao_155_MA2_dist, method = "ward.D2")
 
 # MA(3)
 feijao_155_MA3_dist <- dist(feijao_155_MA3, method = "euclidean")
-feijao_155_MA3_hc <- hclust(feijao_155_MA3_dist, method = "ward.D2")
+#feijao_155_MA3_hc <- hclust(feijao_155_MA3_dist, method = "ward.D2")
 ```
 
 #### Dendrograms
@@ -1008,6 +1008,194 @@ ggsave(
 )
 ```
 
+```{r}
+p_peru_F_elbow_raw <- fviz_nbclust(
+  peru_D_F,
+  kmeans,
+  method = "wss"
+) +
+  ggtitle("Peru (F): Raw")
+
+p_peru_F_elbow_MA2 <- fviz_nbclust(
+  peru_F_MA2,
+  kmeans,
+  method = "wss"
+) +
+  ggtitle("Peru (F): MA(2)")
+
+p_peru_F_elbow_MA3 <- fviz_nbclust(
+  peru_F_MA3,
+  kmeans,
+  method = "wss"
+) +
+  ggtitle("Peru (F): MA(3)")
+```
+
+```{r}
+ggsave(
+  "peru_F_elbow_raw.png",
+  p_peru_F_elbow_raw,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+ggsave(
+  "peru_F_elbow_MA2.png",
+  p_peru_F_elbow_MA2,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+ggsave(
+  "peru_F_elbow_MA3.png",
+  p_peru_F_elbow_MA3,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+```{r}
+p_peru_U_elbow_raw <- fviz_nbclust(
+  peru_D_U,
+  kmeans,
+  method = "wss"
+) +
+  ggtitle("Peru (U): Raw")
+
+p_peru_U_elbow_MA2 <- fviz_nbclust(
+  peru_U_MA2,
+  kmeans,
+  method = "wss"
+) +
+  ggtitle("Peru (U): MA(2)")
+
+p_peru_U_elbow_MA3 <- fviz_nbclust(
+  peru_U_MA3,
+  kmeans,
+  method = "wss"
+) +
+  ggtitle("Peru (U): MA(3)")
+```
+
+```{r}
+ggsave(
+  "peru_U_elbow_raw.png",
+  p_peru_U_elbow_raw,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+ggsave(
+  "peru_U_elbow_MA2.png",
+  p_peru_U_elbow_MA2,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+ggsave(
+  "peru_U_elbow_MA3.png",
+  p_peru_U_elbow_MA3,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+```{r}
+p_feijao_53_elbow_raw <- fviz_nbclust(
+  feijao_D_53,
+  kmeans,
+  method = "wss"
+) +
+  ggtitle("Feijao (T53): Raw")
+
+p_feijao_53_elbow_MA2 <- fviz_nbclust(
+  feijao_53_MA2,
+  kmeans,
+  method = "wss"
+) +
+  ggtitle("Feijao (T53): MA(2)")
+
+p_feijao_53_elbow_MA3 <- fviz_nbclust(
+  feijao_53_MA3,
+  kmeans,
+  method = "wss"
+) +
+  ggtitle("Feijao (T53): MA(3)")
+```
+
+```{r}
+ggsave(
+  "feijao_53_elbow_raw.png",
+  p_feijao_53_elbow_raw,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+ggsave(
+  "feijao_53_elbow_MA2.png",
+  p_feijao_53_elbow_MA2,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+ggsave(
+  "feijao_53_elbow_MA3.png",
+  p_feijao_53_elbow_MA3,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+```{r}
+p_feijao_155_elbow_raw <- fviz_nbclust(
+  feijao_D_155,
+  kmeans,
+  method = "wss"
+) +
+  ggtitle("Feijao (T155): Raw")
+
+p_feijao_155_elbow_MA2 <- fviz_nbclust(
+  feijao_155_MA2,
+  kmeans,
+  method = "wss"
+) +
+  ggtitle("Feijao (T155): MA(2)")
+
+p_feijao_155_elbow_MA3 <- fviz_nbclust(
+  feijao_155_MA3,
+  kmeans,
+  method = "wss"
+) +
+  ggtitle("Feijao (T155): MA(3)")
+```
+
+```{r}
+ggsave(
+  "feijao_155_elbow_raw.png",
+  p_feijao_155_elbow_raw,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+ggsave(
+  "feijao_155_elbow_MA2.png",
+  p_feijao_155_elbow_MA2,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+ggsave(
+  "feijao_155_elbow_MA3.png",
+  p_feijao_155_elbow_MA3,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
 #### Silhouette Score Plot
 
 ```{r}
@@ -1054,6 +1242,142 @@ ggsave("cadia_sil_MA3.png",
        p_cadia_sil_MA3, width = 7, height = 5, dpi = 300)
 ```
 
+```{r}
+p_peru_F_sil_raw <- fviz_nbclust(
+  peru_D_F,
+  kmeans,
+  method = "silhouette"
+) +
+  ggtitle("Peru (F): Raw")
+
+p_peru_F_sil_MA2 <- fviz_nbclust(
+  peru_F_MA2,
+  kmeans,
+  method = "silhouette"
+) +
+  ggtitle("Peru (F): MA(2)")
+
+p_peru_F_sil_MA3 <- fviz_nbclust(
+  peru_F_MA3,
+  kmeans,
+  method = "silhouette"
+) +
+  ggtitle("Peru (F): MA(3)")
+```
+
+```{r}
+ggsave("peru_F_sil_raw.png",
+       p_peru_F_sil_raw, width = 7, height = 5, dpi = 300)
+
+ggsave("peru_F_sil_MA2.png",
+       p_peru_F_sil_MA3, width = 7, height = 5, dpi = 300)
+
+ggsave("peru_F_sil_MA3.png",
+       p_peru_F_sil_MA3, width = 7, height = 5, dpi = 300)
+```
+
+```{r}
+p_peru_U_sil_raw <- fviz_nbclust(
+  peru_D_U,
+  kmeans,
+  method = "silhouette"
+) +
+  ggtitle("Peru (U): Raw")
+
+p_peru_U_sil_MA2 <- fviz_nbclust(
+  peru_U_MA2,
+  kmeans,
+  method = "silhouette"
+) +
+  ggtitle("Peru (U): MA(2)")
+
+p_peru_U_sil_MA3 <- fviz_nbclust(
+  peru_U_MA3,
+  kmeans,
+  method = "silhouette"
+) +
+  ggtitle("Peru (U): MA(3)")
+```
+
+```{r}
+ggsave("peru_U_sil_raw.png",
+       p_peru_U_sil_raw, width = 7, height = 5, dpi = 300)
+
+ggsave("peru_U_sil_MA2.png",
+       p_peru_U_sil_MA3, width = 7, height = 5, dpi = 300)
+
+ggsave("peru_U_sil_MA3.png",
+       p_peru_U_sil_MA3, width = 7, height = 5, dpi = 300)
+```
+
+```{r}
+p_feijao_53_sil_raw <- fviz_nbclust(
+  feijao_D_53,
+  kmeans,
+  method = "silhouette"
+) +
+  ggtitle("Feijao (T53): Raw")
+
+p_feijao_53_sil_MA2 <- fviz_nbclust(
+  feijao_53_MA2,
+  kmeans,
+  method = "silhouette"
+) +
+  ggtitle("Feijao (T53): MA(2)")
+
+p_feijao_53_sil_MA3 <- fviz_nbclust(
+  feijao_53_MA3,
+  kmeans,
+  method = "silhouette"
+) +
+  ggtitle("Feijao (T53): MA(3)")
+```
+
+```{r}
+ggsave("feijao_53_sil_raw.png",
+       p_feijao_53_sil_raw, width = 7, height = 5, dpi = 300)
+
+ggsave("feijao_53_sil_MA2.png",
+       p_feijao_53_sil_MA2, width = 7, height = 5, dpi = 300)
+
+ggsave("feijao_53_sil_MA3.png",
+       p_feijao_53_sil_MA3, width = 7, height = 5, dpi = 300)
+```
+
+```{r}
+p_feijao_155_sil_raw <- fviz_nbclust(
+  feijao_D_155,
+  kmeans,
+  method = "silhouette"
+) +
+  ggtitle("Feijao (T155): Raw")
+
+p_feijao_155_sil_MA2 <- fviz_nbclust(
+  feijao_155_MA2,
+  kmeans,
+  method = "silhouette"
+) +
+  ggtitle("Feijao (T155): MA(2)")
+
+p_feijao_155_sil_MA3 <- fviz_nbclust(
+  feijao_155_MA3,
+  kmeans,
+  method = "silhouette"
+) +
+  ggtitle("Feijao (T155): MA(3)")
+```
+
+```{r}
+ggsave("feijao_155_sil_raw.png",
+       p_feijao_155_sil_raw, width = 7, height = 5, dpi = 300)
+
+ggsave("feijao_155_sil_MA2.png",
+       p_feijao_155_sil_MA2, width = 7, height = 5, dpi = 300)
+
+ggsave("feijao_155_sil_MA3.png",
+       p_feijao_155_sil_MA3, width = 7, height = 5, dpi = 300)
+```
+
 #### Applying K-means clustering
 
 ```{r}
@@ -1076,6 +1400,94 @@ cadia_MA3_km_2 <- kmeans(cadia_MA3, centers = 2, nstart = 20)
 cadia_MA3_km_3 <- kmeans(cadia_MA3, centers = 3, nstart = 20)
 cadia_MA3_km_4 <- kmeans(cadia_MA3, centers = 4, nstart = 20)
 cadia_MA3_km_5 <- kmeans(cadia_MA3, centers = 5, nstart = 20)
+```
+
+```{r}
+set.seed(1234)
+
+# Raw
+peru_F_km_2 <- kmeans(peru_D_F, centers = 2, nstart = 20)
+peru_F_km_3 <- kmeans(peru_D_F, centers = 3, nstart = 20)
+peru_F_km_4 <- kmeans(peru_D_F, centers = 4, nstart = 20)
+peru_F_km_5 <- kmeans(peru_D_F, centers = 5, nstart = 20)
+
+# MA(2)
+peru_F_MA2_km_2 <- kmeans(peru_F_MA2, centers = 2, nstart = 20)
+peru_F_MA2_km_3 <- kmeans(peru_F_MA2, centers = 3, nstart = 20)
+peru_F_MA2_km_4 <- kmeans(peru_F_MA2, centers = 4, nstart = 20)
+peru_F_MA2_km_5 <- kmeans(peru_F_MA2, centers = 5, nstart = 20)
+
+# MA(3)
+peru_F_MA3_km_2 <- kmeans(peru_F_MA3, centers = 2, nstart = 20)
+peru_F_MA3_km_3 <- kmeans(peru_F_MA3, centers = 3, nstart = 20)
+peru_F_MA3_km_4 <- kmeans(peru_F_MA3, centers = 4, nstart = 20)
+peru_F_MA3_km_5 <- kmeans(peru_F_MA3, centers = 5, nstart = 20)
+```
+
+```{r}
+set.seed(1234)
+
+# Raw
+peru_U_km_2 <- kmeans(peru_D_U, centers = 2, nstart = 20)
+peru_U_km_3 <- kmeans(peru_D_U, centers = 3, nstart = 20)
+peru_U_km_4 <- kmeans(peru_D_U, centers = 4, nstart = 20)
+peru_U_km_5 <- kmeans(peru_D_U, centers = 5, nstart = 20)
+
+# MA(2)
+peru_U_MA2_km_2 <- kmeans(peru_U_MA2, centers = 2, nstart = 20)
+peru_U_MA2_km_3 <- kmeans(peru_U_MA2, centers = 3, nstart = 20)
+peru_U_MA2_km_4 <- kmeans(peru_U_MA2, centers = 4, nstart = 20)
+peru_U_MA2_km_5 <- kmeans(peru_U_MA2, centers = 5, nstart = 20)
+
+# MA(3)
+peru_U_MA3_km_2 <- kmeans(peru_U_MA3, centers = 2, nstart = 20)
+peru_U_MA3_km_3 <- kmeans(peru_U_MA3, centers = 3, nstart = 20)
+peru_U_MA3_km_4 <- kmeans(peru_U_MA3, centers = 4, nstart = 20)
+peru_U_MA3_km_5 <- kmeans(peru_U_MA3, centers = 5, nstart = 20)
+```
+
+```{r}
+set.seed(1234)
+
+# Raw
+feijao_53_km_2 <- kmeans(feijao_D_53, centers = 2, nstart = 20)
+feijao_53_km_3 <- kmeans(feijao_D_53, centers = 3, nstart = 20)
+feijao_53_km_4 <- kmeans(feijao_D_53, centers = 4, nstart = 20)
+feijao_53_km_5 <- kmeans(feijao_D_53, centers = 5, nstart = 20)
+
+# MA(2)
+feijao_53_MA2_km_2 <- kmeans(feijao_53_MA2, centers = 2, nstart = 20)
+feijao_53_MA2_km_3 <- kmeans(feijao_53_MA2, centers = 3, nstart = 20)
+feijao_53_MA2_km_4 <- kmeans(feijao_53_MA2, centers = 4, nstart = 20)
+feijao_53_MA2_km_5 <- kmeans(feijao_53_MA2, centers = 5, nstart = 20)
+
+# MA(3)
+feijao_53_MA3_km_2 <- kmeans(feijao_53_MA3, centers = 2, nstart = 20)
+feijao_53_MA3_km_3 <- kmeans(feijao_53_MA3, centers = 3, nstart = 20)
+feijao_53_MA3_km_4 <- kmeans(feijao_53_MA3, centers = 4, nstart = 20)
+feijao_53_MA3_km_5 <- kmeans(feijao_53_MA3, centers = 5, nstart = 20)
+```
+
+```{r}
+set.seed(1234)
+
+# Raw
+feijao_155_km_2 <- kmeans(feijao_D_155, centers = 2, nstart = 20)
+feijao_155_km_3 <- kmeans(feijao_D_155, centers = 3, nstart = 20)
+feijao_155_km_4 <- kmeans(feijao_D_155, centers = 4, nstart = 20)
+feijao_155_km_5 <- kmeans(feijao_D_155, centers = 5, nstart = 20)
+
+# MA(2)
+feijao_155_MA2_km_2 <- kmeans(feijao_155_MA2, centers = 2, nstart = 20)
+feijao_155_MA2_km_3 <- kmeans(feijao_155_MA2, centers = 3, nstart = 20)
+feijao_155_MA2_km_4 <- kmeans(feijao_155_MA2, centers = 4, nstart = 20)
+feijao_155_MA2_km_5 <- kmeans(feijao_155_MA2, centers = 5, nstart = 20)
+
+# MA(3)
+feijao_155_MA3_km_2 <- kmeans(feijao_155_MA3, centers = 2, nstart = 20)
+feijao_155_MA3_km_3 <- kmeans(feijao_155_MA3, centers = 3, nstart = 20)
+feijao_155_MA3_km_4 <- kmeans(feijao_155_MA3, centers = 4, nstart = 20)
+feijao_155_MA3_km_5 <- kmeans(feijao_155_MA3, centers = 5, nstart = 20)
 ```
 
 #### Silhouette Score
@@ -1132,9 +1544,139 @@ cadia_MA3_km_sil <- avg_sil_score_km(
 ```
 
 ```{r}
+peru_F_km_sil <- avg_sil_score_km(
+  list(peru_F_km_2,
+       peru_F_km_3,
+       peru_F_km_4,
+       peru_F_km_5),
+  peru_F_dist
+)
+
+peru_F_MA2_km_sil <- avg_sil_score_km(
+  list(peru_F_MA2_km_2,
+       peru_F_MA2_km_3,
+       peru_F_MA2_km_4,
+       peru_F_MA2_km_5),
+  peru_F_MA2_dist
+)
+
+peru_F_MA3_km_sil <- avg_sil_score_km(
+  list(peru_F_MA3_km_2,
+       peru_F_MA3_km_3,
+       peru_F_MA3_km_4,
+       peru_F_MA3_km_5),
+  peru_F_MA3_dist
+)
+```
+
+```{r}
+peru_U_km_sil <- avg_sil_score_km(
+  list(peru_U_km_2,
+       peru_U_km_3,
+       peru_U_km_4,
+       peru_U_km_5),
+  peru_U_dist
+)
+
+peru_U_MA2_km_sil <- avg_sil_score_km(
+  list(peru_U_MA2_km_2,
+       peru_U_MA2_km_3,
+       peru_U_MA2_km_4,
+       peru_U_MA2_km_5),
+  peru_U_MA2_dist
+)
+
+peru_U_MA3_km_sil <- avg_sil_score_km(
+  list(peru_U_MA3_km_2,
+       peru_U_MA3_km_3,
+       peru_U_MA3_km_4,
+       peru_U_MA3_km_5),
+  peru_U_MA3_dist
+)
+```
+
+```{r}
+feijao_53_km_sil <- avg_sil_score_km(
+  list(feijao_53_km_2,
+       feijao_53_km_3,
+       feijao_53_km_4,
+       feijao_53_km_5),
+  feijao_53_dist
+)
+
+feijao_53_MA2_km_sil <- avg_sil_score_km(
+  list(feijao_53_MA2_km_2,
+       feijao_53_MA2_km_3,
+       feijao_53_MA2_km_4,
+       feijao_53_MA2_km_5),
+  feijao_53_MA2_dist
+)
+
+feijao_53_MA3_km_sil <- avg_sil_score_km(
+  list(feijao_53_MA3_km_2,
+       feijao_53_MA3_km_3,
+       feijao_53_MA3_km_4,
+       feijao_53_MA3_km_5),
+  feijao_53_MA3_dist
+)
+```
+
+```{r}
+feijao_155_km_sil <- avg_sil_score_km(
+  list(feijao_155_km_2,
+       feijao_155_km_3,
+       feijao_155_km_4,
+       feijao_155_km_5),
+  feijao_155_dist
+)
+
+feijao_155_MA2_km_sil <- avg_sil_score_km(
+  list(feijao_155_MA2_km_2,
+       feijao_155_MA2_km_3,
+       feijao_155_MA2_km_4,
+       feijao_155_MA2_km_5),
+  feijao_155_MA2_dist
+)
+
+feijao_155_MA3_km_sil <- avg_sil_score_km(
+  list(feijao_155_MA3_km_2,
+       feijao_155_MA3_km_3,
+       feijao_155_MA3_km_4,
+       feijao_155_MA3_km_5),
+  feijao_155_MA3_dist
+)
+```
+
+**Average Silhouette Score Results**
+
+```{r}
 cadia_km_sil
 cadia_MA2_km_sil
 cadia_MA3_km_sil
+```
+
+```{r}
+peru_F_km_sil
+peru_F_MA2_km_sil
+peru_F_MA3_km_sil
+```
+
+```{r}
+peru_U_km_sil
+peru_U_MA2_km_sil
+peru_U_MA3_km_sil
+```
+
+```{r}
+feijao_53_km_sil
+feijao_53_MA2_km_sil
+feijao_53_MA3_km_sil
+```
+
+```{r}
+feijao_155_km_sil
+feijao_155_MA2_km_sil
+feijao_155_MA3_km_sil
 ```
 
 #### Davies-Bouldin Index
@@ -1186,12 +1728,138 @@ cadia_MA3_km_db <- dbi_km(
 ```
 
 ```{r}
+peru_F_km_db <- dbi_km(
+  peru_D_F,
+  list(peru_F_km_2,
+       peru_F_km_3,
+       peru_F_km_4,
+       peru_F_km_5)
+)
+
+peru_F_MA2_km_db <- dbi_km(
+  peru_F_MA2,
+  list(peru_F_MA2_km_2,
+       peru_F_MA2_km_3,
+       peru_F_MA2_km_4,
+       peru_F_MA2_km_5)
+)
+
+peru_F_MA3_km_db <- dbi_km(
+  peru_F_MA3,
+  list(peru_F_MA3_km_2,
+       peru_F_MA3_km_3,
+       peru_F_MA3_km_4,
+       peru_F_MA3_km_5)
+)
+```
+
+```{r}
+peru_U_km_db <- dbi_km(
+  peru_D_U,
+  list(peru_U_km_2,
+       peru_U_km_3,
+       peru_U_km_4,
+       peru_U_km_5)
+)
+
+peru_U_MA2_km_db <- dbi_km(
+  peru_U_MA2,
+  list(peru_U_MA2_km_2,
+       peru_U_MA2_km_3,
+       peru_U_MA2_km_4,
+       peru_U_MA2_km_5)
+)
+
+peru_U_MA3_km_db <- dbi_km(
+  peru_U_MA3,
+  list(peru_U_MA3_km_2,
+       peru_U_MA3_km_3,
+       peru_U_MA3_km_4,
+       peru_U_MA3_km_5)
+)
+```
+
+```{r}
+feijao_53_km_db <- dbi_km(
+  feijao_D_53,
+  list(feijao_53_km_2,
+       feijao_53_km_3,
+       feijao_53_km_4,
+       feijao_53_km_5)
+)
+
+feijao_53_MA2_km_db <- dbi_km(
+  feijao_53_MA2,
+  list(feijao_53_MA2_km_2,
+       feijao_53_MA2_km_3,
+       feijao_53_MA2_km_4,
+       feijao_53_MA2_km_5)
+)
+
+feijao_53_MA3_km_db <- dbi_km(
+  feijao_53_MA3,
+  list(feijao_53_MA3_km_2,
+       feijao_53_MA3_km_3,
+       feijao_53_MA3_km_4,
+       feijao_53_MA3_km_5)
+)
+```
+
+```{r}
+feijao_155_km_db <- dbi_km(
+  feijao_D_155,
+  list(feijao_155_km_2,
+       feijao_155_km_3,
+       feijao_155_km_4,
+       feijao_155_km_5)
+)
+
+feijao_155_MA2_km_db <- dbi_km(
+  feijao_155_MA2,
+  list(feijao_155_MA2_km_2,
+       feijao_155_MA2_km_3,
+       feijao_155_MA2_km_4,
+       feijao_155_MA2_km_5)
+)
+
+feijao_155_MA3_km_db <- dbi_km(
+  feijao_155_MA3,
+  list(feijao_155_MA3_km_2,
+       feijao_155_MA3_km_3,
+       feijao_155_MA3_km_4,
+       feijao_155_MA3_km_5)
+)
+```
+
+```{r}
 cadia_km_db
 cadia_MA2_km_db
 cadia_MA3_km_db
 ```
 
-- Comment
+```{r}
+peru_F_km_db
+peru_F_MA2_km_db
+peru_F_MA3_km_db
+```
+
+```{r}
+peru_U_km_db
+peru_U_MA2_km_db
+peru_U_MA3_km_db
+```
+
+```{r}
+feijao_53_km_db
+feijao_53_MA2_km_db
+feijao_53_MA3_km_db
+```
+
+```{r}
+feijao_155_km_db
+feijao_155_MA2_km_db
+feijao_155_MA3_km_db
+```
 
 ```{r}
 p_db_cadia <- ggplot(
@@ -1274,6 +1942,141 @@ ggsave(
   height = 5,
   dpi = 300
 )
+```
+
+```{r}
+# Peru (F) -------
+p_db_peru_F <- ggplot(
+  peru_F_km_db,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin Index: Peru - Failed (Raw)",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+
+p_db_peru_F_MA2 <- ggplot(
+  peru_F_MA2_km_db,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin Index: Peru - Failed (MA2)",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+
+p_db_peru_F_MA3 <- ggplot(
+  peru_F_MA3_km_db,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin Index: Peru - Failed (MA3)",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+# Export Peru (F) DBI Plots
+ggsave(
+  "peru_F_dbi_piecewise_raw.png",
+  p_db_peru_F,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+
+ggsave(
+  "peru_F_dbi_piecewise_MA2.png",
+  p_db_peru_F_MA2,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+
+ggsave(
+  "peru_F_dbi_piecewise_MA3.png",
+  p_db_peru_F_MA3,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+```{r}
+# Peru (U) -------
+p_db_peru_U <- ggplot(
+  peru_U_km_db,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin Index: Peru - Unfailed (Raw)",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+
+p_db_peru_F_MA2 <- ggplot(
+  peru_F_MA2_km_db,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin Index: Peru - Failed (MA2)",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+
+p_db_peru_F_MA3 <- ggplot(
+  peru_F_MA3_km_db,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin Index: Peru - Failed (MA3)",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
 ```
 
 #### Apply cluster IDs and export
