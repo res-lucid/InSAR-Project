@@ -239,6 +239,8 @@ dim(cluster_membership_mat)
 
 ### 2.2 Temporal Clustering Loop
 
+#### K = 2
+
 ```{r}
 for (i in start_window:n_dates) {
   x <- cadia_D[, 1:i, drop = FALSE]
@@ -471,7 +473,7 @@ cadia_cluster_summary <- cadia_cluster_summary %>%
   )
 ```
 
-#### Export the data
+##### Export the data
 
 ```{r}
 write.csv(
@@ -479,4 +481,327 @@ write.csv(
   "../outputs/cadia_temporal_clust_long.csv",
   row.names = FALSE
 )
+```
+
+```{r}
+View(cadia_cluster_summary)
+```
+
+#### K = 3
+
+```{r}
+set.seed(1234)
+
+k <- 3
+
+cluster_membership_mat_k3 <- matrix(
+  NA,
+  nrow = n_pts,
+  ncol = n_iters
+)
+
+# rename the columns to correspond to dates
+
+colnames(cluster_membership_mat_k3) <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates)
+)
+```
+
+```{r}
+# Kmeans loop
+
+for (i in start_window:n_dates) {
+  x <- cadia_D[, 1:i, drop = FALSE]
+  
+  # k-means
+  km <- kmeans(x, centers = k, nstart = 20)
+  
+  # displacement at newest date
+  
+  latest_disp <- x[, ncol(x)]
+  
+  # median newest displacement for each cluster
+  cluster_medians <- tapply(
+    latest_disp,
+    km$cluster,
+    median
+  )
+  
+  # order clusters from lower to higher median disp
+  cluster_order <- order(cluster_medians)
+  
+  # replace arbitrary K-means labels w/ ordered labels
+  ordered_clusters <- match(
+    km$cluster,
+    cluster_order
+  )
+  
+  # store memberships
+  iter <- i - start_window + 1
+  
+  cluster_membership_mat_k3[, iter] <- ordered_clusters
+}
+```
+
+```{r}
+# check matrix
+apply(cluster_membership_mat_k3, 2, table)
+```
+
+```{r}
+# k = 3 change matrix
+
+change_mat_k3 <- matrix(
+  0,
+  nrow = nrow(cluster_membership_mat_k3),
+  ncol = ncol(cluster_membership_mat_k3)
+)
+
+change_mat_k3[, 2:ncol(change_mat_k3)] <-
+  cluster_membership_mat_k3[, 2:ncol(cluster_membership_mat_k3)] !=
+  cluster_membership_mat_k3[, 1:(ncol(cluster_membership_mat_k3) - 1)]
+
+change_mat_k3 <- change_mat_k3 * 1
+
+colnames(change_mat_k3) <- paste0(
+  "changed_",
+  sub("^D_", "", iter_dates)
+)
+```
+
+```{r}
+colSums(change_mat_k3)
+head(change_mat_k3)
+```
+
+```{r}
+par(mfrow=c(1,2))
+
+changes_per_date <- colSums(change_mat)
+
+plot(
+  cadia_dates,
+  changes_per_date,
+  type = "b",
+  xlab = "Date",
+  ylab = "Number of points changing cluster",
+  main = "Cadia: Cluster Changes - k = 2")
+
+changes_per_date_k3 <- colSums(change_mat_k3)
+
+plot(
+  cadia_dates,
+  changes_per_date_k3,
+  type = "b",
+  xlab = "Date",
+  ylab = "Number of points changing cluster",
+  main = "Cadia Cluster Changes - k = 3"
+)
+```
+
+```{r}
+# convert to long
+
+cadia_cluster_long_k3 <- as.data.frame(cluster_membership_mat_k3)
+
+cadia_cluster_long_k3$PT_ID <- seq_len(
+  nrow(cadia_cluster_long_k3)
+)
+
+cadia_cluster_long_k3 <- cadia_cluster_long_k3 %>%
+  pivot_longer(
+    cols = starts_with("cluster_"),
+    names_to = "Date",
+    values_to = "Cluster"
+  )
+
+
+# --------
+
+cadia_cluster_long_k3$Date <- sub(
+  "^cluster_",
+  "",
+  cadia_cluster_long_k3$Date
+)
+
+cadia_cluster_long_k3$Date <- as.Date(
+  cadia_cluster_long_k3$Date,
+  format = "%Y%m%d"
+)
+```
+
+```{r}
+str(cadia_cluster_long_k3)
+```
+
+```{r}
+# convert change matrix to long
+cadia_change_long_k3 <- as.data.frame(change_mat_k3)
+
+cadia_change_long_k3$PT_ID <- seq_len(
+  nrow(cadia_change_long_k3)
+)
+
+cadia_change_long_k3 <- cadia_change_long_k3 %>%
+  pivot_longer(
+    cols = starts_with("changed_"),
+    names_to = "Date",
+    values_to = "Changed"
+  )
+
+cadia_change_long_k3$Date <- sub(
+  "^changed_",
+  "",
+  cadia_change_long_k3$Date
+)
+
+cadia_change_long_k3$Date <- as.Date(
+  cadia_change_long_k3$Date,
+  format = "%Y%m%d"
+)
+```
+
+```{r}
+# combine matrices
+cadia_cluster_summary_k3 <- cadia_cluster_long_k3 %>%
+  left_join(
+    cadia_change_long_k3,
+    by = c("PT_ID", "Date")
+  )
+```
+
+```{r}
+head(cadia_cluster_summary_k3)
+```
+
+```{r}
+# new dataset combining clusters and changes
+
+cadia_data_summary_k3 <- data.frame(
+  PT_ID = seq_len(nrow(cadia)),
+  lon = cadia$lon,
+  lat = cadia$lat,
+  coherence = cadia$coherence
+)
+```
+
+```{r}
+cadia_cluster_summary_k3 <- cadia_cluster_summary_k3 %>%
+  left_join(
+    cadia_data_summary_k3,
+    by = "PT_ID"
+  ) %>%
+  select(
+    PT_ID,
+    coherence,
+    lon,
+    lat,
+    Date,
+    Cluster,
+    Changed
+  )
+```
+
+```{r}
+# check
+dim(cadia_cluster_summary_k3)
+table(cadia_cluster_summary_k3$Cluster)
+table(cadia_cluster_summary_k3$Changed)
+View(cadia_cluster_summary_k3)
+```
+
+```{r}
+# Export
+
+write.csv(
+  cadia_cluster_summary_k3,
+  "../outputs/cadia_temporal_clust_k3_long.csv",
+  row.names = FALSE
+)
+```
+
+### 2.3 Cumulative displacement tracking for comparison
+
+We can try to create a similar animation as the cluster membership tracking animation, but with just the cumulative displacement over time. It may act as a "baseline" that we can use in overall comparisons. This is straightforward, as the data is already given in such form. Although tracking the velocity through animation was another option, it was difficult to determine the best representation and calculation of velocity (expanding window, rolling window, internal velocity).
+
+The process is just converting the data to long form:
+
+```{r}
+cadia_disp_long <- as.data.frame(cadia_D_mat)
+
+cadia_disp_long$PT_ID <- seq_len(nrow(cadia_disp_long))
+```
+
+```{r}
+cadia_disp_long <- cadia_disp_long %>%
+  pivot_longer(
+    cols = starts_with("D_"),
+    names_to = "Date",
+    values_to = "Displacement"
+  )
+```
+
+```{r}
+# convert dates
+cadia_disp_long$Date <- sub(
+  "^D_",
+  "",
+  cadia_disp_long$Date
+)
+
+cadia_disp_long$Date <- as.Date(
+  cadia_disp_long$Date,
+  format = "%Y%m%d"
+)
+```
+
+```{r}
+# add geographical info to new format data
+
+cadia_disp_summary <- data.frame(
+  PT_ID = seq_len(nrow(cadia)),
+  lon = cadia$lon,
+  lat = cadia$lat,
+  coherence = cadia$coherence
+)
+
+# combine geographical info w/ disp info
+cadia_disp_long <- cadia_disp_long %>%
+  left_join(
+    cadia_disp_summary,
+    by = "PT_ID"
+  )
+```
+
+```{r}
+# rearrange new format data
+
+cadia_disp_long <- cadia_disp_long %>%
+  select(
+    PT_ID,
+    coherence,
+    lon,
+    lat,
+    Date,
+    Displacement
+  )
+```
+
+```{r}
+head(cadia_disp_long)
+```
+
+#### Export the data
+
+```{r}
+write.csv(
+  cadia_disp_long,
+  "../outputs/cadia_displacement_long.csv",
+  row.names = FALSE
+)
+```
+
+```{r}
+View(cadia_disp_long)
 ```

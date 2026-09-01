@@ -2044,8 +2044,8 @@ p_db_peru_U <- ggplot(
   ) +
   theme_minimal()
 
-p_db_peru_F_MA2 <- ggplot(
-  peru_F_MA2_km_db,
+p_db_peru_U_MA2 <- ggplot(
+  peru_U_MA2_km_db,
   aes(
     x = k,
     y = davies_bouldin
@@ -2055,14 +2055,14 @@ p_db_peru_F_MA2 <- ggplot(
   geom_point(size = 2.5) +
   scale_x_continuous(breaks = 2:5) +
   labs(
-    title = "Davies–Bouldin Index: Peru - Failed (MA2)",
+    title = "Davies–Bouldin Index: Peru - Unfailed (MA2)",
     x = "Number of clusters",
     y = "Davies–Bouldin index"
   ) +
   theme_minimal()
 
-p_db_peru_F_MA3 <- ggplot(
-  peru_F_MA3_km_db,
+p_db_peru_U_MA3 <- ggplot(
+  peru_U_MA3_km_db,
   aes(
     x = k,
     y = davies_bouldin
@@ -2072,11 +2072,200 @@ p_db_peru_F_MA3 <- ggplot(
   geom_point(size = 2.5) +
   scale_x_continuous(breaks = 2:5) +
   labs(
-    title = "Davies–Bouldin Index: Peru - Failed (MA3)",
+    title = "Davies–Bouldin Index: Peru - Unfailed (MA3)",
     x = "Number of clusters",
     y = "Davies–Bouldin index"
   ) +
   theme_minimal()
+```
+
+```{r}
+# Export Peru (U) DBI Plots
+ggsave(
+  "peru_U_dbi_piecewise_raw.png",
+  p_db_peru_U,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+
+ggsave(
+  "peru_U_dbi_piecewise_MA2.png",
+  p_db_peru_U_MA2,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+
+ggsave(
+  "peru_U_dbi_piecewise_MA3.png",
+  p_db_peru_U_MA3,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+```{r}
+# Feijao (T53) -------
+p_db_feijao_53 <- ggplot(
+  feijao_53_km_db,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin Index: Feijao - T53 (Raw)",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+
+p_db_feijao_53_MA2 <- ggplot(
+  feijao_53_MA2_km_db,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin Index: Feijao - T53 (MA2)",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+
+p_db_feijao_53_MA3 <- ggplot(
+  feijao_53_MA3_km_db,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin Index: Feijao - T53 (MA3)",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+# Export Feijao (T53) DBI Plots
+ggsave(
+  "feijao_53_dbi_piecewise_raw.png",
+  p_db_feijao_53,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+
+ggsave(
+  "feijao_53_dbi_piecewise_MA2.png",
+  p_db_feijao_53_MA2,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+
+ggsave(
+  "feijao_53_dbi_piecewise_MA3.png",
+  p_db_feijao_53_MA3,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+```{r}
+# Feijao (T155) -------
+p_db_feijao_155 <- ggplot(
+  feijao_155_km_db,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin Index: Feijao - T155 (Raw)",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+
+p_db_feijao_155_MA2 <- ggplot(
+  feijao_155_MA2_km_db,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin Index: Feijao - T155 (MA2)",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+
+p_db_feijao_155_MA3 <- ggplot(
+  feijao_155_MA3_km_db,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin Index: Feijao - T155 (MA3)",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+# Export Feijao (T155) DBI Plots
+ggsave(
+  "feijao_155_dbi_piecewise_raw.png",
+  p_db_feijao_155,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+
+ggsave(
+  "feijao_155_dbi_piecewise_MA2.png",
+  p_db_feijao_155_MA2,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+
+ggsave(
+  "feijao_155_dbi_piecewise_MA3.png",
+  p_db_feijao_155_MA3,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
 ```
 
 #### Apply cluster IDs and export
@@ -2098,6 +2287,94 @@ cadia$MA3_km_5 <- cadia_MA3_km_5$cluster
 write.csv(
   cadia,
   "cadia_MA_km.csv",
+  row.names = FALSE
+)
+```
+
+```{r}
+# Peru (F)
+# MA(2) K-means cluster IDs
+peru_failed$MA2_km_2 <- peru_F_MA2_km_2$cluster
+peru_failed$MA2_km_3 <- peru_F_MA2_km_3$cluster
+peru_failed$MA2_km_4 <- peru_F_MA2_km_4$cluster
+peru_failed$MA2_km_5 <- peru_F_MA2_km_5$cluster
+
+# MA(3)
+peru_failed$MA3_km_2 <- peru_F_MA3_km_2$cluster
+peru_failed$MA3_km_3 <- peru_F_MA3_km_3$cluster
+peru_failed$MA3_km_4 <- peru_F_MA3_km_4$cluster
+peru_failed$MA3_km_5 <- peru_F_MA3_km_5$cluster
+
+
+write.csv(
+  peru_failed,
+  "peru_F_MA_km.csv",
+  row.names = FALSE
+)
+```
+
+```{r}
+# Peru (U)
+# MA(2) K-means cluster IDs
+peru_unfailed$MA2_km_2 <- peru_U_MA2_km_2$cluster
+peru_unfailed$MA2_km_3 <- peru_U_MA2_km_3$cluster
+peru_unfailed$MA2_km_4 <- peru_U_MA2_km_4$cluster
+peru_unfailed$MA2_km_5 <- peru_U_MA2_km_5$cluster
+
+# MA(3)
+peru_unfailed$MA3_km_2 <- peru_U_MA3_km_2$cluster
+peru_unfailed$MA3_km_3 <- peru_U_MA3_km_3$cluster
+peru_unfailed$MA3_km_4 <- peru_U_MA3_km_4$cluster
+peru_unfailed$MA3_km_5 <- peru_U_MA3_km_5$cluster
+
+
+write.csv(
+  peru_unfailed,
+  "peru_U_MA_km.csv",
+  row.names = FALSE
+)
+```
+
+```{r}
+# Feijao (T53)
+# MA(2) K-means cluster IDs
+feijao_53$MA2_km_2 <- feijao_53_MA2_km_2$cluster
+feijao_53$MA2_km_3 <- feijao_53_MA2_km_3$cluster
+feijao_53$MA2_km_4 <- feijao_53_MA2_km_4$cluster
+feijao_53$MA2_km_5 <- feijao_53_MA2_km_5$cluster
+
+# MA(3)
+feijao_53$MA3_km_2 <- feijao_53_MA3_km_2$cluster
+feijao_53$MA3_km_3 <- feijao_53_MA3_km_3$cluster
+feijao_53$MA3_km_4 <- feijao_53_MA3_km_4$cluster
+feijao_53$MA3_km_5 <- feijao_53_MA3_km_5$cluster
+
+
+write.csv(
+  feijao_53,
+  "feijao_53_MA_km.csv",
+  row.names = FALSE
+)
+```
+
+```{r}
+# Feijao (T53)
+# MA(2) K-means cluster IDs
+feijao_155$MA2_km_2 <- feijao_155_MA2_km_2$cluster
+feijao_155$MA2_km_3 <- feijao_155_MA2_km_3$cluster
+feijao_155$MA2_km_4 <- feijao_155_MA2_km_4$cluster
+feijao_155$MA2_km_5 <- feijao_155_MA2_km_5$cluster
+
+# MA(3)
+feijao_155$MA3_km_2 <- feijao_155_MA3_km_2$cluster
+feijao_155$MA3_km_3 <- feijao_155_MA3_km_3$cluster
+feijao_155$MA3_km_4 <- feijao_155_MA3_km_4$cluster
+feijao_155$MA3_km_5 <- feijao_155_MA3_km_5$cluster
+
+
+write.csv(
+  feijao_155,
+  "feijao_155_MA_km.csv",
   row.names = FALSE
 )
 ```
