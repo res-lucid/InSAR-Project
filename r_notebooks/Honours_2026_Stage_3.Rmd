@@ -473,8 +473,6 @@ cadia_cluster_summary <- cadia_cluster_summary %>%
   )
 ```
 
-##### Export the data
-
 ```{r}
 write.csv(
   cadia_cluster_summary,
@@ -804,4 +802,537 @@ write.csv(
 
 ```{r}
 View(cadia_disp_long)
+```
+
+## 3. Hierarchical clustering
+
+Same pipeline and processing, except the hierarchical clustering step.
+
+### 3.1 Temporal clustering
+
+#### K = 2
+
+```{r}
+k <- 2
+
+cluster_membership_mat_hc <- matrix(
+  NA,
+  nrow = n_pts,
+  ncol = n_iters
+)
+
+colnames(cluster_membership_mat_hc) <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates)
+)
+```
+
+```{r}
+for (i in start_window:n_dates) {
+  x <- cadia_D[, 1:i, drop = FALSE]
+  
+  # hierarchical clustering
+  x_dist <- dist(x, method = "euclidean")
+  
+  hc <- hclust(x_dist, method = "ward.D2")
+  
+  # store resulting clusters
+  hc_clusters <- cutree(hc, k = k)
+  
+  # displacement at newest date
+  
+  latest_disp <- x[, ncol(x)]
+  
+  # median newest displacement for each cluster
+  cluster_medians <- tapply(
+    latest_disp,
+    hc_clusters,
+    median
+  )
+  
+  # order clusters from lower to higher median disp
+  cluster_order <- order(cluster_medians)
+  
+  # replace arbitrary K-means labels w/ ordered labels
+  ordered_clusters <- match(
+    hc_clusters,
+    cluster_order
+  )
+  
+  # store memberships
+  iter <- i - start_window + 1
+  
+  cluster_membership_mat_hc[, iter] <- ordered_clusters
+}
+```
+
+```{r}
+# check matrix
+apply(cluster_membership_mat_hc, 2, table)
+```
+
+```{r}
+# hc change matrix
+change_mat_hc <- matrix(
+  0,
+  nrow = nrow(cluster_membership_mat_hc),
+  ncol = ncol(cluster_membership_mat_hc)
+)
+
+change_mat_hc[, 2:ncol(change_mat_hc)] <-
+  cluster_membership_mat_hc[, 2:ncol(cluster_membership_mat_hc)] !=
+  cluster_membership_mat_hc[, 1:(ncol(cluster_membership_mat_hc) - 1)]
+
+change_mat_hc <- change_mat_hc * 1
+
+colnames(change_mat_hc) <- paste0(
+  "changed_",
+  sub("^D_", "", iter_dates)
+)
+```
+
+```{r}
+# check number of changes
+colSums(change_mat_hc)
+head(change_mat_hc)
+```
+
+```{r}
+# plot
+changes_per_date_hc <- colSums(change_mat_hc)
+
+plot(
+  cadia_dates,
+  changes_per_date_hc,
+  type = "b",
+  xlab = "Date",
+  ylab = "Number of points changing cluster",
+  main = "Cadia: Cluster Changes - HC k = 2")
+```
+
+```{r}
+length(cadia_dates)
+length(changes_per_date_hc)
+```
+
+```{r}
+pct_changed_hc <- 
+  changes_per_date_hc / n_pts * 100
+```
+
+```{r}
+pct_changed_k2 <- 
+  colSums(change_mat) / n_pts * 100
+```
+
+```{r}
+pct_changed_k3 <- 
+  colSums(change_mat_k3) / n_pts * 100
+```
+
+```{r}
+# compare changes
+
+png(
+  "cadia_changes_km_hc.png",
+  width = 2400,
+  height = 1800,
+  res = 300
+)
+
+plot(
+  cadia_dates,
+  pct_changed_k2,
+  type = "l",
+  ylim = range(
+    pct_changed_k2,
+    pct_changed_k3,
+    pct_changed_hc
+  ),
+  xlab = "Date",
+  ylab = "Points changing cluster (%)",
+  main = "Cadia: Temporal Cluster Changes"
+)
+
+lines(
+  cadia_dates,
+  pct_changed_k3,
+  lty = 2
+)
+
+lines(
+  cadia_dates,
+  pct_changed_hc,
+  lty = 3
+)
+
+legend(
+  "topright",
+  legend = c(
+    "K-means k = 2",
+    "K-means k = 3",
+    "HC k = 2"
+  ),
+  lty = c(1, 2, 3)
+)
+
+dev.off()
+```
+
+```{r}
+mean(pct_changed_k2[-1])
+max(pct_changed_k2[-1])
+
+mean(pct_changed_k3[-1])
+max(pct_changed_k3[-1])
+
+mean(pct_changed_hc[-1])
+max(pct_changed_hc[-1])
+```
+
+```{r}
+median(pct_changed_k2[-1])
+median(pct_changed_k3[-1])
+median(pct_changed_hc[-1])
+```
+
+```{r}
+# convert from wide to long - cluster membership
+cadia_cluster_long_hc <- as.data.frame(
+  cluster_membership_mat_hc
+)
+
+cadia_cluster_long_hc$PT_ID <- seq_len(
+  nrow(cadia_cluster_long_hc)
+)
+
+cadia_cluster_long_hc <- cadia_cluster_long_hc %>%
+  pivot_longer(
+    cols = starts_with("cluster_"),
+    names_to = "Date",
+    values_to = "Cluster"
+  )
+
+cadia_cluster_long_hc$Date <- sub(
+  "^cluster_",
+  "",
+  cadia_cluster_long_hc$Date
+)
+
+cadia_cluster_long_hc$Date <- as.Date(
+  cadia_cluster_long_hc$Date,
+  format = "%Y%m%d"
+)
+```
+
+```{r}
+# convert from wide to long - changes
+cadia_change_long_hc <- as.data.frame(
+  change_mat_hc
+)
+
+cadia_change_long_hc$PT_ID <- seq_len(
+  nrow(cadia_change_long_hc)
+)
+
+cadia_change_long_hc <- cadia_change_long_hc %>%
+  pivot_longer(
+    cols = starts_with("changed_"),
+    names_to = "Date",
+    values_to = "Changed"
+  )
+
+cadia_change_long_hc$Date <- sub(
+  "^changed_",
+  "",
+  cadia_change_long_hc$Date
+)
+
+cadia_change_long_hc$Date <- as.Date(
+  cadia_change_long_hc$Date,
+  format = "%Y%m%d"
+)
+```
+
+```{r}
+# combine clusters and changes
+cadia_cluster_summary_hc <- cadia_cluster_long_hc %>%
+  left_join(
+    cadia_change_long_hc,
+    by = c("PT_ID", "Date")
+  )
+```
+
+```{r}
+cadia_cluster_summary_hc <- cadia_cluster_summary_hc %>%
+  left_join(
+    cadia_data_summary,
+    by = "PT_ID"
+  ) %>%
+  select(
+    PT_ID,
+    coherence,
+    lon,
+    lat,
+    Date,
+    Cluster,
+    Changed
+  )
+```
+
+```{r}
+# export
+write.csv(
+  cadia_cluster_summary_hc,
+  "../outputs/cadia_temporal_clust_hc_k2_long.csv",
+  row.names = FALSE
+)
+```
+
+#### K = 3
+
+```{r}
+set.seed(1234)
+
+k <- 3
+
+cluster_membership_mat_hc_k3 <- matrix(
+  NA,
+  nrow = n_pts,
+  ncol = n_iters
+)
+
+# rename the columns to correspond to dates
+
+colnames(cluster_membership_mat_hc_k3) <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates)
+)
+```
+
+```{r}
+for (i in start_window:n_dates) {
+  x <- cadia_D[, 1:i, drop = FALSE]
+  
+  # hierarchical clustering
+  x_dist <- dist(x, method = "euclidean")
+  
+  hc <- hclust(x_dist, method = "ward.D2")
+  
+  # store resulting clusters
+  hc_clusters <- cutree(hc, k = k)
+  
+  # displacement at newest date
+  
+  latest_disp <- x[, ncol(x)]
+  
+  # median newest displacement for each cluster
+  cluster_medians <- tapply(
+    latest_disp,
+    hc_clusters,
+    median
+  )
+  
+  # order clusters from lower to higher median disp
+  cluster_order <- order(cluster_medians)
+  
+  # replace arbitrary K-means labels w/ ordered labels
+  ordered_clusters <- match(
+    hc_clusters,
+    cluster_order
+  )
+  
+  # store memberships
+  iter <- i - start_window + 1
+  
+  cluster_membership_mat_hc_k3[, iter] <- ordered_clusters
+}
+```
+
+```{r}
+# check matrix
+apply(cluster_membership_mat_hc_k3, 2, table)
+```
+
+```{r}
+# hc change matrix
+change_mat_hc_k3 <- matrix(
+  0,
+  nrow = nrow(cluster_membership_mat_hc_k3),
+  ncol = ncol(cluster_membership_mat_hc_k3)
+)
+
+change_mat_hc_k3[, 2:ncol(change_mat_hc_k3)] <-
+  cluster_membership_mat_hc_k3[, 2:ncol(cluster_membership_mat_hc_k3)] !=
+  cluster_membership_mat_hc_k3[, 1:(ncol(cluster_membership_mat_hc_k3) - 1)]
+
+change_mat_hc_k3 <- change_mat_hc_k3 * 1
+
+colnames(change_mat_hc_k3) <- paste0(
+  "changed_",
+  sub("^D_", "", iter_dates)
+)
+```
+
+```{r}
+# check number of changes
+colSums(change_mat_hc_k3)
+head(change_mat_hc_k3)
+```
+
+```{r}
+# plot
+changes_per_date_hc_k3 <- colSums(change_mat_hc_k3)
+
+plot(
+  cadia_dates,
+  changes_per_date_hc_k3,
+  type = "b",
+  xlab = "Date",
+  ylab = "Number of points changing cluster",
+  main = "Cadia: Cluster Changes - HC k = 3")
+```
+
+```{r}
+pct_changed_hc_k3 <- 
+  changes_per_date_hc_k3 / n_pts * 100
+```
+
+```{r}
+plot(
+  cadia_dates,
+  pct_changed_k2,
+  type = "l",
+  ylim = range(
+    pct_changed_k2,
+    pct_changed_k3,
+    pct_changed_hc,
+    pct_changed_hc_k3
+  ),
+  xlab = "Date",
+  ylab = "Points changing cluster (%)",
+  main = "Cadia: Temporal Cluster Changes"
+)
+
+lines(
+  cadia_dates,
+  pct_changed_k3,
+  lty = 2
+)
+
+lines(
+  cadia_dates,
+  pct_changed_hc,
+  lty = 3
+)
+
+lines(
+  cadia_dates,
+  pct_changed_hc_k3,
+  lty = 4
+)
+
+legend(
+  "topright",
+  legend = c(
+    "K-means k = 2",
+    "K-means k = 3",
+    "HC k = 2",
+    "HC k = 3"
+  ),
+  lty = c(1, 2, 3, 4)
+)
+```
+
+```{r}
+# convert from wide to long - cluster membership
+cadia_cluster_long_hc_k3 <- as.data.frame(
+  cluster_membership_mat_hc_k3
+)
+
+cadia_cluster_long_hc_k3$PT_ID <- seq_len(
+  nrow(cadia_cluster_long_hc_k3)
+)
+
+cadia_cluster_long_hc_k3 <- cadia_cluster_long_hc_k3 %>%
+  pivot_longer(
+    cols = starts_with("cluster_"),
+    names_to = "Date",
+    values_to = "Cluster"
+  )
+
+cadia_cluster_long_hc_k3$Date <- sub(
+  "^cluster_",
+  "",
+  cadia_cluster_long_hc_k3$Date
+)
+
+cadia_cluster_long_hc_k3$Date <- as.Date(
+  cadia_cluster_long_hc_k3$Date,
+  format = "%Y%m%d"
+)
+```
+
+```{r}
+# convert from wide to long - changes
+cadia_change_long_hc_k3 <- as.data.frame(
+  change_mat_hc_k3
+)
+
+cadia_change_long_hc_k3$PT_ID <- seq_len(
+  nrow(cadia_change_long_hc_k3)
+)
+
+cadia_change_long_hc_k3 <- cadia_change_long_hc_k3 %>%
+  pivot_longer(
+    cols = starts_with("changed_"),
+    names_to = "Date",
+    values_to = "Changed"
+  )
+
+cadia_change_long_hc_k3$Date <- sub(
+  "^changed_",
+  "",
+  cadia_change_long_hc_k3$Date
+)
+
+cadia_change_long_hc_k3$Date <- as.Date(
+  cadia_change_long_hc_k3$Date,
+  format = "%Y%m%d"
+)
+```
+
+```{r}
+# combine clusters and changes
+cadia_cluster_summary_hc_k3 <- cadia_cluster_long_hc_k3 %>%
+  left_join(
+    cadia_change_long_hc_k3,
+    by = c("PT_ID", "Date")
+  )
+```
+
+```{r}
+cadia_cluster_summary_hc_k3 <- cadia_cluster_summary_hc_k3 %>%
+  left_join(
+    cadia_data_summary,
+    by = "PT_ID"
+  ) %>%
+  select(
+    PT_ID,
+    coherence,
+    lon,
+    lat,
+    Date,
+    Cluster,
+    Changed
+  )
+```
+
+```{r}
+# export
+write.csv(
+  cadia_cluster_summary_hc_k3,
+  "../outputs/cadia_temporal_clust_hc_k3_long.csv",
+  row.names = FALSE
+)
 ```
