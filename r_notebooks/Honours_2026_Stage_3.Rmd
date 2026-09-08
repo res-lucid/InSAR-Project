@@ -233,7 +233,7 @@ colnames(cluster_membership_mat) <- paste0(
 ```
 
 ```{r}
-head(cluster_membership_mat)
+#head(cluster_membership_mat)
 dim(cluster_membership_mat)
 ```
 
@@ -574,6 +574,13 @@ head(change_mat_k3)
 ```
 
 ```{r}
+png(
+  "cadia_changes_km2_km3.png",
+  width = 3200,
+  height = 1800,
+  res = 300
+)
+
 par(mfrow=c(1,2))
 
 changes_per_date <- colSums(change_mat)
@@ -596,6 +603,8 @@ plot(
   ylab = "Number of points changing cluster",
   main = "Cadia Cluster Changes - k = 3"
 )
+
+dev.off()
 ```
 
 ```{r}
@@ -899,6 +908,10 @@ head(change_mat_hc)
 
 ```{r}
 # plot
+cadia_dates <- as.Date(
+  sub("D_", "", iter_dates),
+  format = "%Y%m%d")
+
 changes_per_date_hc <- colSums(change_mat_hc)
 
 plot(
@@ -1089,6 +1102,47 @@ write.csv(
 )
 ```
 
+```{r}
+library(mclust)
+
+ari_hc <- numeric(
+  ncol(cluster_membership_mat_hc) - 1
+)
+
+for (j in 2:ncol(cluster_membership_mat_hc)) {
+  
+  ari_hc[j - 1] <- adjustedRandIndex(
+    cluster_membership_mat_hc[, j - 1],
+    cluster_membership_mat_hc[, j]
+  )
+}
+```
+
+```{r}
+plot(
+  cadia_dates[-1],
+  ari_hc,
+  type = "b",
+  xlab = "Date",
+  ylab = "Adjusted Rand Index",
+  main = "Cadia: HC Consecutive Cluster Stability"
+)
+```
+
+```{r}
+which(
+  colnames(cluster_membership_mat_hc) ==
+    "cluster_20170302"
+)
+```
+
+```{r}
+table(
+  cluster_membership_mat_hc[, 4],
+  cluster_membership_mat_hc[, 5]
+)
+```
+
 #### K = 3
 
 ```{r}
@@ -1182,6 +1236,23 @@ head(change_mat_hc_k3)
 
 ```{r}
 # plot
+png(
+  "cadia_changes_hc2_hc3.png",
+  width = 3600,
+  height = 1800,
+  res = 300
+)
+
+par(mfrow=c(1,2))
+
+plot(
+  cadia_dates,
+  changes_per_date_hc,
+  type = "b",
+  xlab = "Date",
+  ylab = "Number of points changing cluster",
+  main = "Cadia: Cluster Changes - HC k = 2")
+
 changes_per_date_hc_k3 <- colSums(change_mat_hc_k3)
 
 plot(
@@ -1191,6 +1262,9 @@ plot(
   xlab = "Date",
   ylab = "Number of points changing cluster",
   main = "Cadia: Cluster Changes - HC k = 3")
+
+dev.off()
+
 ```
 
 ```{r}
@@ -1199,6 +1273,13 @@ pct_changed_hc_k3 <-
 ```
 
 ```{r}
+png(
+  "cadia_changes_km_hc.png",
+  width = 2400,
+  height = 1800,
+  res = 300
+)
+
 plot(
   cadia_dates,
   pct_changed_k2,
@@ -1242,6 +1323,8 @@ legend(
   ),
   lty = c(1, 2, 3, 4)
 )
+
+dev.off()
 ```
 
 ```{r}
@@ -1333,6 +1416,406 @@ cadia_cluster_summary_hc_k3 <- cadia_cluster_summary_hc_k3 %>%
 write.csv(
   cadia_cluster_summary_hc_k3,
   "../outputs/cadia_temporal_clust_hc_k3_long.csv",
+  row.names = FALSE
+)
+```
+
+## 4. Validation Metrics
+
+To evaluate our results quantitatively, as we already have done so spatially using ArcGIS, we can experiment using different metrics.
+
+- For consistency with the previous stages, we will use average silhouette score, but calculating it for each method and k value for each time acquistion.
+
+- Total number of membership changes from each point plotted against time.
+
+### 4.1 Silhouette Score
+
+Same process as previous stages but calculating the average silhouette score at each time acquisition.
+
+#### K-means: K = 2
+
+```{r}
+# reconstruct dist matrix for each window
+library(cluster)
+
+cadia_sil_km_k2 <- numeric(n_iters)
+
+for (i in start_window:n_dates) {
+  
+  # same expanding window used for clustering
+  x <- cadia_D[, 1:i, drop = FALSE]
+  
+  # corresponding iteration
+  iter <- i - start_window + 1
+  
+  # cluster memberships already calculated
+  clusters <- cluster_membership_mat[, iter]
+  
+  # Euclidean distances for this window
+  x_dist <- dist(x, method = "euclidean")
+  
+  # silhouette
+  sil <- silhouette(clusters, x_dist)
+  
+  # average silhouette
+  cadia_sil_km_k2[iter] <- mean(sil[, "sil_width"])
+}
+```
+
+```{r}
+plot(
+  cadia_dates,
+  cadia_sil_km_k2,
+  type = "b",
+  ylim = c(0, 1),
+  xlab = "Date",
+  ylab = "Average silhouette score",
+  main = "Cadia: Temporal Silhouette Score - K-means k = 2"
+)
+```
+
+#### K-means: K = 3
+
+```{r}
+cadia_sil_km_k3 <- numeric(n_iters)
+
+for (i in start_window:n_dates) {
+  
+  x <- cadia_D[, 1:i, drop = FALSE]
+  
+  iter <- i - start_window + 1
+  
+  clusters <- cluster_membership_mat_k3[, iter]
+  
+  x_dist <- dist(x, method = "euclidean")
+  
+  sil <- silhouette(clusters, x_dist)
+  
+  cadia_sil_km_k3[iter] <- mean(sil[, "sil_width"])
+}
+```
+
+#### HC: K = 2
+
+```{r}
+cadia_sil_hc_k2 <- numeric(n_iters)
+
+for (i in start_window:n_dates) {
+  
+  x <- cadia_D[, 1:i, drop = FALSE]
+  
+  iter <- i - start_window + 1
+  
+  clusters <- cluster_membership_mat_hc[, iter]
+  
+  x_dist <- dist(x, method = "euclidean")
+  
+  sil <- silhouette(clusters, x_dist)
+  
+  cadia_sil_hc_k2[iter] <- mean(sil[, "sil_width"])
+}
+```
+
+#### HC: K = 3
+
+```{r}
+cadia_sil_hc_k3 <- numeric(n_iters)
+
+for (i in start_window:n_dates) {
+  
+  x <- cadia_D[, 1:i, drop = FALSE]
+  
+  iter <- i - start_window + 1
+  
+  clusters <- cluster_membership_mat_hc_k3[, iter]
+  
+  x_dist <- dist(x, method = "euclidean")
+  
+  sil <- silhouette(clusters, x_dist)
+  
+  cadia_sil_hc_k3[iter] <- mean(sil[, "sil_width"])
+}
+```
+
+#### Combined Plot
+
+```{r}
+png(
+  "cadia_sil_temporal_comparison.png",
+  width = 2400,
+  height = 1800,
+  res = 300
+)
+
+plot(
+  cadia_dates,
+  cadia_sil_km_k2,
+  type = "l",
+  ylim = range(
+    cadia_sil_km_k2,
+    cadia_sil_km_k3,
+    cadia_sil_hc_k2,
+    cadia_sil_hc_k3
+  ),
+  xlab = "Date",
+  ylab = "Average silhouette score",
+  main = "Cadia: Temporal Cluster Validation"
+)
+
+lines(
+  cadia_dates,
+  cadia_sil_km_k3,
+  lty = 2
+)
+
+lines(
+  cadia_dates,
+  cadia_sil_hc_k2,
+  lty = 3
+)
+
+lines(
+  cadia_dates,
+  cadia_sil_hc_k3,
+  lty = 4
+)
+
+legend(
+  "topleft",
+  legend = c(
+    "K-means k = 2",
+    "K-means k = 3",
+    "HC k = 2",
+    "HC k = 3"
+  ),
+  lty = c(1, 2, 3, 4)
+)
+
+dev.off()
+```
+
+# Stage 3.1 Altered Temporal Clustering Workflow
+
+Instead of interpreting the clusters after reordering their respective labels (based on the median of each cluster's latest cumulative displacement observations), we can implement a fixed-threshold idea. This uses a fixed threshold to compare and assign cluster labels (again, after the actual clustering is completed) instead of recalculating the median each time.
+
+We still compute the median cumulative displacement of the latest acquisition, but instead of relabelling clusters by ordering the medians, we compare it to a threshold to determine whether it is "concerning" or "normal" (which are the two different clusters).
+
+## 1. K-means clustering
+
+### K = 2
+
+```{r}
+set.seed(1234)
+
+k <- 2
+start_window <- 10
+# added threshold for median comparison
+threshold <- -10
+
+n_pts <- nrow(cadia_D)
+n_dates <- ncol(cadia_D)
+
+n_iters <- n_dates - start_window + 1
+```
+
+```{r}
+cluster_status_mat_k2 <- matrix(
+  NA,
+  nrow = n_pts,
+  ncol = n_iters
+)
+
+# rename the columns to correspond to dates
+
+iter_dates <- colnames(cadia_D)[start_window:n_dates]
+
+colnames(cluster_status_mat_k2) <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates)
+)
+```
+
+```{r}
+# debugging
+cluster_medians_mat <- matrix(
+  NA,
+  nrow = n_iters,
+  ncol = k
+)
+
+colnames(cluster_medians_mat) <- c(
+  "Lower median",
+  "Higher median"
+)
+```
+
+```{r}
+for (i in start_window:n_dates) {
+  x <- cadia_D[, 1:i, drop = FALSE]
+  
+  # k-means
+  km <- kmeans(x, centers = k, nstart = 20)
+  
+  # displacement at newest date
+  
+  latest_disp <- x[, ncol(x)]
+  
+  iter <- i - start_window + 1
+  
+  # median newest displacement for each cluster
+  cluster_medians <- tapply(
+    latest_disp,
+    km$cluster,
+    median
+  )
+  
+  # order clusters from lower to higher median disp
+  ordered_medians <- sort(cluster_medians)
+  
+  # store medians
+  cluster_medians_mat[iter, ] <- ordered_medians
+  
+  # replace arbitrary K-means labels w/ ordered labels
+  # USING NEW threshold !!
+  cluster_status <- ifelse(
+    cluster_medians <= threshold,
+    1, #  1 = concerning
+    0 #   0 = normal-ish
+  )
+  
+  # assign each point resulting status
+  pt_status <- cluster_status[km$cluster]
+  
+  cluster_status_mat_k2[, iter] <- pt_status
+}
+```
+
+```{r}
+cluster_medians_mat
+```
+
+```{r}
+range(cluster_medians_mat)
+```
+
+```{r}
+apply(cluster_medians_mat, 2, range)
+```
+
+```{r}
+par(mar = c(5, 5, 4, 2) + 0.1)
+
+matplot(
+  cadia_dates,
+  cluster_medians_mat,
+  type = "l",
+  lty = 1,
+  col = c("black", "red"),
+  xlab = "Date",
+  ylab = "Median cumulative displacement (mm)",
+  main = "Cadia: K-means Cluster Median Displacement"
+)
+
+abline(
+  h = threshold,
+  lty = 2,
+  col = "black"
+)
+
+legend(
+  "bottomleft",
+  legend = c(
+    "More-negative displacement cluster",
+    "Less-negative displacement cluster",
+    paste0(threshold, " mm threshold")
+  ),
+  col = c("black", "red", "black"),
+  lty = c(1, 1, 2),
+  bty = "n",
+  cex = 0.8
+)
+```
+
+- The two lines in the above plot represent the median newest-date cumulative displacement of the two groups found by K-means at each expanding window.
+
+- The red line (representing one cluster, after re-labelling based on the threshold rule) stays relatively stable around +1 to +3 mm.
+
+- The black line cluster becomes increasingly negative over time. It begins at roughly -5mm and reaches approximately -10mm by June/July 2017, and finally, reaches approximately -19mm by February 2018 (one month before failure).
+
+- The threshold was chosen based on knowledge of the failure after it occurred.
+
+#### Investigating results
+
+- Examine how many points are "concerning" and if they increase/decrease/stay the same over time.
+
+```{r}
+n_concerning_k2 <- colSums(cluster_status_mat_k2)
+
+percent_concerning_k2 <-
+  n_concerning_k2 / n_pts * 100
+```
+
+```{r}
+plot(
+  cadia_dates,
+  percent_concerning_k2,
+  type = "b",
+  xlab = "Date",
+  ylab = "Points in concerning cluster (%)",
+  main = "Cadia: Fixed-threshold K-means (k = 2)"
+)
+```
+
+- The above plot displays the number of points in the "Concerning" cluster (%).
+
+- Before June/July 2017, neither K-means cluster has median displacement of -10mm or less.
+
+- As we apply the threshold to the cluster median (not every separate point), every point belonging to that cluster becomes "concerning" simultaneously.
+
+- The percentage subsequently remains relatively stable at approximately 44–48%.
+
+```{r}
+# converting from wide to long
+
+cadia_status_long_k2 <- as.data.frame(cluster_status_mat_k2)
+
+cadia_status_long_k2$PT_ID <- seq_len(nrow(cadia_status_long_k2))
+
+cadia_status_long_k2 <- cadia_status_long_k2 %>%
+  pivot_longer(
+    cols = starts_with("cluster_"),
+    names_to = "Date",
+    values_to = "Status"
+  )
+
+cadia_status_long_k2$Date <- sub(
+  "^cluster_",
+  "",
+  cadia_status_long_k2$Date
+)
+
+cadia_status_long_k2$Date <- as.Date(
+  cadia_status_long_k2$Date,
+  format = "%Y%m%d"
+)
+```
+
+```{r}
+# Join w/ other data
+cadia_status_long_k2 <- cadia_status_long_k2 %>%
+  left_join(
+    cadia %>%
+      mutate(PT_ID = row_number()) %>%
+      select(PT_ID, lon, lat, coherence),
+    by = "PT_ID"
+  )
+```
+
+```{r}
+# export
+write.csv(
+  cadia_status_long_k2,
+  "../outputs/cadia_temporal_threshold_k2.csv",
   row.names = FALSE
 )
 ```
