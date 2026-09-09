@@ -1619,6 +1619,20 @@ n_iters <- n_dates - start_window + 1
 ```
 
 ```{r}
+# storing clusters
+cluster_membership_mat_v2_k2 <- matrix(
+  NA,
+  nrow = n_pts,
+  ncol = n_iters
+)
+
+colnames(cluster_membership_mat_v2_k2) <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates)
+)
+```
+
+```{r}
 cluster_status_mat_k2 <- matrix(
   NA,
   nrow = n_pts,
@@ -1662,6 +1676,9 @@ for (i in start_window:n_dates) {
   
   iter <- i - start_window + 1
   
+  # raw membership
+  cluster_membership_mat_v2_k2[, iter] <- km$cluster
+  
   # median newest displacement for each cluster
   cluster_medians <- tapply(
     latest_disp,
@@ -1669,7 +1686,7 @@ for (i in start_window:n_dates) {
     median
   )
   
-  # order clusters from lower to higher median disp
+  # order clusters from lower to higher median disp - plotting
   ordered_medians <- sort(cluster_medians)
   
   # store medians
@@ -1775,6 +1792,32 @@ plot(
 - The percentage subsequently remains relatively stable at approximately 44–48%.
 
 ```{r}
+# converting from wide to long - memberships
+
+membership_long_k2 <- as.data.frame(cluster_membership_mat_v2_k2)
+
+membership_long_k2$PT_ID <- seq_len(nrow(membership_long_k2))
+
+membership_long_k2 <- membership_long_k2 %>%
+  pivot_longer(
+    cols = starts_with("cluster_"),
+    names_to = "Date",
+    values_to = "Cluster"
+  )
+
+membership_long_k2$Date <- sub(
+  "^cluster_",
+  "",
+  membership_long_k2$Date
+)
+
+membership_long_k2$Date <- as.Date(
+  membership_long_k2$Date,
+  format = "%Y%m%d"
+)
+```
+
+```{r}
 # converting from wide to long
 
 cadia_status_long_k2 <- as.data.frame(cluster_status_mat_k2)
@@ -1801,21 +1844,860 @@ cadia_status_long_k2$Date <- as.Date(
 ```
 
 ```{r}
-# Join w/ other data
-cadia_status_long_k2 <- cadia_status_long_k2 %>%
+# join membership and status
+cadia_temporal_threshold_k2 <- membership_long_k2 %>%
   left_join(
-    cadia %>%
-      mutate(PT_ID = row_number()) %>%
-      select(PT_ID, lon, lat, coherence),
-    by = "PT_ID"
+    cadia_status_long_k2,
+    by = c("PT_ID", "Date")
+  )
+```
+
+```{r}
+# reorder cols
+cadia_temporal_threshold_k2 <- cadia_temporal_threshold_k2 %>%
+  select(
+    PT_ID,
+    Date,
+    Cluster,
+    Status,
+    lon,
+    lat,
+    coherence
   )
 ```
 
 ```{r}
 # export
 write.csv(
-  cadia_status_long_k2,
-  "../outputs/cadia_temporal_threshold_k2.csv",
+  cadia_temporal_threshold_k2,
+  "../outputs/cadia_temporal_threshold_k2_v2.csv",
+  row.names = FALSE
+)
+```
+
+```{r}
+View(cadia_temporal_threshold_k2)
+```
+
+```{r}
+sum(cadia$coherence >= 0.70)
+sum(cadia$coherence < 0.70)
+
+mean(cadia$coherence >= 0.70) * 100
+```
+
+#### Coherence Filtering Version
+
+```{r}
+coherence_thresholds <- c(0.55, 0.60, 0.70)
+
+for (t in coherence_thresholds) {
+  
+  n_keep <- sum(cadia$coherence >= t)
+  pct_keep <- mean(cadia$coherence >= t) * 100
+  
+  cat(
+    "Threshold:", t,
+    "- Points:", n_keep,
+    "- Percent:", round(pct_keep, 1), "%\n"
+  )
+}
+```
+
+- Choosing 0.60.
+
+**Setup:**
+
+```{r}
+cadia_coherence_threshold <- 0.60
+
+cadia_co_filtered <- cadia %>%
+  filter(coherence >= cadia_coherence_threshold)
+
+nrow(cadia_co_filtered)
+```
+
+```{r}
+# extract displacement cols
+
+d_cols_filtered <- grep(
+  "^D_",
+  names(cadia_co_filtered),
+  value = TRUE
+)
+
+cadia_D_filtered <- cadia_co_filtered[, d_cols_filtered]
+
+cadia_D_filtered <- as.matrix(cadia_D_filtered)
+```
+
+```{r}
+# remove 0 var dates
+cadia_D_filtered <- remove_zero_var(cadia_D_filtered)
+```
+
+```{r}
+# temporal clustering setup
+
+set.seed(1234)
+
+k <- 2
+start_window <- 10
+threshold <- -10
+
+n_pts_filtered <- nrow(cadia_D_filtered)
+n_dates_filtered <- ncol(cadia_D_filtered)
+
+n_iters_filtered <-
+  n_dates_filtered - start_window + 1
+
+iter_dates_filtered <-
+  colnames(cadia_D_filtered)[
+    start_window:n_dates_filtered
+  ]
+```
+
+```{r}
+# membership matrix
+cluster_membership_mat_filtered_k2 <- matrix(
+  NA,
+  nrow = n_pts_filtered,
+  ncol = n_iters_filtered
+)
+
+colnames(cluster_membership_mat_filtered_k2) <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates_filtered)
+)
+```
+
+```{r}
+# status matrix
+cluster_status_mat_filtered_k2 <- matrix(
+  NA,
+  nrow = n_pts_filtered,
+  ncol = n_iters_filtered
+)
+
+colnames(cluster_status_mat_filtered_k2) <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates_filtered)
+)
+```
+
+```{r}
+# medians matrix
+cluster_medians_mat_filtered_k2 <- matrix(
+  NA,
+  nrow = n_iters_filtered,
+  ncol = k
+)
+
+colnames(cluster_medians_mat_filtered_k2) <- c(
+  "Lower median",
+  "Higher median"
+)
+```
+
+```{r}
+# temporal clustering loop
+
+for (i in start_window:n_dates_filtered) {
+  
+  x <- cadia_D_filtered[
+    , 1:i,
+    drop = FALSE
+  ]
+
+  km <- kmeans(
+    x,
+    centers = k,
+    nstart = 20
+  )
+  
+  # displacement at newest date
+  latest_disp <- x[, ncol(x)]
+  
+  # current iteration number
+  iter <- i - start_window + 1
+  
+  # store raw cluster membership
+  cluster_membership_mat_filtered_k2[
+    , iter
+  ] <- km$cluster
+  
+  # median newest displacement
+    # for each raw cluster
+  cluster_medians <- tapply(
+    latest_disp,
+    km$cluster,
+    median
+  )
+  
+  # ordered medians only for plotting
+  ordered_medians <- sort(
+    cluster_medians
+  )
+  
+  cluster_medians_mat_filtered_k2[
+    iter,
+  ] <- ordered_medians
+  
+  # classify each cluster using THRESHOLD
+  cluster_status <- ifelse(
+    cluster_medians <= threshold,
+    1,   # concerning
+    0    # non-concerning
+  )
+  
+  # each point inherits its cluster's status
+  pt_status <- cluster_status[
+    km$cluster
+  ]
+  
+  cluster_status_mat_filtered_k2[
+    , iter
+  ] <- pt_status
+}
+```
+
+```{r}
+# calculate concerning pts
+n_concerning_filtered_k2 <- colSums(
+  cluster_status_mat_filtered_k2
+)
+
+percent_concerning_filtered_k2 <-
+  n_concerning_filtered_k2 /
+  n_pts_filtered * 100
+
+# plot
+cadia_dates_filtered <- as.Date(
+  sub("^D_", "", iter_dates_filtered),
+  format = "%Y%m%d"
+)
+
+matplot(
+  cadia_dates_filtered,
+  cluster_medians_mat_filtered_k2,
+  type = "l",
+  lty = 1,
+  col = c("black", "red"),
+  xlab = "Date",
+  ylab = "Median cumulative displacement (mm)",
+  main = "Cadia: Filtered KM Cluster Median Displacement"
+)
+
+abline(
+  h = threshold,
+  lty = 2,
+  col = "black"
+)
+
+legend(
+  "bottomleft",
+  legend = c(
+    "More-negative displacement cluster",
+    "Less-negative displacement cluster",
+    paste0(threshold, " mm threshold")
+  ),
+  col = c("black", "red", "black"),
+  lty = c(1, 1, 2),
+  bty = "n",
+  cex = 0.8
+)
+```
+
+```{r}
+# plot % of concerning pts
+plot(
+  cadia_dates_filtered,
+  percent_concerning_filtered_k2,
+  type = "b",
+  xlab = "Date",
+  ylab = "Points in concerning cluster (%)",
+  main = "Cadia: Filtered Fixed-threshold K-means (k = 2)"
+)
+```
+
+```{r}
+# convert to long - membership
+membership_long_filtered_k2 <- as.data.frame(
+  cluster_membership_mat_filtered_k2
+)
+
+membership_long_filtered_k2$PT_ID <-
+  seq_len(
+    nrow(membership_long_filtered_k2)
+  )
+
+membership_long_filtered_k2 <-
+  membership_long_filtered_k2 %>%
+  pivot_longer(
+    cols = starts_with("cluster_"),
+    names_to = "Date",
+    values_to = "Cluster"
+  )
+
+membership_long_filtered_k2$Date <- sub(
+  "^cluster_",
+  "",
+  membership_long_filtered_k2$Date
+)
+
+membership_long_filtered_k2$Date <- as.Date(
+  membership_long_filtered_k2$Date,
+  format = "%Y%m%d"
+)
+```
+
+```{r}
+# convert to long - status
+status_long_filtered_k2 <- as.data.frame(
+  cluster_status_mat_filtered_k2
+)
+
+status_long_filtered_k2$PT_ID <-
+  seq_len(
+    nrow(status_long_filtered_k2)
+  )
+
+status_long_filtered_k2 <-
+  status_long_filtered_k2 %>%
+  pivot_longer(
+    cols = starts_with("cluster_"),
+    names_to = "Date",
+    values_to = "Status"
+  )
+
+status_long_filtered_k2$Date <- sub(
+  "^cluster_",
+  "",
+  status_long_filtered_k2$Date
+)
+
+status_long_filtered_k2$Date <- as.Date(
+  status_long_filtered_k2$Date,
+  format = "%Y%m%d"
+)
+```
+
+```{r}
+# join membership + status
+cadia_temporal_threshold_filtered_k2 <-
+  membership_long_filtered_k2 %>%
+  left_join(
+    status_long_filtered_k2,
+    by = c("PT_ID", "Date")
+  )
+```
+
+```{r}
+# add rest of data's info
+cadia_temporal_threshold_filtered_k2 <-
+  cadia_temporal_threshold_filtered_k2 %>%
+  left_join(
+    cadia_co_filtered %>%
+      mutate(
+        PT_ID = row_number()
+      ) %>%
+      select(
+        PT_ID,
+        lon,
+        lat,
+        coherence
+      ),
+    by = "PT_ID"
+  )
+```
+
+```{r}
+# reorder new cols
+cadia_temporal_threshold_filtered_k2 <-
+  cadia_temporal_threshold_filtered_k2 %>%
+  select(
+    PT_ID,
+    Date,
+    Cluster,
+    Status,
+    lon,
+    lat,
+    coherence
+  )
+```
+
+```{r}
+# export
+write.csv(
+  cadia_temporal_threshold_filtered_k2,
+  "../outputs/cadia_temporal_threshold_filtered_060_k2.csv",
+  row.names = FALSE
+)
+```
+
+```{r}
+View(cadia_temporal_threshold_filtered_k2)
+```
+
+#### Velocity Version
+
+```{r}
+
+```
+
+### K = 3
+
+```{r}
+set.seed(1234)
+
+k <- 3
+start_window <- 10
+# added threshold for median comparison
+threshold <- -10
+
+n_pts <- nrow(cadia_D)
+n_dates <- ncol(cadia_D)
+
+n_iters <- n_dates - start_window + 1
+```
+
+```{r}
+cluster_membership_mat_k3 <- matrix(
+  NA,
+  nrow = n_pts,
+  ncol = n_iters
+)
+
+colnames(cluster_membership_mat_k3) <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates)
+)
+```
+
+```{r}
+cluster_status_mat_k3 <- matrix(
+  NA,
+  nrow = n_pts,
+  ncol = n_iters
+)
+
+# rename the columns to correspond to dates
+
+iter_dates <- colnames(cadia_D)[start_window:n_dates]
+
+colnames(cluster_status_mat_k3) <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates)
+)
+```
+
+```{r}
+# debugging
+cluster_medians_mat_k3 <- matrix(
+  NA,
+  nrow = n_iters,
+  ncol = k
+)
+
+colnames(cluster_medians_mat_k3) <- c(
+  "Lower median",
+  "Middle median",
+  "Highest median"
+)
+```
+
+```{r}
+for (i in start_window:n_dates) {
+  
+  x <- cadia_D[, 1:i, drop = FALSE]
+  
+  # k-means
+  km <- kmeans(x, centers = k, nstart = 20)
+  
+  # displacement at newest date
+  
+  latest_disp <- x[, ncol(x)]
+  
+  iter <- i - start_window + 1
+  
+  # store raw K-means membership
+  cluster_membership_mat_k3[, iter] <- km$cluster
+  
+  # median newest displacement for each cluster
+  cluster_medians <- tapply(
+    latest_disp,
+    km$cluster,
+    median
+  )
+  
+  # order clusters from lower to higher median disp
+  ordered_medians <- sort(cluster_medians)
+  
+  # store medians
+  cluster_medians_mat_k3[iter, ] <- ordered_medians
+  
+  # replace arbitrary K-means labels w/ ordered labels
+  # USING NEW threshold !!
+  cluster_status <- ifelse(
+    cluster_medians <= threshold,
+    1, #  1 = concerning
+    0 #   0 = normal-ish
+  )
+  
+  # assign each point resulting status
+  pt_status <- cluster_status[km$cluster]
+  
+  cluster_status_mat_k3[, iter] <- pt_status
+}
+```
+
+- k = 3
+
+- After K-means finds 3 clusters, the algorithm loops to calculate each cluster's median displacement and assign each cluster a status of 0 (normal) or 1 (concerning).
+
+#### Investigating results
+
+```{r}
+apply(cluster_medians_mat_k3, 2, range)
+```
+
+```{r}
+matplot(
+  cadia_dates,
+  cluster_medians_mat_k3,
+  type = "l",
+  lty = 1,
+  xlab = "Date",
+  ylab = "Median cumulative displacement (mm)",
+  main = "Cadia: K-means Cluster Median Displacement (k = 3)"
+)
+
+abline(
+  h = threshold,
+  lty = 2
+)
+```
+
+```{r}
+n_concerning_k3 <- colSums(
+  cluster_status_mat_k3
+)
+
+percent_concerning_k3 <-
+  n_concerning_k3 / n_pts * 100
+```
+
+```{r}
+plot(
+  cadia_dates,
+  percent_concerning_k3,
+  type = "b",
+  xlab = "Date",
+  ylab = "Points in concerning cluster(s) (%)",
+  main = "Cadia: Fixed-threshold K-means (k = 3)"
+)
+```
+
+#### Coherence Filtering
+
+Same data setup as k = 2 version.
+
+```{r}
+# temporal clustering setup
+set.seed(1234)
+
+k <- 3
+
+threshold_intermediate <- -5
+threshold_concerning <- -10
+```
+
+```{r}
+# cluster membership matrix
+cluster_membership_mat_filtered_k3 <- matrix(
+  NA,
+  nrow = n_pts_filtered,
+  ncol = n_iters_filtered
+)
+
+colnames(cluster_membership_mat_filtered_k3) <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates_filtered)
+)
+```
+
+```{r}
+# status matrix
+cluster_status_mat_filtered_k3_3class <- matrix(
+  NA,
+  nrow = n_pts_filtered,
+  ncol = n_iters_filtered
+)
+
+colnames(cluster_status_mat_filtered_k3_3class) <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates_filtered)
+)
+```
+
+```{r}
+# medians matrix
+cluster_medians_mat_filtered_k3 <- matrix(
+  NA,
+  nrow = n_iters_filtered,
+  ncol = 3
+)
+
+colnames(cluster_medians_mat_filtered_k3) <- c(
+  "Lower median",
+  "Middle median",
+  "Higher median"
+)
+```
+
+```{r}
+# temporal clustering loop
+for (i in start_window:n_dates_filtered) {
+  
+  x <- cadia_D_filtered[, 1:i, drop = FALSE]
+
+  km <- kmeans(
+    x,
+    centers = k,
+    nstart = 20
+  )
+  
+  # newest cumulative displacement
+  latest_disp <- x[, ncol(x)]
+  
+  iter <- i - start_window + 1
+  
+  # store raw cluster memberships: 1, 2, 3
+  cluster_membership_mat_filtered_k3[, iter] <- km$cluster
+  
+  # median newest displacement for each raw cluster
+  cluster_medians <- tapply(
+    latest_disp,
+    km$cluster,
+    median
+  )
+  
+  # ordered medians for plotting only
+  ordered_medians <- sort(cluster_medians)
+  
+  cluster_medians_mat_filtered_k3[iter, ] <-
+    ordered_medians
+  
+  # classify each cluster into 3 categories
+  cluster_status <- ifelse(
+    cluster_medians <= threshold_concerning,
+    2,  # concerning
+    ifelse(
+      cluster_medians <= threshold_intermediate,
+      1,  # elevated
+      0   # lower deformation
+    )
+  )
+  
+  # each point takes its cluster's classification
+  pt_status <- cluster_status[km$cluster]
+  
+  cluster_status_mat_filtered_k3_3class[, iter] <-
+    pt_status
+}
+```
+
+```{r}
+# looking at 3 cluster medians
+matplot(
+  cadia_dates_filtered,
+  cluster_medians_mat_filtered_k3,
+  type = "l",
+  lty = 1,
+  xlab = "Date",
+  ylab = "Median cumulative displacement (mm)",
+  main = "Cadia: Filtered K-means Cluster Medians (k = 3)"
+)
+
+abline(
+  h = threshold_intermediate,
+  lty = 2
+)
+
+abline(
+  h = threshold_concerning,
+  lty = 2
+)
+
+legend(
+  "bottomleft",
+  legend = c(
+    "More-negative median",
+    "Middle median",
+    "More-positive median",
+    "-5 mm threshold",
+    "-10 mm threshold"
+  ),
+  lty = c(1, 1, 1, 2, 2),
+  col = c(1, 2, 3, 1, 1),
+  bty = "n"
+)
+```
+
+```{r}
+# calc % in each category
+percent_normal_filtered_k3 <- colMeans(
+  cluster_status_mat_filtered_k3_3class == 0
+) * 100
+
+percent_intermed_filtered_k3 <- colMeans(
+  cluster_status_mat_filtered_k3_3class == 1
+) * 100
+
+percent_concerning_filtered_k3 <- colMeans(
+  cluster_status_mat_filtered_k3_3class == 2
+) * 100
+
+status_percent_filtered_k3 <- cbind(
+  Normal = percent_normal_filtered_k3,
+  Elevated = percent_intermed_filtered_k3,
+  Concerning = percent_concerning_filtered_k3
+)
+```
+
+```{r}
+# plot ^
+matplot(
+  cadia_dates_filtered,
+  status_percent_filtered_k3,
+  type = "l",
+  lty = 1,
+  xlab = "Date",
+  ylab = "Points (%)",
+  main = "Cadia: Filtered Three-level K-means Classification (k = 3)"
+)
+
+legend(
+  "right",
+  legend = c(
+    "Lower deformation",
+    "Elevated deformation",
+    "Concerning deformation"
+  ),
+  lty = 1,
+  col = 1:3,
+  bty = "n"
+)
+```
+
+- The abrupt changes in the proportion of points assigned to each status occur because thresholds are applied to cluster medians, meaning all points within a cluster inherit the same status simultaneously.
+
+```{r}
+# convert to long - memberships
+membership_long_filtered_k3 <- as.data.frame(
+  cluster_membership_mat_filtered_k3
+)
+
+membership_long_filtered_k3$PT_ID <- seq_len(
+  nrow(membership_long_filtered_k3)
+)
+
+membership_long_filtered_k3 <- membership_long_filtered_k3 %>%
+  pivot_longer(
+    cols = starts_with("cluster_"),
+    names_to = "Date",
+    values_to = "Cluster"
+  )
+
+membership_long_filtered_k3$Date <- sub(
+  "^cluster_",
+  "",
+  membership_long_filtered_k3$Date
+)
+
+membership_long_filtered_k3$Date <- as.Date(
+  membership_long_filtered_k3$Date,
+  format = "%Y%m%d"
+)
+```
+
+```{r}
+# convert to long - status
+
+status_long_filtered_k3 <- as.data.frame(
+  cluster_status_mat_filtered_k3_3class
+)
+
+status_long_filtered_k3$PT_ID <- seq_len(
+  nrow(status_long_filtered_k3)
+)
+
+status_long_filtered_k3 <- status_long_filtered_k3 %>%
+  pivot_longer(
+    cols = starts_with("cluster_"),
+    names_to = "Date",
+    values_to = "Status"
+  )
+
+status_long_filtered_k3$Date <- sub(
+  "^cluster_",
+  "",
+  status_long_filtered_k3$Date
+)
+
+status_long_filtered_k3$Date <- as.Date(
+  status_long_filtered_k3$Date,
+  format = "%Y%m%d"
+)
+```
+
+```{r}
+# join
+cadia_temporal_threshold_filtered_k3 <-
+  membership_long_filtered_k3 %>%
+  left_join(
+    status_long_filtered_k3,
+    by = c("PT_ID", "Date")
+  )
+```
+
+```{r}
+# add other info
+cadia_temporal_threshold_filtered_k3 <-
+  cadia_temporal_threshold_filtered_k3 %>%
+  left_join(
+    cadia_co_filtered %>%
+      mutate(PT_ID = row_number()) %>%
+      select(
+        PT_ID,
+        lon,
+        lat,
+        coherence
+      ),
+    by = "PT_ID"
+  )
+```
+
+```{r}
+# reorder info
+cadia_temporal_threshold_filtered_k3 <-
+  cadia_temporal_threshold_filtered_k3 %>%
+  select(
+    PT_ID,
+    Date,
+    Cluster,
+    Status,
+    lon,
+    lat,
+    coherence
+  )
+```
+
+```{r}
+# export
+write.csv(
+  cadia_temporal_threshold_filtered_k3,
+  "../outputs/cadia_temporal_threshold_filtered_060_k3_3class.csv",
   row.names = FALSE
 )
 ```
