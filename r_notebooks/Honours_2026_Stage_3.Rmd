@@ -1886,15 +1886,48 @@ sum(cadia$coherence < 0.70)
 mean(cadia$coherence >= 0.70) * 100
 ```
 
-#### Coherence Filtering Version
+#### Coherence Filtering + Localised TSF Version
+
+- Also adding selection of smaller subset of points (targeted around the dam only).
+
+```{r}
+# read smaller region csv
+
+cadia_tsf_only <- read.csv("../data/cadia_filtered_tsf_only.csv")
+
+head(cadia_tsf_only)
+dim(cadia_tsf_only)
+```
+
+```{r}
+library(ggplot2)
+
+ggplot(cadia, aes(x = lon, y = lat)) +
+  geom_point(size = 0.5) +
+  coord_fixed() +
+  labs(
+    title = "Cadia InSAR points",
+    x = "Longitude",
+    y = "Latitude"
+  )
+
+ggplot(cadia_tsf_only, aes(x = lon, y = lat)) +
+  geom_point(size = 0.5) +
+  coord_fixed() +
+  labs(
+    title = "Cadia TSF InSAR points",
+    x = "Longitude",
+    y = "Latitude"
+  )
+```
 
 ```{r}
 coherence_thresholds <- c(0.55, 0.60, 0.70)
 
 for (t in coherence_thresholds) {
   
-  n_keep <- sum(cadia$coherence >= t)
-  pct_keep <- mean(cadia$coherence >= t) * 100
+  n_keep <- sum(cadia_tsf_only$coherence >= t)
+  pct_keep <- mean(cadia_tsf_only$coherence >= t) * 100
   
   cat(
     "Threshold:", t,
@@ -1906,12 +1939,14 @@ for (t in coherence_thresholds) {
 
 - Choosing 0.60.
 
+- V2: Choosing 0.70.
+
 **Setup:**
 
 ```{r}
-cadia_coherence_threshold <- 0.60
+cadia_coherence_threshold <- 0.70
 
-cadia_co_filtered <- cadia %>%
+cadia_co_filtered <- cadia_tsf_only %>%
   filter(coherence >= cadia_coherence_threshold)
 
 nrow(cadia_co_filtered)
@@ -2070,42 +2105,6 @@ n_concerning_filtered_k2 <- colSums(
 percent_concerning_filtered_k2 <-
   n_concerning_filtered_k2 /
   n_pts_filtered * 100
-
-# plot
-cadia_dates_filtered <- as.Date(
-  sub("^D_", "", iter_dates_filtered),
-  format = "%Y%m%d"
-)
-
-matplot(
-  cadia_dates_filtered,
-  cluster_medians_mat_filtered_k2,
-  type = "l",
-  lty = 1,
-  col = c("black", "red"),
-  xlab = "Date",
-  ylab = "Median cumulative displacement (mm)",
-  main = "Cadia: Filtered KM Cluster Median Displacement"
-)
-
-abline(
-  h = threshold,
-  lty = 2,
-  col = "black"
-)
-
-legend(
-  "bottomleft",
-  legend = c(
-    "More-negative displacement cluster",
-    "Less-negative displacement cluster",
-    paste0(threshold, " mm threshold")
-  ),
-  col = c("black", "red", "black"),
-  lty = c(1, 1, 2),
-  bty = "n",
-  cex = 0.8
-)
 ```
 
 ```{r}
@@ -2230,7 +2229,7 @@ cadia_temporal_threshold_filtered_k2 <-
 # export
 write.csv(
   cadia_temporal_threshold_filtered_k2,
-  "../outputs/cadia_temporal_threshold_filtered_060_k2.csv",
+  "../outputs/cadia_threshold_tsf_filtered_060_k2.csv",
   row.names = FALSE
 )
 ```
@@ -2241,8 +2240,186 @@ View(cadia_temporal_threshold_filtered_k2)
 
 #### Velocity Version
 
-```{r}
+We experiment with using velocity instead of median cumulative displacement for reclassifying each cluster.
 
+- K-means still clusters each point using all displacement dates available (up to that point - expanding window)
+
+- For reclassifying, we instead calculate the recent velocity:
+
+  - Tossed up between calculating the velocity of the whole current window, but that would remove some meaningful data.
+
+  - Instead, calculate a recent velocity over the last few (2,3 or 4) acquisitions.
+
+  - Using 3 acquisitions means calculating a velocity that describes the movement over the last \~month (36 days)
+
+    - Median or mean velocity?
+
+  - We compare the cluster median velocity with a fixed velocity threshold.
+
+```{r}
+# clustering setup
+
+set.seed(1234)
+
+k <- 2
+start_window <- 10
+
+# recent vel
+vel_window <- 3
+
+n_pts <- nrow(cadia_D)
+n_dates <- ncol(cadia_D)
+
+n_iters <- n_dates - start_window + 1
+
+iter_dates <- colnames(cadia_D)[
+  start_window:n_dates
+]
+```
+
+```{r}
+# membership matrix
+cluster_membership_mat_vel_k2 <- matrix(
+  NA,
+  nrow = n_pts,
+  ncol = n_iters
+)
+
+colnames(cluster_membership_mat_vel_k2) <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates)
+)
+```
+
+```{r}
+# status matrix
+cluster_status_mat_vel_k2 <- matrix(
+  NA,
+  nrow = n_pts,
+  ncol = n_iters
+)
+
+colnames(cluster_status_mat_vel_k2) <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates)
+)
+```
+
+```{r}
+# median vel matrix
+cluster_velocity_mat_k2 <- matrix(
+  NA,
+  nrow = n_iters,
+  ncol = k
+)
+
+colnames(cluster_velocity_mat_k2) <- c(
+  "More-negative velocity",
+  "Less-negative velocity"
+)
+```
+
+Instead of choosing a velocity threshold now, we can run the temporal clustering loop first and inspect the ranges.
+
+```{r}
+# temporal clustering loop
+for (i in start_window:n_dates) {
+  
+  x <- cadia_D[, 1:i, drop = FALSE]
+  
+  km <- kmeans(
+    x,
+    centers = k,
+    nstart = 20
+  )
+  
+  iter <- i - start_window + 1
+  
+  # store raw cluster membership
+  cluster_membership_mat_vel_k2[, iter] <- km$cluster
+
+  # recent velocity calculation
+  
+  current_dates <- as.Date(
+    sub("^D_", "", colnames(x)),
+    format = "%Y%m%d"
+  )
+  
+  # indices of last 3 acquisitions
+  recent_cols <- (
+    ncol(x) - vel_window + 1
+  ):ncol(x)
+  
+  recent_x <- x[
+    , recent_cols,
+    drop = FALSE
+  ]
+  
+  recent_dates <- current_dates[
+    recent_cols
+  ]
+  
+  # elapsed time between first and last
+  # acquisition in recent window
+  elapsed_years <- as.numeric(
+    recent_dates[length(recent_dates)] -
+      recent_dates[1]
+  ) / 365.25
+  
+  # recent velocity for every point
+  point_velocity <- (
+    recent_x[, ncol(recent_x)] -
+      recent_x[, 1]
+  ) / elapsed_years
+  
+
+  # median velocity of each cluster
+  cluster_velocities <- tapply(
+    point_velocity,
+    km$cluster,
+    median
+  )
+  
+  # sort only for plotting
+  ordered_velocities <- sort(
+    cluster_velocities
+  )
+  
+  cluster_velocity_mat_k2[
+    iter,
+  ] <- ordered_velocities
+}
+```
+
+```{r}
+# inspect
+cluster_velocity_mat_k2
+```
+
+```{r}
+apply(
+  cluster_velocity_mat_k2,
+  2,
+  range
+)
+```
+
+```{r}
+# plot vel range
+cadia_dates <- as.Date(
+  sub("^D_", "", iter_dates),
+  format = "%Y%m%d"
+)
+
+matplot(
+  cadia_dates,
+  cluster_velocity_mat_k2,
+  type = "l",
+  lty = 1,
+  xlab = "Date",
+  ylab = "Median recent LOS velocity (mm/year)",
+  main = "Cadia: K-means Recent Cluster Velocity"
+)
 ```
 
 ### K = 3
@@ -2408,8 +2585,8 @@ set.seed(1234)
 
 k <- 3
 
-threshold_intermediate <- -5
-threshold_concerning <- -10
+threshold_med_concerning <- -10
+threshold_high_concerning <- -20
 ```
 
 ```{r}
@@ -2490,10 +2667,10 @@ for (i in start_window:n_dates_filtered) {
   
   # classify each cluster into 3 categories
   cluster_status <- ifelse(
-    cluster_medians <= threshold_concerning,
+    cluster_medians <= threshold_high_concerning,
     2,  # concerning
     ifelse(
-      cluster_medians <= threshold_intermediate,
+      cluster_medians <= threshold_med_concerning,
       1,  # elevated
       0   # lower deformation
     )
@@ -2697,7 +2874,11 @@ cadia_temporal_threshold_filtered_k3 <-
 # export
 write.csv(
   cadia_temporal_threshold_filtered_k3,
-  "../outputs/cadia_temporal_threshold_filtered_060_k3_3class.csv",
+  "../outputs/cadia_threshold_tsf_filtered_060_k3_3class.csv",
   row.names = FALSE
 )
+```
+
+```{r}
+View(cadia_temporal_threshold_filtered_k3)
 ```
