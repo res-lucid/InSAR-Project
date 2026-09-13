@@ -1594,7 +1594,7 @@ legend(
 dev.off()
 ```
 
-# Stage 3.1 Altered Temporal Clustering Workflow
+# 3.1. Altered Temporal Clustering Workflow
 
 Instead of interpreting the clusters after reordering their respective labels (based on the median of each cluster's latest cumulative displacement observations), we can implement a fixed-threshold idea. This uses a fixed threshold to compare and assign cluster labels (again, after the actual clustering is completed) instead of recalculating the median each time.
 
@@ -2238,6 +2238,12 @@ write.csv(
 View(cadia_temporal_threshold_filtered_k2)
 ```
 
+#### 
+
+cluster_status_mat_velocity_k2 \<- matrix( NA, nrow = n_pts_filtered, ncol = n_iters_filtered )
+
+colnames(cluster_status_mat_velocity_k2) \<- colnames(cluster_membership_mat_velocity_k2)
+
 #### Velocity Version
 
 We experiment with using velocity instead of median cumulative displacement for reclassifying each cluster.
@@ -2263,6 +2269,7 @@ set.seed(1234)
 
 k <- 2
 start_window <- 10
+
 
 # recent vel
 vel_window <- 3
@@ -2881,4 +2888,1143 @@ write.csv(
 
 ```{r}
 View(cadia_temporal_threshold_filtered_k3)
+```
+
+# 4. Sliding Window Temporal Clustering Workflow
+
+## Median Cumulative Displacement Version
+
+```{r}
+# filtered cadia dataset including 0 baseline
+cadia_D_filtered_sliding <- cadia_D_filtered
+```
+
+```{r}
+dim(cadia_D_filtered_sliding)
+```
+
+```{r}
+# temporal clustering setup
+# sliding window size 3 instead of expanding by 1
+
+set.seed(1234)
+
+k <- 3
+window_size <- 3
+threshold_1 <- -3
+threshold_2 <- -5
+
+n_pts_filtered <- nrow(cadia_D_filtered_sliding)
+n_dates_filtered <- ncol(cadia_D_filtered_sliding)
+
+# number of overlapping sliding windows
+n_iters_filtered <- n_dates_filtered - window_size + 1
+
+# date representing each window = final date in window
+iter_dates_filtered <- colnames(cadia_D_filtered_sliding)[
+  window_size:n_dates_filtered
+]
+```
+
+```{r}
+# membership matrix
+cluster_membership_mat_sliding_k3 <- matrix(
+  NA,
+  nrow = n_pts_filtered,
+  ncol = n_iters_filtered
+)
+
+colnames(cluster_membership_mat_sliding_k3) <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates_filtered)
+)
+```
+
+```{r}
+# status matrix
+cluster_status_mat_sliding_k3 <- matrix(
+  NA,
+  nrow = n_pts_filtered,
+  ncol = n_iters_filtered
+)
+
+colnames(cluster_status_mat_sliding_k3) <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates_filtered)
+)
+```
+
+```{r}
+# medians matrix
+cluster_medians_mat_sliding_k3 <- matrix(
+  NA,
+  nrow = n_iters_filtered,
+  ncol = k
+)
+
+colnames(cluster_medians_mat_sliding_k3) <- c(
+  "Lower median",
+  "Middle median",
+  "Higher median"
+)
+```
+
+```{r}
+n_iters_filtered
+ncol(cluster_membership_mat_sliding_k2)
+length(iter_dates_filtered)
+```
+
+```{r}
+# temporal clustering loop
+
+for (i in window_size:n_dates_filtered) {
+  
+  start_idx <- i - window_size + 1
+  
+  x <- cadia_D_filtered_sliding[
+    , start_idx:i,
+    drop = FALSE
+  ]
+  
+  # reset each pt to 0 at the start of each window
+  x <- sweep(
+    x,
+    1,
+    x[, 1],
+    FUN = "-"
+  )
+  
+  km <- kmeans(
+    x,
+    centers = k,
+    nstart = 20
+  )
+  
+  # displacement at newest date
+  latest_disp <- x[, ncol(x)]
+  
+  # current iteration number
+  iter <- i - window_size + 1
+  
+  # store raw cluster membership
+  cluster_membership_mat_sliding_k3[
+    , iter
+  ] <- km$cluster
+  
+  # median newest displacement
+  # for each raw cluster
+  cluster_medians <- tapply(
+    latest_disp,
+    km$cluster,
+    median
+  )
+  
+  # ordered medians only for plotting
+  ordered_medians <- sort(
+    cluster_medians
+  )
+  
+  cluster_medians_mat_sliding_k3[
+    iter,
+  ] <- ordered_medians
+  
+  # classify each raw K-means cluster
+  cluster_status <- ifelse(
+    cluster_medians <= threshold_2,
+    2,
+    ifelse(
+      cluster_medians <= threshold_1,
+      1,
+      0
+    )
+  )
+  
+  # each point inherits the status of its cluster
+  pt_status <- cluster_status[
+    as.character(km$cluster)
+  ]
+  
+  cluster_status_mat_sliding_k3[
+    , iter
+  ] <- pt_status
+  
+}
+```
+
+```{r}
+head(cluster_medians_mat_sliding_k3)
+tail(cluster_medians_mat_sliding_k3)
+
+summary(cluster_medians_mat_sliding_k3)
+```
+
+```{r}
+matplot(
+  cluster_medians_mat_sliding_k3,
+  type = "l",
+  lty = 1,
+  xlab = "Sliding window iteration",
+  ylab = "Median within-window displacement (mm)"
+)
+
+legend(
+  "bottomleft",
+  legend = colnames(cluster_medians_mat_sliding_k3),
+  lty = 1
+)
+```
+
+```{r}
+dim(cluster_membership_mat_sliding_k2)
+dim(cluster_status_mat_sliding_k2)
+dim(cluster_medians_mat_sliding_k2)
+```
+
+#### Median check:
+
+- We check the medians from the initial test to choose an appropriate threshold.
+
+```{r}
+head(cluster_medians_mat_sliding_k2)
+tail(cluster_medians_mat_sliding_k2)
+summary(cluster_medians_mat_sliding_k2)
+```
+
+```{r}
+thresholds <- c(-2, -2.5, -3, -3.5, -4, -5)
+
+threshold_check <- data.frame(
+  Threshold = thresholds,
+  WindowsFlagged = sapply(
+    thresholds,
+    function(th) {
+      sum(lower_med <= th, na.rm = TRUE)
+    }
+  )
+)
+
+threshold_check
+```
+
+```{r}
+matplot(
+  cluster_medians_mat_sliding_k2,
+  type = "l",
+  lty = 1,
+  xlab = "Sliding window iteration",
+  ylab = "Median within-window displacement (mm)"
+)
+
+abline(h = -2, lty = 2)
+abline(h = -3, lty = 2)
+abline(h = -4, lty = 2)
+```
+
+```{r}
+table(cluster_status_mat_sliding_k3)
+```
+
+```{r}
+status_counts_k3 <- t(
+  apply(
+    cluster_status_mat_sliding_k3,
+    2,
+    function(x) table(
+      factor(x, levels = c(0, 1, 2))
+    )
+  )
+)
+
+colnames(status_counts_k3) <- c(
+  "Status0",
+  "Status1",
+  "Status2"
+)
+
+status_counts_k3
+```
+
+```{r}
+matplot(
+  status_counts_k3,
+  type = "l",
+  lty = 1,
+  xlab = "Sliding window iteration",
+  ylab = "Number of points"
+)
+
+legend(
+  "topleft",
+  legend = c(
+    "Status 0",
+    "Status 1",
+    "Status 2"
+  ),
+  lty = 1
+)
+```
+
+### Exporting k = 3 results:
+
+```{r}
+# cluster membership conversion
+cadia_sliding_clusters_df_k3 <-
+  as.data.frame(cluster_membership_mat_sliding_k3)
+
+cadia_sliding_clusters_df_k3$PointID <-
+  cadia_info_sliding$PointID
+
+cadia_sliding_clusters_long_k3 <-
+  cadia_sliding_clusters_df_k3 %>%
+  pivot_longer(
+    cols = -PointID,
+    names_to = "Date",
+    values_to = "RawCluster"
+  )
+```
+
+```{r}
+# status conversion
+cadia_sliding_status_df_k3 <-
+  as.data.frame(cluster_status_mat_sliding_k3)
+
+cadia_sliding_status_df_k3$PointID <-
+  cadia_info_sliding$PointID
+
+cadia_sliding_status_long_k3 <-
+  cadia_sliding_status_df_k3 %>%
+  pivot_longer(
+    cols = -PointID,
+    names_to = "Date",
+    values_to = "Status"
+  )
+```
+
+```{r}
+# combine membership + status
+cadia_sliding_results_k3 <-
+  cadia_sliding_clusters_long_k3 %>%
+  left_join(
+    cadia_sliding_status_long_k3,
+    by = c("PointID", "Date")
+  )
+```
+
+```{r}
+cadia_sliding_results_k3 <-
+  cadia_sliding_results_k3 %>%
+  mutate(
+    Date = sub("^cluster_", "", Date),
+    Date = as.Date(Date, format = "%Y%m%d")
+  )
+```
+
+```{r}
+# join other data
+cadia_sliding_results_k3 <-
+  cadia_sliding_results_k3 %>%
+  left_join(
+    cadia_info_sliding,
+    by = "PointID"
+  )
+```
+
+```{r}
+names(cadia_sliding_results_k3)
+head(cadia_sliding_results_k3)
+```
+
+```{r}
+# export
+write.csv(
+  cadia_sliding_results_k3,
+  "../outputs/cadia_sliding_k3_w3_thresholds3_5.csv",
+  row.names = FALSE
+)
+```
+
+#### Results check:
+
+1.  How many points are flagged at each iteration?
+
+```{r}
+flagged_per_iter <- colSums(
+  cluster_status_mat_sliding_k2 == 1,
+  na.rm = TRUE
+)
+
+flagged_per_iter
+```
+
+```{r}
+plot(
+  flagged_per_iter,
+  type = "l",
+  xlab = "Sliding window iteration",
+  ylab = "Number of flagged points"
+)
+```
+
+```{r}
+# check matrix
+table(cluster_status_mat_sliding_k2, useNA = "ifany")
+```
+
+### Converting and exporting results:
+
+- From wide to long.
+
+```{r}
+cadia_co_filtered <- cadia_co_filtered %>%
+  mutate(PointID = row_number())
+```
+
+```{r}
+cadia_info_sliding <- cadia_co_filtered %>%
+  select(
+    PointID,
+    lon,
+    lat,
+    coherence
+  )
+
+cadia_D_filtered_sliding <- cadia_co_filtered %>%
+  select(starts_with("D_"))
+```
+
+```{r}
+nrow(cadia_D_filtered)
+nrow(cadia_D_filtered_sliding)
+```
+
+```{r}
+# convert clusters
+cadia_sliding_clusters_df <- as.data.frame(
+  cluster_membership_mat_sliding_k2
+)
+
+cadia_sliding_clusters_df$PointID <- cadia_info_sliding$PointID
+
+cadia_sliding_clusters_long <- cadia_sliding_clusters_df %>%
+  pivot_longer(
+    cols = -PointID,
+    names_to = "Date",
+    values_to = "RawCluster"
+  )
+```
+
+```{r}
+# convert status
+cadia_sliding_status_df <- as.data.frame(
+  cluster_status_mat_sliding_k2
+)
+
+cadia_sliding_status_df$PointID <- cadia_info_sliding$PointID
+
+cadia_sliding_status_long <- cadia_sliding_status_df %>%
+  pivot_longer(
+    cols = -PointID,
+    names_to = "Date",
+    values_to = "Status"
+  )
+```
+
+```{r}
+cadia_sliding_results <- cadia_sliding_clusters_long %>%
+  left_join(
+    cadia_sliding_status_long,
+    by = c("PointID", "Date")
+  )
+```
+
+```{r}
+# convert dates
+cadia_sliding_results <- cadia_sliding_results %>%
+  mutate(
+    Date = sub("^cluster_", "", Date),
+    Date = as.Date(Date, format = "%Y%m%d")
+  )
+```
+
+```{r}
+head(cadia_sliding_results$Date)
+str(cadia_sliding_results$Date)
+```
+
+```{r}
+cadia_sliding_results <- cadia_sliding_results %>%
+  left_join(
+    cadia_info_sliding,
+    by = "PointID"
+  )
+```
+
+```{r}
+names(cadia_sliding_results)
+```
+
+```{r}
+write.csv(
+  cadia_sliding_results,
+  "../outputs/cadia_sliding_k2_w3_threshold2.5.csv",
+  row.names = FALSE
+)
+```
+
+## Median Velocity Version
+
+```{r}
+# setup
+set.seed(1234)
+
+k <- 2
+window_size <- 3
+velocity_threshold <- -25
+
+n_pts_filtered <- nrow(cadia_D_filtered_sliding)
+n_dates_filtered <- ncol(cadia_D_filtered_sliding)
+
+n_iters_filtered <-
+  n_dates_filtered - window_size + 1
+
+iter_dates_filtered <-
+  colnames(cadia_D_filtered_sliding)[
+    window_size:n_dates_filtered
+  ]
+```
+
+```{r}
+cadia_all_dates <- as.Date(
+  sub("^D_", "", colnames(cadia_D_filtered_sliding)),
+  format = "%Y%m%d"
+)
+```
+
+```{r}
+head(cadia_all_dates)
+diff(cadia_all_dates)
+```
+
+```{r}
+# membership matrix
+cluster_membership_mat_velocity_k2 <- matrix(
+  NA,
+  nrow = n_pts_filtered,
+  ncol = n_iters_filtered
+)
+
+colnames(cluster_membership_mat_velocity_k2) <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates_filtered)
+)
+```
+
+```{r}
+cluster_status_mat_velocity_k2 <- matrix(
+  NA,
+  nrow = n_pts_filtered,
+  ncol = n_iters_filtered
+)
+
+colnames(cluster_status_mat_velocity_k2) <-
+  colnames(cluster_membership_mat_velocity_k2)
+```
+
+```{r}
+# median matrix
+cluster_velocity_mat_k2 <- matrix(
+  NA,
+  nrow = n_iters_filtered,
+  ncol = k
+)
+
+colnames(cluster_velocity_mat_k2) <- c(
+  "Lower velocity",
+  "Higher velocity"
+)
+```
+
+```{r}
+# temporal clustering loop - velocity version
+
+for (i in window_size:n_dates_filtered) {
+  
+  start_idx <- i - window_size + 1
+  
+  # current 3-date displacement window
+  x <- cadia_D_filtered_sliding[
+    , start_idx:i,
+    drop = FALSE
+  ]
+  
+  # reset each point to 0 at start of window
+  x <- sweep(
+    x,
+    1,
+    x[, 1],
+    FUN = "-"
+  )
+  
+  # dates in current window
+  window_dates <- cadia_all_dates[start_idx:i]
+  
+  # time from start of window in days
+  time_days <- as.numeric(
+    window_dates - window_dates[1]
+  )
+  
+  # K-means on displacement trajectories
+  km <- kmeans(
+    x,
+    centers = k,
+    nstart = 20
+  )
+  
+  # iteration number
+  iter <- i - window_size + 1
+  
+  # store raw cluster membership
+  cluster_membership_mat_velocity_k2[
+    , iter
+  ] <- km$cluster
+  
+  # velocity for each individual point
+  point_velocity <- apply(
+    x,
+    1,
+    function(y) {
+      coef(lm(y ~ time_days))[2]
+    }
+  )
+  
+  # mm/day -> mm/year
+  point_velocity <- point_velocity * 365.25
+  
+  # median velocity for each raw K-means cluster
+  cluster_velocities <- tapply(
+    point_velocity,
+    km$cluster,
+    median
+  )
+  
+  # ordered values just for plotting/inspection
+  ordered_velocities <- sort(
+    cluster_velocities
+  )
+  
+  cluster_velocity_mat_k2[
+    iter,
+  ] <- ordered_velocities
+  
+  # classify each K-means cluster using fixed velocity threshold
+  cluster_status <- ifelse(
+    cluster_velocities <= velocity_threshold,
+    1,   # concerning negative velocity
+    0    # non-concerning
+  )
+  
+  # every point inherits the status of its K-means cluster
+  pt_status <- cluster_status[
+    as.character(km$cluster)
+  ]
+  
+  # store point status
+  cluster_status_mat_velocity_k2[
+    , iter
+  ] <- pt_status
+}
+```
+
+Inspect velocity results:
+
+```{r}
+head(cluster_velocity_mat_k2)
+tail(cluster_velocity_mat_k2)
+
+summary(cluster_velocity_mat_k2)
+```
+
+```{r}
+matplot(
+  cluster_velocity_mat_k2,
+  type = "l",
+  lty = 1,
+  xlab = "Sliding window iteration",
+  ylab = "Median LOS velocity (mm/year)"
+)
+
+abline(h = 0, lty = 2)
+
+legend(
+  "bottomleft",
+  legend = colnames(cluster_velocity_mat_k2),
+  lty = 1
+)
+```
+
+```{r}
+table(cluster_status_mat_velocity_k2)
+```
+
+```{r}
+flagged_velocity <- colSums(
+  cluster_status_mat_velocity_k2 == 1,
+  na.rm = TRUE
+)
+
+plot(
+  flagged_velocity,
+  type = "l",
+  xlab = "Sliding window iteration",
+  ylab = "Number of velocity-flagged points"
+)
+```
+
+```{r}
+velocity_flag_check <- data.frame(
+  Date = iter_dates_filtered,
+  LowerVelocity = cluster_velocity_mat_k2[, 1],
+  HigherVelocity = cluster_velocity_mat_k2[, 2],
+  FlaggedPoints = flagged_velocity
+)
+
+velocity_flag_check
+```
+
+```{r}
+dim(cluster_membership_mat_velocity_k2)
+dim(cluster_status_mat_velocity_k2)
+```
+
+```{r}
+table(cluster_status_mat_velocity_k2)
+head(colnames(cluster_status_mat_velocity_k2))
+head(colnames(cluster_membership_mat_velocity_k2))
+```
+
+## Exporting the results:
+
+```{r}
+cadia_info_velocity <- cadia_co_filtered %>%
+  select(
+    PointID,
+    lon,
+    lat,
+    coherence
+  )
+```
+
+```{r}
+nrow(cadia_info_velocity)
+nrow(cluster_membership_mat_velocity_k2)
+```
+
+```{r}
+# convert clusters
+cadia_velocity_clusters_df <-
+  as.data.frame(cluster_membership_mat_velocity_k2)
+
+cadia_velocity_clusters_df$PointID <-
+  cadia_info_velocity$PointID
+```
+
+```{r}
+cadia_velocity_clusters_long <-
+  cadia_velocity_clusters_df %>%
+  pivot_longer(
+    cols = -PointID,
+    names_to = "Date",
+    values_to = "RawCluster"
+  )
+```
+
+```{r}
+# convert status
+cadia_velocity_status_df <-
+  as.data.frame(cluster_status_mat_velocity_k2)
+
+cadia_velocity_status_df$PointID <-
+  cadia_info_velocity$PointID
+```
+
+```{r}
+cadia_velocity_status_long <-
+  cadia_velocity_status_df %>%
+  pivot_longer(
+    cols = -PointID,
+    names_to = "Date",
+    values_to = "Status"
+  )
+```
+
+```{r}
+# combine clusters and status
+cadia_velocity_results <-
+  cadia_velocity_clusters_long %>%
+  left_join(
+    cadia_velocity_status_long,
+    by = c("PointID", "Date")
+  )
+```
+
+```{r}
+head(cadia_velocity_results)
+names(cadia_velocity_results)
+```
+
+```{r}
+# convert the dates
+cadia_velocity_results <-
+  cadia_velocity_results %>%
+  mutate(
+    Date = sub("^cluster_", "", Date),
+    Date = as.Date(
+      Date,
+      format = "%Y%m%d"
+    )
+  )
+```
+
+```{r}
+head(cadia_velocity_results$Date)
+str(cadia_velocity_results$Date)
+```
+
+```{r}
+# join other info
+cadia_velocity_results <-
+  cadia_velocity_results %>%
+  left_join(
+    cadia_info_velocity,
+    by = "PointID"
+  )
+```
+
+```{r}
+names(cadia_velocity_results)
+```
+
+```{r}
+head(cadia_velocity_results)
+summary(cadia_velocity_results$Status)
+```
+
+```{r}
+length(unique(cadia_velocity_results$PointID))
+length(unique(cadia_velocity_results$Date))
+table(cadia_velocity_results$Status)
+```
+
+```{r}
+write.csv(
+  cadia_velocity_results,
+  "../outputs/cadia_sliding_velocity_k2_w3_threshold25.csv",
+  row.names = FALSE
+)
+```
+
+### K = 3
+
+```{r}
+set.seed(1234)
+
+k <- 3
+window_size <- 3
+threshold_1 <- -25
+threshold_2 <- -50
+
+n_pts_filtered <- nrow(cadia_D_filtered_sliding)
+n_dates_filtered <- ncol(cadia_D_filtered_sliding)
+
+n_iters_filtered <-
+  n_dates_filtered - window_size + 1
+
+iter_dates_filtered <-
+  colnames(cadia_D_filtered_sliding)[
+    window_size:n_dates_filtered
+  ]
+
+cadia_all_dates <- as.Date(
+  sub("^D_", "", colnames(cadia_D_filtered_sliding)),
+  format = "%Y%m%d"
+)
+```
+
+```{r}
+cluster_membership_mat_velocity_k3 <- matrix(
+  NA,
+  nrow = n_pts_filtered,
+  ncol = n_iters_filtered
+)
+
+colnames(cluster_membership_mat_velocity_k3) <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates_filtered)
+)
+```
+
+```{r}
+cluster_status_mat_velocity_k3 <- matrix(
+  NA,
+  nrow = n_pts_filtered,
+  ncol = n_iters_filtered
+)
+
+colnames(cluster_status_mat_velocity_k3) <-
+  colnames(cluster_membership_mat_velocity_k3)
+```
+
+```{r}
+cluster_velocity_mat_k3 <- matrix(
+  NA,
+  nrow = n_iters_filtered,
+  ncol = k
+)
+
+colnames(cluster_velocity_mat_k3) <- c(
+  "Lower velocity",
+  "Middle velocity",
+  "Higher velocity"
+)
+```
+
+```{r}
+for (i in window_size:n_dates_filtered) {
+  
+  start_idx <- i - window_size + 1
+  
+  # extract current 3-date window
+  x <- cadia_D_filtered_sliding[
+    , start_idx:i,
+    drop = FALSE
+  ]
+  
+  # reset each point to 0 at start of window
+  x <- sweep(
+    x,
+    1,
+    x[, 1],
+    FUN = "-"
+  )
+  
+  # dates for current window
+  window_dates <- cadia_all_dates[start_idx:i]
+  
+  # time in days from start of window
+  time_days <- as.numeric(
+    window_dates - window_dates[1]
+  )
+  
+  # K-means on rebased displacement
+  km <- kmeans(
+    x,
+    centers = k,
+    nstart = 20
+  )
+  
+  iter <- i - window_size + 1
+  
+  # store RAW K-means membership
+  cluster_membership_mat_velocity_k3[
+    , iter
+  ] <- km$cluster
+  
+  # velocity of each individual point
+  point_velocity <- apply(
+    x,
+    1,
+    function(y) {
+      coef(lm(y ~ time_days))[2]
+    }
+  )
+  
+  # mm/day -> mm/year
+  point_velocity <- point_velocity * 365.25
+  
+  # median velocity of each raw K-means cluster
+  cluster_velocities <- tapply(
+    point_velocity,
+    km$cluster,
+    median
+  )
+  
+  # sort ONLY for inspection
+  ordered_velocities <- sort(
+    cluster_velocities
+  )
+  
+  cluster_velocity_mat_k3[
+    iter,
+  ] <- ordered_velocities
+  
+  # classify raw clusters by median velocity
+  cluster_status <- ifelse(
+    cluster_velocities <= threshold_2,
+    2,
+    ifelse(
+      cluster_velocities <= threshold_1,
+      1,
+      0
+    )
+  )
+  
+  # each point inherits its cluster's status
+  pt_status <- cluster_status[
+    as.character(km$cluster)
+  ]
+
+cluster_status_mat_velocity_k3[
+  , iter
+] <- pt_status
+}
+```
+
+```{r}
+head(cluster_velocity_mat_k3)
+tail(cluster_velocity_mat_k3)
+
+summary(cluster_velocity_mat_k3)
+```
+
+```{r}
+matplot(
+  cluster_velocity_mat_k3,
+  type = "l",
+  lty = 1,
+  xlab = "Sliding window iteration",
+  ylab = "Median LOS velocity (mm/year)"
+)
+
+abline(h = 0, lty = 2)
+
+legend(
+  "bottomleft",
+  legend = colnames(cluster_velocity_mat_k3),
+  lty = 1
+)
+```
+
+```{r}
+table(cluster_status_mat_velocity_k3)
+```
+
+```{r}
+status_counts_velocity_k3 <- t(
+  apply(
+    cluster_status_mat_velocity_k3,
+    2,
+    function(x) {
+      table(
+        factor(x, levels = c(0, 1, 2))
+      )
+    }
+  )
+)
+
+colnames(status_counts_velocity_k3) <-
+  c("Status0", "Status1", "Status2")
+
+status_counts_velocity_k3
+```
+
+```{r}
+matplot(
+  status_counts_velocity_k3,
+  type = "l",
+  lty = 1,
+  xlab = "Sliding window iteration",
+  ylab = "Number of points"
+)
+
+legend(
+  "topleft",
+  legend = colnames(status_counts_velocity_k3),
+  lty = 1
+)
+```
+
+```{r}
+# convert clusters
+cadia_velocity_clusters_df_k3 <-
+  as.data.frame(cluster_membership_mat_velocity_k3)
+
+cadia_velocity_clusters_df_k3$PointID <-
+  cadia_info_velocity$PointID
+
+cadia_velocity_clusters_long_k3 <-
+  cadia_velocity_clusters_df_k3 %>%
+  pivot_longer(
+    cols = -PointID,
+    names_to = "Date",
+    values_to = "RawCluster"
+  )
+```
+
+```{r}
+# convert status
+cadia_velocity_status_df_k3 <-
+  as.data.frame(cluster_status_mat_velocity_k3)
+
+cadia_velocity_status_df_k3$PointID <-
+  cadia_info_velocity$PointID
+
+cadia_velocity_status_long_k3 <-
+  cadia_velocity_status_df_k3 %>%
+  pivot_longer(
+    cols = -PointID,
+    names_to = "Date",
+    values_to = "Status"
+  )
+```
+
+```{r}
+# join cluster and status
+cadia_velocity_results_k3 <-
+  cadia_velocity_clusters_long_k3 %>%
+  left_join(
+    cadia_velocity_status_long_k3,
+    by = c("PointID", "Date")
+  )
+```
+
+```{r}
+cadia_velocity_results_k3 <-
+  cadia_velocity_results_k3 %>%
+  mutate(
+    Date = sub("^cluster_", "", Date),
+    Date = as.Date(Date, format = "%Y%m%d")
+  )
+```
+
+```{r}
+cadia_velocity_results_k3 <-
+  cadia_velocity_results_k3 %>%
+  left_join(
+    cadia_info_velocity,
+    by = "PointID"
+  )
+```
+
+```{r}
+names(cadia_velocity_results_k3)
+head(cadia_velocity_results_k3)
+
+table(cadia_velocity_results_k3$RawCluster)
+table(cadia_velocity_results_k3$Status)
+```
+
+```{r}
+length(unique(cadia_velocity_results_k3$PointID))
+length(unique(cadia_velocity_results_k3$Date))
+
+nrow(cadia_velocity_results_k3)
+```
+
+```{r}
+write.csv(
+  cadia_velocity_results_k3,
+  "../outputs/cadia_sliding_velocity_k3_w3_thresholds25_50.csv",
+  row.names = FALSE
+)
 ```
