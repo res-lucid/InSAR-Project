@@ -2238,195 +2238,6 @@ write.csv(
 View(cadia_temporal_threshold_filtered_k2)
 ```
 
-cluster_status_mat_velocity_k2 \<- matrix( NA, nrow = n_pts_filtered, ncol = n_iters_filtered )
-
-colnames(cluster_status_mat_velocity_k2) \<- colnames(cluster_membership_mat_velocity_k2)
-
-#### Velocity Version
-
-We experiment with using velocity instead of median cumulative displacement for reclassifying each cluster.
-
-- K-means still clusters each point using all displacement dates available (up to that point - expanding window)
-
-- For reclassifying, we instead calculate the recent velocity:
-
-  - Tossed up between calculating the velocity of the whole current window, but that would remove some meaningful data.
-
-  - Instead, calculate a recent velocity over the last few (2,3 or 4) acquisitions.
-
-  - Using 3 acquisitions means calculating a velocity that describes the movement over the last \~month (36 days)
-
-    - Median or mean velocity?
-
-  - We compare the cluster median velocity with a fixed velocity threshold.
-
-```{r}
-# clustering setup
-
-set.seed(1234)
-
-k <- 2
-start_window <- 10
-
-
-# recent vel
-vel_window <- 3
-
-n_pts <- nrow(cadia_D)
-n_dates <- ncol(cadia_D)
-
-n_iters <- n_dates - start_window + 1
-
-iter_dates <- colnames(cadia_D)[
-  start_window:n_dates
-]
-```
-
-```{r}
-# membership matrix
-cluster_membership_mat_vel_k2 <- matrix(
-  NA,
-  nrow = n_pts,
-  ncol = n_iters
-)
-
-colnames(cluster_membership_mat_vel_k2) <- paste0(
-  "cluster_",
-  sub("^D_", "", iter_dates)
-)
-```
-
-```{r}
-# status matrix
-cluster_status_mat_vel_k2 <- matrix(
-  NA,
-  nrow = n_pts,
-  ncol = n_iters
-)
-
-colnames(cluster_status_mat_vel_k2) <- paste0(
-  "cluster_",
-  sub("^D_", "", iter_dates)
-)
-```
-
-```{r}
-# median vel matrix
-cluster_velocity_mat_k2 <- matrix(
-  NA,
-  nrow = n_iters,
-  ncol = k
-)
-
-colnames(cluster_velocity_mat_k2) <- c(
-  "More-negative velocity",
-  "Less-negative velocity"
-)
-```
-
-Instead of choosing a velocity threshold now, we can run the temporal clustering loop first and inspect the ranges.
-
-```{r}
-# temporal clustering loop
-for (i in start_window:n_dates) {
-  
-  x <- cadia_D[, 1:i, drop = FALSE]
-  
-  km <- kmeans(
-    x,
-    centers = k,
-    nstart = 20
-  )
-  
-  iter <- i - start_window + 1
-  
-  # store raw cluster membership
-  cluster_membership_mat_vel_k2[, iter] <- km$cluster
-
-  # recent velocity calculation
-  
-  current_dates <- as.Date(
-    sub("^D_", "", colnames(x)),
-    format = "%Y%m%d"
-  )
-  
-  # indices of last 3 acquisitions
-  recent_cols <- (
-    ncol(x) - vel_window + 1
-  ):ncol(x)
-  
-  recent_x <- x[
-    , recent_cols,
-    drop = FALSE
-  ]
-  
-  recent_dates <- current_dates[
-    recent_cols
-  ]
-  
-  # elapsed time between first and last
-  # acquisition in recent window
-  elapsed_years <- as.numeric(
-    recent_dates[length(recent_dates)] -
-      recent_dates[1]
-  ) / 365.25
-  
-  # recent velocity for every point
-  point_velocity <- (
-    recent_x[, ncol(recent_x)] -
-      recent_x[, 1]
-  ) / elapsed_years
-  
-
-  # median velocity of each cluster
-  cluster_velocities <- tapply(
-    point_velocity,
-    km$cluster,
-    median
-  )
-  
-  # sort only for plotting
-  ordered_velocities <- sort(
-    cluster_velocities
-  )
-  
-  cluster_velocity_mat_k2[
-    iter,
-  ] <- ordered_velocities
-}
-```
-
-```{r}
-# inspect
-cluster_velocity_mat_k2
-```
-
-```{r}
-apply(
-  cluster_velocity_mat_k2,
-  2,
-  range
-)
-```
-
-```{r}
-# plot vel range
-cadia_dates <- as.Date(
-  sub("^D_", "", iter_dates),
-  format = "%Y%m%d"
-)
-
-matplot(
-  cadia_dates,
-  cluster_velocity_mat_k2,
-  type = "l",
-  lty = 1,
-  xlab = "Date",
-  ylab = "Median recent LOS velocity (mm/year)",
-  main = "Cadia: K-means Recent Cluster Velocity"
-)
-```
-
 ### K = 3
 
 ```{r}
@@ -3372,6 +3183,8 @@ write.csv(
 
 ## Median Velocity Version
 
+### K = 2
+
 ```{r}
 # setup
 set.seed(1234)
@@ -4084,6 +3897,8 @@ We will test the process on one temporal window first.
 minPts <- 5
 ```
 
+We use minPts = 5 as a test. This aligns with the common rule to choose the minPts value in relation to dimensionality, often around double the number of dimensions as a starting point.
+
 ```{r}
 # initial test HP: eps
 x_test <- cadia_D_filtered_sliding[
@@ -4448,3 +4263,762 @@ dbscan_tuning_summary
 ```
 
 - The plot shows that changing minPts from 5 to 10 mostly increases the noise across every eps value.
+
+## 6. Sliding Window w/ 5 Acquisitions
+
+Instead of 3.
+
+### Median Cumulative Displacement
+
+#### K = 2
+
+```{r}
+# temporal clustering setup
+# sliding window size 5 instead of expanding by 1
+
+set.seed(1234)
+
+k <- 2
+window_size <- 5
+threshold_w5 <- -4 # change after checking
+
+n_pts_filtered <- nrow(cadia_D_filtered_sliding)
+n_dates_filtered <- ncol(cadia_D_filtered_sliding)
+
+# number of overlapping sliding windows
+n_iters_filtered <- n_dates_filtered - window_size + 1
+
+# date representing each window = final date in window
+iter_dates_filtered <- colnames(cadia_D_filtered_sliding)[
+  window_size:n_dates_filtered
+]
+```
+
+```{r}
+# matrices
+
+cluster_membership_mat_w5 <- matrix(
+  NA,
+  nrow = n_pts_filtered,
+  ncol = n_iters_filtered
+)
+
+status_mat_w5 <- matrix(
+  NA,
+  nrow = n_pts_filtered,
+  ncol = n_iters_filtered
+)
+
+medians_mat_w5 <- matrix(
+  NA,
+  nrow = n_iters_filtered,
+  ncol = k
+)
+
+# silhoutte score for later
+silhouette_w5 <- numeric(n_iters_filtered)
+
+colnames(cluster_membership_mat_w5) <-
+  paste0(
+    "cluster_",
+    sub("^D_", "", iter_dates_filtered)
+  )
+
+colnames(status_mat_w5) <-
+  paste0(
+    "cluster_",
+    sub("^D_", "", iter_dates_filtered)
+  )
+
+colnames(medians_mat_w5) <- c(
+  "Lower_Cluster",
+  "Higher_Cluster"
+)
+```
+
+```{r}
+# check
+n_iters_filtered
+ncol(cluster_membership_mat_w5)
+length(iter_dates_filtered)
+```
+
+```{r}
+# temporal clustering loop
+# w = 5 version
+set.seed(1234)
+
+for (i in window_size:n_dates_filtered) {
+  
+  start_idx <- i - window_size + 1
+  
+  # Extract window
+  x <- cadia_D_filtered_sliding[
+    , start_idx:i,
+    drop = FALSE
+  ]
+  
+  # Rebase first observation to zero
+  x <- sweep(x, 1, x[, 1], FUN = "-")
+  
+  # K-means
+  km <- kmeans(
+    x,
+    centers = 2,
+    nstart = 20
+  )
+  
+  sil <- cluster::silhouette(
+    km$cluster,
+    dist(x)
+  )
+  
+  silhouette_w5[iter] <- mean(sil[, "sil_width"])
+  
+  iter <- i - window_size + 1
+  
+  cluster_membership_mat_w5[, iter] <- km$cluster
+  
+  # Displacement at end of window
+  latest_disp <- x[, ncol(x)]
+  
+  # Median for each raw K-means cluster
+  cluster_medians <- tapply(
+    latest_disp,
+    km$cluster,
+    median
+  )
+  
+  # Sorted ONLY for plotting
+  medians_mat_w5[iter, ] <- sort(cluster_medians)
+  
+  # Apply fixed threshold
+  cluster_status <- ifelse(
+    cluster_medians <= threshold_w5,
+    1,
+    0
+  )
+  
+  # Give every point its cluster's status
+  status_mat_w5[, iter] <-
+    cluster_status[km$cluster]
+}
+```
+
+```{r}
+# check threshold first
+plot(
+  medians_mat_w5[, 1],
+  type = "l",
+  xlab = "Window",
+  ylab = "Lower cluster median displacement"
+)
+```
+
+```{r}
+head(medians_mat_w5)
+tail(medians_mat_w5)
+summary(medians_mat_w5)
+```
+
+```{r}
+# threshold checking
+thresholds <- c(-3, -3.5, -4, -4.5, -5)
+
+sapply(
+  thresholds,
+  function(t) sum(medians_mat_w5[, "Lower_Cluster"] <= t)
+)
+```
+
+#### Results checking:
+
+```{r}
+flagged_w5 <- colSums(status_mat_w5 == 1)
+
+plot(
+  flagged_w5,
+  type = "l",
+  xlab = "Sliding window",
+  ylab = "Number of points with Status = 1",
+  main = "W=5 K-means displacement"
+)
+
+summary(flagged_w5)
+```
+
+```{r}
+which(medians_mat_w5[, "Lower_Cluster"] <= threshold_w5)
+```
+
+```{r}
+# silhouette score
+plot(
+  silhouette_w5,
+  type = "l",
+  xlab = "Sliding window",
+  ylab = "Average silhouette score",
+  main = "W=5 K-means silhouette"
+)
+
+summary(silhouette_w5)
+mean(silhouette_w5)
+```
+
+```{r}
+# status changes
+change_mat_w5 <- matrix(
+  0,
+  nrow = nrow(status_mat_w5),
+  ncol = ncol(status_mat_w5)
+)
+
+change_mat_w5[, 2:ncol(change_mat_w5)] <-
+  status_mat_w5[, 2:ncol(status_mat_w5)] !=
+  status_mat_w5[, 1:(ncol(status_mat_w5) - 1)]
+
+changes_w5 <- colSums(change_mat_w5)
+
+change_prop_w5 <- colMeans(change_mat_w5)
+```
+
+```{r}
+plot(
+  change_prop_w5,
+  type = "l",
+  xlab = "Sliding window",
+  ylab = "Proportion changing status",
+  main = "W=5 temporal status changes"
+)
+```
+
+#### Exporting the results:
+
+```{r}
+# converting to long: cluster
+
+cluster_df_w5 <- as.data.frame(
+  cluster_membership_mat_w5
+)
+
+cluster_df_w5$PointID <- cadia_info_sliding$PointID
+
+clusters_long_w5 <- cluster_df_w5 %>%
+  pivot_longer(
+    cols = -PointID,
+    names_to = "Date",
+    values_to = "RawCluster"
+  )
+
+# converting to long: status
+status_df_w5 <- as.data.frame(status_mat_w5)
+
+status_df_w5$PointID <- cadia_info_sliding$PointID
+
+status_long_w5 <- status_df_w5 %>%
+  pivot_longer(
+    cols = -PointID,
+    names_to = "Date",
+    values_to = "Status"
+  )
+```
+
+```{r}
+# combining clusters and status
+cadia_kmeans_w5_results <-
+  clusters_long_w5 %>%
+  left_join(
+    status_long_w5,
+    by = c("PointID", "Date")
+  ) %>%
+  mutate(
+    Date = sub("^cluster_", "", Date),
+    Date = as.Date(Date, format = "%Y%m%d")
+  ) %>%
+  left_join(
+    cadia_info_sliding,
+    by = "PointID"
+  )
+```
+
+```{r}
+# exporting
+write.csv(
+  cadia_kmeans_w5_results,
+  "../outputs/cadia_sw_km2_disp_w5_k2_threshold4.csv",
+  row.names = FALSE
+)
+```
+
+### Median Velocity version
+
+#### K = 2
+
+```{r}
+window_size <- 5
+k <- 2
+
+n_pts_filtered <- nrow(cadia_D_filtered_sliding)
+n_dates_filtered <- ncol(cadia_D_filtered_sliding)
+
+n_iters_vel_w5 <- n_dates_filtered - window_size + 1
+
+iter_dates_vel_w5 <-
+  colnames(cadia_D_filtered_sliding)[
+    window_size:n_dates_filtered
+  ]
+
+cadia_all_dates <- as.Date(
+  sub(
+    "^D_",
+    "",
+    colnames(cadia_D_filtered_sliding)
+  ),
+  format = "%Y%m%d"
+)
+```
+
+```{r}
+cluster_membership_vel_w5 <- matrix(
+  NA,
+  nrow = n_pts_filtered,
+  ncol = n_iters_vel_w5
+)
+
+status_vel_w5 <- matrix(
+  NA,
+  nrow = n_pts_filtered,
+  ncol = n_iters_vel_w5
+)
+
+vel_medians_w5 <- matrix(
+  NA,
+  nrow = n_iters_vel_w5,
+  ncol = 2
+)
+
+silhouette_vel_w5 <- numeric(n_iters_vel_w5)
+
+colnames(vel_medians_w5) <-
+  c("Lower_Cluster", "Higher_Cluster")
+
+date_names_vel_w5 <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates_vel_w5)
+)
+
+colnames(cluster_membership_vel_w5) <- date_names_vel_w5
+colnames(status_vel_w5) <- date_names_vel_w5
+```
+
+```{r}
+# temporal clustering loop
+set.seed(1234)
+
+for (i in window_size:n_dates_filtered) {
+  
+  start_idx <- i - window_size + 1
+  iter <- i - window_size + 1
+  
+  # W5 displacement trajectory
+  x <- cadia_D_filtered_sliding[
+    , start_idx:i,
+    drop = FALSE
+  ]
+  
+  # Rebase
+  x <- sweep(x, 1, x[, 1], FUN = "-")
+  
+  # K-means on trajectory
+  km <- kmeans(
+    x,
+    centers = k,
+    nstart = 20
+  )
+  
+  cluster_membership_vel_w5[, iter] <- km$cluster
+  
+  # Actual acquisition dates
+  window_dates <- cadia_all_dates[start_idx:i]
+  
+  time_days <- as.numeric(
+    window_dates - window_dates[1]
+  )
+  
+  # Regression velocity for each point
+  point_velocity <- apply(
+    x,
+    1,
+    function(y) coef(lm(y ~ time_days))[2]
+  ) * 365.25
+  
+  # Median velocity of each raw cluster
+  cluster_velocity <- tapply(
+    point_velocity,
+    km$cluster,
+    median
+  )
+  
+  vel_medians_w5[iter, ] <-
+    sort(cluster_velocity)
+  
+  # Fixed velocity status
+  cluster_status <- ifelse(
+    cluster_velocity <= velocity_threshold,
+    1,
+    0
+  )
+  
+  status_vel_w5[, iter] <-
+    cluster_status[km$cluster]
+  
+  # Silhouette
+  sil <- cluster::silhouette(
+    km$cluster,
+    dist(x)
+  )
+  
+  silhouette_vel_w5[iter] <-
+    mean(sil[, "sil_width"])
+}
+```
+
+```{r}
+head(vel_medians_w5)
+tail(vel_medians_w5)
+summary(vel_medians_w5)
+
+plot(
+  vel_medians_w5[, "Lower_Cluster"],
+  type = "l",
+  xlab = "Window",
+  ylab = "Lower cluster median velocity (mm/year)"
+)
+
+plot(
+  silhouette_vel_w5,
+  type = "l",
+  xlab = "Window",
+  ylab = "Average silhouette"
+)
+```
+
+```{r}
+# flagged pts
+flagged_vel_w5 <- colSums(status_vel_w5 == 1)
+
+plot(
+  flagged_vel_w5,
+  type = "l",
+  xlab = "Window",
+  ylab = "Number of flagged points"
+)
+```
+
+#### Exporting the results:
+
+```{r}
+cluster_vel_df_w5 <- as.data.frame(
+  cluster_membership_vel_w5
+)
+
+cluster_vel_df_w5$PointID <-
+  cadia_info_sliding$PointID
+
+cluster_vel_long_w5 <- cluster_vel_df_w5 %>%
+  pivot_longer(
+    cols = -PointID,
+    names_to = "Date",
+    values_to = "RawCluster"
+  )
+```
+
+```{r}
+status_vel_df_w5 <- as.data.frame(
+  status_vel_w5
+)
+
+status_vel_df_w5$PointID <-
+  cadia_info_sliding$PointID
+
+status_vel_long_w5 <- status_vel_df_w5 %>%
+  pivot_longer(
+    cols = -PointID,
+    names_to = "Date",
+    values_to = "Status"
+  )
+```
+
+```{r}
+# combine
+cadia_vel_w5_k2 <- cluster_vel_long_w5 %>%
+  left_join(
+    status_vel_long_w5,
+    by = c("PointID", "Date")
+  ) %>%
+  mutate(
+    Date = sub("^cluster_", "", Date),
+    Date = as.Date(Date, format = "%Y%m%d")
+  ) %>%
+  left_join(
+    cadia_info_sliding,
+    by = "PointID"
+  )
+```
+
+```{r}
+# export
+write.csv(
+  cadia_vel_w5_k2,
+  "../outputs/cadia_sw_vel_w5_k2.csv",
+  row.names = FALSE
+)
+```
+
+### DBSCAN
+
+```{r}
+# setup + test
+window_size <- 5
+
+i <- ncol(cadia_D_filtered_sliding)
+
+start_idx <- i - window_size + 1
+
+x_test_w5 <- cadia_D_filtered_sliding[
+  , start_idx:i,
+  drop = FALSE
+]
+
+x_test_w5 <- sweep(
+  x_test_w5,
+  1,
+  x_test_w5[, 1],
+  FUN = "-"
+)
+
+# Drop zero baseline
+x_test_db_w5 <- x_test_w5[, -1, drop = FALSE]
+```
+
+```{r}
+minPts <- 5
+```
+
+```{r}
+kNNdistplot(
+  x_test_db_w5,
+  k = minPts
+)
+```
+
+```{r}
+# test
+eps_values <- c(4, 5, 6)
+minPts <- 5
+
+for (e in c(4, 5, 6)) {
+  
+  db_test <- dbscan(
+    x_test_db_w5,
+    eps = e,
+    minPts = 5
+  )
+  
+  cat(
+    "\neps =", e,
+    "\nclusters =",
+    length(unique(db_test$cluster[db_test$cluster != 0])),
+    "\nnoise =",
+    sum(db_test$cluster == 0),
+    "\nnoise % =",
+    round(mean(db_test$cluster == 0) * 100, 1),
+    "%\n"
+  )
+}
+```
+
+```{r}
+# setup after picking HPs
+window_size <- 5
+eps_w5 <- 5
+minPts <- 5
+
+n_pts_filtered <- nrow(cadia_D_filtered_sliding)
+n_dates_filtered <- ncol(cadia_D_filtered_sliding)
+
+n_iters_db_w5 <- n_dates_filtered - window_size + 1
+
+iter_dates_db_w5 <-
+  colnames(cadia_D_filtered_sliding)[
+    window_size:n_dates_filtered
+  ]
+
+dbscan_membership_w5 <- matrix(
+  NA,
+  nrow = n_pts_filtered,
+  ncol = n_iters_db_w5
+)
+
+dbscan_noise_w5 <- matrix(
+  NA,
+  nrow = n_pts_filtered,
+  ncol = n_iters_db_w5
+)
+
+date_names_db_w5 <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates_db_w5)
+)
+
+colnames(dbscan_membership_w5) <- date_names_db_w5
+colnames(dbscan_noise_w5) <- date_names_db_w5
+```
+
+```{r}
+# temporal clustering loop
+for (i in window_size:n_dates_filtered) {
+  
+  start_idx <- i - window_size + 1
+  iter <- i - window_size + 1
+  
+  x <- cadia_D_filtered_sliding[
+    , start_idx:i,
+    drop = FALSE
+  ]
+  
+  # Rebase each point within window
+  x <- sweep(
+    x,
+    1,
+    x[, 1],
+    FUN = "-"
+  )
+  
+  # Remove constant zero baseline
+  x_db <- x[, -1, drop = FALSE]
+  
+  db <- dbscan(
+    x_db,
+    eps = eps_w5,
+    minPts = minPts
+  )
+  
+  dbscan_membership_w5[, iter] <-
+    db$cluster
+  
+  dbscan_noise_w5[, iter] <-
+    as.integer(db$cluster == 0)
+}
+```
+
+#### Results checking:
+
+```{r}
+noise_per_iter_w5 <- colSums(
+  dbscan_noise_w5
+)
+
+noise_prop_w5 <- colMeans(
+  dbscan_noise_w5
+)
+
+plot(
+  noise_prop_w5 * 100,
+  type = "l",
+  xlab = "Sliding window",
+  ylab = "Noise (%)",
+  main = "DBSCAN W=5: Noise through time"
+)
+
+summary(noise_prop_w5 * 100)
+```
+
+```{r}
+summary(noise_prop_w5 * 100)
+summary(n_clusters_w5)
+table(n_clusters_w5)
+```
+
+#### Exporting the results:
+
+```{r}
+head(colnames(dbscan_membership_w5))
+head(colnames(dbscan_noise_w5))
+```
+
+```{r}
+# converting to long: clusters
+db_cluster_w5 <- as.data.frame(
+  dbscan_membership_w5
+)
+
+db_cluster_w5$PointID <-
+  cadia_info_sliding$PointID
+
+db_cluster_long_w5 <- db_cluster_w5 %>%
+  pivot_longer(
+    cols = -PointID,
+    names_to = "Date",
+    values_to = "DBCluster"
+  )
+```
+
+```{r}
+# converting to nlong: noise
+db_noise_w5 <- as.data.frame(
+  dbscan_noise_w5
+)
+
+db_noise_w5$PointID <-
+  cadia_info_sliding$PointID
+
+db_noise_long_w5 <- db_noise_w5 %>%
+  pivot_longer(
+    cols = -PointID,
+    names_to = "Date",
+    values_to = "Noise"
+  )
+```
+
+```{r}
+# combine cluster + noise
+cadia_dbscan_w5 <- db_cluster_long_w5 %>%
+  left_join(
+    db_noise_long_w5,
+    by = c("PointID", "Date")
+  ) %>%
+  mutate(
+    Date = sub("^cluster_", "", Date),
+    Date = as.Date(Date, format = "%Y%m%d"),
+    WindowSize = 5,
+    Eps = 5,
+    MinPts = 5
+  ) %>%
+  left_join(
+    cadia_info_sliding,
+    by = "PointID"
+  )
+```
+
+```{r}
+head(cadia_dbscan_w5)
+
+table(
+  cadia_dbscan_w5$DBCluster,
+  cadia_dbscan_w5$Noise
+)
+```
+
+```{r}
+nrow(cadia_dbscan_w5)
+# should be 102295
+```
+
+```{r}
+write.csv(
+  cadia_dbscan_w5,
+  "../outputs/cadia_sw_dbscan_w5_eps5_minpts5.csv",
+  row.names = FALSE
+)
+```
