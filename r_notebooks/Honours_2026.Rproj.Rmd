@@ -289,7 +289,7 @@ feijao_D_155_clust <- remove_zero_var(feijao_D_155_mat)
 
 We begin experimenting with clustering, unsupervised machine learning methods. We aim to find groupings or patterns of similarity, ideally focusing on the time-series data without incorporating any geographical information yet. However, these methods, although labelling the data is not necessary, may differ in "setup" as some require the number of clusters for the data to be split into to be specified. This is true for K-means clustering (next section).
 
-Hierarchical clustering methods involve a series of successive mergers (agglomerative) or successive divisions (divisive). Divisive hierarchical clustering is much more computationally intensive compared to its agglomerative counterpart. It starts with all observations in one cluster, then repeatedly calculated which cluster split is the "best", resulting in $2^N$\$2\^N\$\$2\^N\$\$2\^N\$\$2\^N\$\$2\^N\$\$2\^N\$ comparisons (from N total observations). This is much slower than in agglomerative hierarchical clustering. Agglomerative clustering starts with each observation as its own cluster, then calculates the $\frac{N(N-1)}{2}$ initial pairwise distances between clusters, then repeatedly merges the two most similar/closest clusters until only one cluster remains.
+Hierarchical clustering methods involve a series of successive mergers (agglomerative) or successive divisions (divisive). Divisive hierarchical clustering is much more computationally intensive compared to its agglomerative counterpart. It starts with all observations in one cluster, then repeatedly calculated which cluster split is the "best", resulting in $2^N$\$2\^N\$\$2\^N\$\$2\^N\$\$2\^N\$\$2\^N\$\$2\^N\$\$2\^N\$ comparisons (from N total observations). This is much slower than in agglomerative hierarchical clustering. Agglomerative clustering starts with each observation as its own cluster, then calculates the $\frac{N(N-1)}{2}$ initial pairwise distances between clusters, then repeatedly merges the two most similar/closest clusters until only one cluster remains.
 
 The full process of agglomerative hierarchical clustering is:
 
@@ -1403,7 +1403,7 @@ DTW works by computing the distance between 2 time series by finding a path thro
 
 1.  A distance matrix between the two sequences (time series) is constructed, usually Euclidean distance.
 
-    $$D[i, j] = d(x[i],y[j]) = (x[i] - y[j])^2$$
+    $$D[i, j] = d(x[i],y[j]) = (x[i] - y[j])^2$$\$\$D[i, j] = d(x[i],y[j]) = (x[i] - y[j])\^2\$\$
 
 2.  The cost matrix is created by accumulating the minimum distances from the start of the sequences to the current point. The accumulated cost represents the optimal path's cumulative distance up to that point.
 
