@@ -415,7 +415,7 @@ plot(
 )
 ```
 
-##### Exporting the results:
+##### Exporting:
 
 - From wide to long.
 
@@ -761,7 +761,7 @@ legend(
 )
 ```
 
-#### K = 3: Exporting
+##### Exporting
 
 ```{r}
 # cluster membership conversion
@@ -840,7 +840,7 @@ write.csv(
 )
 ```
 
-#### Results check
+##### Results check
 
 1.  How many points are flagged at each iteration?
 
@@ -1111,7 +1111,7 @@ head(colnames(cluster_status_mat_velocity_k2))
 head(colnames(cluster_membership_mat_velocity_k2))
 ```
 
-##### Exporting the results:
+##### Exporting:
 
 ```{r}
 cadia_info_velocity <- cadia_co_filtered %>%
@@ -1786,7 +1786,7 @@ legend(
 dev.off()
 ```
 
-#### 4.1.1 Exporting the results:
+##### Exporting
 
 ```{r}
 # convert to long: clusters
@@ -1867,7 +1867,7 @@ write.csv(
 )
 ```
 
-#### 4.1.2 Testing other hyperparameters (eps, minPts):
+#### 4.1.1 Testing other hyperparameters (eps, minPts):
 
 ```{r}
 eps_values <- c(0.8, 1.0, 1.2, 1.5)
@@ -2198,7 +2198,7 @@ plot(
 )
 ```
 
-##### Exporting the results:
+##### Exporting:
 
 ```{r}
 # converting to long: cluster
@@ -2647,7 +2647,7 @@ plot(
 )
 ```
 
-##### Exporting the results:
+##### Exporting:
 
 ```{r}
 cluster_vel_df_w5 <- as.data.frame(
@@ -2958,7 +2958,7 @@ plot(
 )
 ```
 
-##### Exporting the results
+##### Exporting:
 
 ```{r}
 # convert to long: cluster
@@ -3199,7 +3199,7 @@ summary(n_clusters_w5)
 table(n_clusters_w5)
 ```
 
-#### Exporting the results:
+##### Exporting
 
 ```{r}
 head(colnames(dbscan_membership_w5))
@@ -3284,7 +3284,9 @@ write.csv(
 
 ## 7. Sliding Window w/ Velocity Version 2
 
-### K = 2
+### W3: Median Velocity
+
+#### K = 2
 
 ```{r}
 # setup
@@ -3502,7 +3504,7 @@ plot(
 )
 ```
 
-Exporting the results:
+##### Exporting:
 
 ```{r}
 cluster_vel_df_k2_w3 <- as.data.frame(
@@ -3581,7 +3583,7 @@ write.csv(
 )
 ```
 
-### K = 3
+#### K = 3
 
 ```{r}
 # setup
@@ -3857,7 +3859,7 @@ legend(
 )
 ```
 
-#### Exporting the results
+##### Exporting:
 
 ```{r}
 cluster_vel_df_k3_w3 <- as.data.frame(
@@ -3946,6 +3948,679 @@ write.csv(
 )
 ```
 
+### W5: Median Velocity
+
+#### K = 2
+
+```{r}
+# setup
+set.seed(1234)
+
+k <- 2
+window_size <- 5
+velocity_threshold_w5 <- -30
+
+n_pts_filtered <- nrow(cadia_D_filtered_sliding)
+n_dates_filtered <- ncol(cadia_D_filtered_sliding)
+
+n_iters_vel_k2_w5 <-
+  n_dates_filtered - window_size + 1
+
+iter_dates_vel_k2_w5 <-
+  colnames(cadia_D_filtered_sliding)[
+    window_size:n_dates_filtered
+  ]
+
+cadia_all_dates <- as.Date(
+  sub("^D_", "", colnames(cadia_D_filtered_sliding)),
+  format = "%Y%m%d"
+)
+```
+
+```{r}
+# matrices
+cluster_membership_vel_k2_w5 <- matrix(
+  NA,
+  nrow = n_pts_filtered,
+  ncol = n_iters_vel_k2_w5
+)
+
+cluster_velocity_vel_k2_w5 <- matrix(
+  NA,
+  nrow = n_iters_vel_k2_w5,
+  ncol = k
+)
+
+silhouette_vel_k2_w5 <- numeric(
+  n_iters_vel_k2_w5
+)
+
+colnames(cluster_velocity_vel_k2_w5) <- c(
+  "Lower_Cluster",
+  "Higher_Cluster"
+)
+
+date_names_vel_k2_w5 <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates_vel_k2_w5)
+)
+
+colnames(cluster_membership_vel_k2_w5) <-
+  date_names_vel_k2_w5
+```
+
+```{r}
+# status
+status_vel_k2_w5 <- matrix(
+  NA,
+  nrow = n_pts_filtered,
+  ncol = n_iters_vel_k2_w5
+)
+
+colnames(status_vel_k2_w5) <-
+  date_names_vel_k2_w5
+```
+
+```{r}
+# temporal clustering loop
+set.seed(1234)
+
+for (i in window_size:n_dates_filtered) {
+  
+  start_idx <- i - window_size + 1
+  iter <- i - window_size + 1
+  
+  # Current W5 displacement window
+  x <- cadia_D_filtered_sliding[
+    , start_idx:i,
+    drop = FALSE
+  ]
+  
+  # Rebase each point to 0 at start of window
+  x <- sweep(
+    x,
+    1,
+    x[, 1],
+    FUN = "-"
+  )
+  
+  # Actual acquisition dates
+  window_dates <- cadia_all_dates[
+    start_idx:i
+  ]
+  
+  # Time relative to first acquisition
+  time_days <- as.numeric(
+    window_dates - window_dates[1]
+  )
+  
+  # ONE regression velocity per point across W5
+  point_velocity <- apply(
+    x,
+    1,
+    function(y) {
+      coef(lm(y ~ time_days))[2]
+    }
+  )
+  
+  # mm/day -> mm/year
+  point_velocity <- point_velocity * 365.25
+  
+  # Velocity is now the clustering input
+  x_vel <- matrix(
+    point_velocity,
+    ncol = 1
+  )
+  
+  # K-means DIRECTLY on velocity
+  km <- kmeans(
+    x_vel,
+    centers = k,
+    nstart = 20
+  )
+  
+  # Save raw membership
+  cluster_membership_vel_k2_w5[
+    , iter
+  ] <- km$cluster
+  
+  # Median velocity of each cluster
+  cluster_velocity <- tapply(
+    point_velocity,
+    km$cluster,
+    median
+  )
+  
+  cluster_status <- ifelse(
+    cluster_velocity <= velocity_threshold_w5,
+    1,
+    0
+  )
+  
+  status_vel_k2_w5[, iter] <-
+    cluster_status[km$cluster]
+  
+  # Sort for interpretation
+  cluster_velocity_vel_k2_w5[
+    iter,
+  ] <- sort(cluster_velocity)
+  
+  # Silhouette using VELOCITY space
+  sil <- cluster::silhouette(
+    km$cluster,
+    dist(x_vel)
+  )
+  
+  silhouette_vel_k2_w5[iter] <-
+    mean(sil[, "sil_width"])
+}
+```
+
+```{r}
+# inspect velocities to choose threhold + rerun temporal loop
+head(cluster_velocity_vel_k2_w5)
+tail(cluster_velocity_vel_k2_w5)
+
+summary(cluster_velocity_vel_k2_w5)
+```
+
+```{r}
+# inspect (2)
+matplot(
+  cluster_velocity_vel_k2_w5,
+  type = "l",
+  lty = 1,
+  xlab = "Sliding window",
+  ylab = "Median LOS velocity (mm/year)",
+  main = "W5 k=2 velocity clustering"
+)
+
+abline(h = 0, lty = 2)
+```
+
+```{r}
+# check thresholds
+lower_vel_w5 <-
+  cluster_velocity_vel_k2_w5[, "Lower_Cluster"]
+
+thresholds <- c(-20, -25, -30, -35, -40)
+
+threshold_check_vel_w5 <- data.frame(
+  Threshold = thresholds,
+  WindowsBelow = sapply(
+    thresholds,
+    function(th) {
+      sum(lower_vel_w5 <= th, na.rm = TRUE)
+    }
+  )
+)
+
+threshold_check_vel_w5
+```
+
+**Checking results:**
+
+```{r}
+table(status_vel_k2_w5)
+
+flagged_vel_k2_w5 <- colSums(
+  status_vel_k2_w5 == 1
+)
+
+plot(
+  flagged_vel_k2_w5,
+  type = "l",
+  xlab = "Sliding window",
+  ylab = "Number of Status 1 points",
+  main = "W5 k=2 velocity clustering"
+)
+```
+
+##### Exporting:
+
+```{r}
+# convert membership from wide to long
+cluster_vel_df_k2_w5 <- as.data.frame(
+  cluster_membership_vel_k2_w5
+)
+
+cluster_vel_df_k2_w5$PointID <-
+  cadia_info_sliding$PointID
+
+cluster_vel_long_k2_w5 <-
+  cluster_vel_df_k2_w5 %>%
+  pivot_longer(
+    cols = -PointID,
+    names_to = "Date",
+    values_to = "RawCluster"
+  )
+```
+
+```{r}
+# convert status ""
+status_vel_df_k2_w5 <- as.data.frame(
+  status_vel_k2_w5
+)
+
+status_vel_df_k2_w5$PointID <-
+  cadia_info_sliding$PointID
+
+status_vel_long_k2_w5 <-
+  status_vel_df_k2_w5 %>%
+  pivot_longer(
+    cols = -PointID,
+    names_to = "Date",
+    values_to = "Status"
+  )
+```
+
+```{r}
+# join membership + status
+cadia_velcluster_k2_w5 <-
+  cluster_vel_long_k2_w5 %>%
+  left_join(
+    status_vel_long_k2_w5,
+    by = c("PointID", "Date")
+  ) %>%
+  mutate(
+    Date = sub("^cluster_", "", Date),
+    Date = as.Date(Date, format = "%Y%m%d"),
+    WindowSize = 5,
+    K = 2,
+    VelocityThreshold = -30
+  ) %>%
+  left_join(
+    cadia_info_sliding,
+    by = "PointID"
+  )
+```
+
+```{r}
+cadia_velcluster_k2_w5 <- cadia_velcluster_k2_w5 %>%
+  select(
+    -WindowSize,
+    -K,
+    -VelocityThreshold
+  )
+```
+
+```{r}
+# check
+names(cadia_velcluster_k2_w5)
+```
+
+```{r}
+# export
+write.csv(
+  cadia_velcluster_k2_w5,
+  "cadia_sw_km2_vel_w5_threshold30.csv",
+  row.names = FALSE
+)
+```
+
+#### K = 3:
+
+```{r}
+# setup
+set.seed(1234)
+
+k <- 3
+window_size <- 5
+threshold_1_vel_k3_w5 <- -35
+threshold_2_vel_k3_w5 <- -50
+
+n_pts_filtered <- nrow(cadia_D_filtered_sliding)
+n_dates_filtered <- ncol(cadia_D_filtered_sliding)
+
+n_iters_vel_k3_w5 <-
+  n_dates_filtered - window_size + 1
+
+iter_dates_vel_k3_w5 <-
+  colnames(cadia_D_filtered_sliding)[
+    window_size:n_dates_filtered
+  ]
+
+cadia_all_dates <- as.Date(
+  sub("^D_", "", colnames(cadia_D_filtered_sliding)),
+  format = "%Y%m%d"
+)
+```
+
+```{r}
+# matrices
+cluster_membership_vel_k3_w5 <- matrix(
+  NA,
+  nrow = n_pts_filtered,
+  ncol = n_iters_vel_k3_w5
+)
+
+cluster_velocity_vel_k3_w5 <- matrix(
+  NA,
+  nrow = n_iters_vel_k3_w5,
+  ncol = k
+)
+
+silhouette_vel_k3_w5 <- numeric(
+  n_iters_vel_k3_w5
+)
+
+colnames(cluster_velocity_vel_k3_w5) <- c(
+  "Lower_Cluster",
+  "Middle_Cluster",
+  "Higher_Cluster"
+)
+
+date_names_vel_k3_w5 <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates_vel_k3_w5)
+)
+
+colnames(cluster_membership_vel_k3_w5) <-
+  date_names_vel_k3_w5
+```
+
+```{r}
+# status
+status_vel_k3_w5 <- matrix(
+  NA,
+  nrow = n_pts_filtered,
+  ncol = n_iters_vel_k3_w5
+)
+
+colnames(status_vel_k3_w5) <-
+  date_names_vel_k3_w5
+```
+
+```{r}
+# temporal loop
+set.seed(1234)
+
+for (i in window_size:n_dates_filtered) {
+  
+  start_idx <- i - window_size + 1
+  iter <- i - window_size + 1
+  
+  # Current W5 displacement window
+  x <- cadia_D_filtered_sliding[
+    , start_idx:i,
+    drop = FALSE
+  ]
+  
+  # Rebase first observation to 0
+  x <- sweep(
+    x,
+    1,
+    x[, 1],
+    FUN = "-"
+  )
+  
+  # Actual acquisition dates
+  window_dates <- cadia_all_dates[start_idx:i]
+  
+  # Time relative to first acquisition
+  time_days <- as.numeric(
+    window_dates - window_dates[1]
+  )
+  
+  # One regression velocity per point
+  point_velocity <- apply(
+    x,
+    1,
+    function(y) {
+      coef(lm(y ~ time_days))[2]
+    }
+  )
+  
+  # mm/day -> mm/year
+  point_velocity <- point_velocity * 365.25
+  
+  # Velocity becomes K-means input
+  x_vel <- matrix(
+    point_velocity,
+    ncol = 1
+  )
+  
+  # K-means DIRECTLY on velocity
+  km <- kmeans(
+    x_vel,
+    centers = k,
+    nstart = 20
+  )
+  
+  # Store raw membership
+  cluster_membership_vel_k3_w5[
+    , iter
+  ] <- km$cluster
+  
+  # Median velocity of each raw cluster
+  cluster_velocity <- tapply(
+    point_velocity,
+    km$cluster,
+    median
+  )
+  
+  cluster_status <- ifelse(
+    cluster_velocity <= threshold_2_vel_k3_w5,
+    2,
+    ifelse(
+      cluster_velocity <= threshold_1_vel_k3_w5,
+      1,
+      0
+    )
+  )
+  
+  status_vel_k3_w5[, iter] <-
+    cluster_status[km$cluster]
+  
+  # Sort only for interpretation
+  cluster_velocity_vel_k3_w5[
+    iter,
+  ] <- sort(cluster_velocity)
+  
+  # Silhouette in velocity space
+  sil <- cluster::silhouette(
+    km$cluster,
+    dist(x_vel)
+  )
+  
+  silhouette_vel_k3_w5[iter] <-
+    mean(sil[, "sil_width"])
+}
+```
+
+```{r}
+# inspect velocity for threshold
+head(cluster_velocity_vel_k3_w5)
+tail(cluster_velocity_vel_k3_w5)
+
+summary(cluster_velocity_vel_k3_w5)
+```
+
+```{r}
+matplot(
+  cluster_velocity_vel_k3_w5,
+  type = "l",
+  lty = 1,
+  xlab = "Sliding window",
+  ylab = "Median LOS velocity (mm/year)",
+  main = "W5 k=3 velocity clustering"
+)
+
+abline(h = 0, lty = 2)
+
+legend(
+  "topright",
+  legend = c(
+    "Lower cluster",
+    "Middle cluster",
+    "Higher cluster"
+  ),
+  lty = 1
+)
+```
+
+```{r}
+lower_vel_k3_w5 <-
+  cluster_velocity_vel_k3_w5[, "Lower_Cluster"]
+
+threshold_pairs <- list(
+  c(-30, -45),
+  c(-30, -50),
+  c(-35, -50),
+  c(-35, -55),
+  c(-40, -55)
+)
+
+threshold_check_k3_w5 <- do.call(
+  rbind,
+  lapply(
+    threshold_pairs,
+    function(th) {
+      
+      status <- ifelse(
+        lower_vel_k3_w5 <= th[2],
+        2,
+        ifelse(
+          lower_vel_k3_w5 <= th[1],
+          1,
+          0
+        )
+      )
+      
+      data.frame(
+        Threshold1 = th[1],
+        Threshold2 = th[2],
+        Status0_Windows = sum(status == 0),
+        Status1_Windows = sum(status == 1),
+        Status2_Windows = sum(status == 2)
+      )
+    }
+  )
+)
+
+threshold_check_k3_w5
+```
+
+**Check results:**
+
+```{r}
+table(status_vel_k3_w5)
+
+status_counts_vel_k3_w5 <- t(
+  apply(
+    status_vel_k3_w5,
+    2,
+    function(x) {
+      table(
+        factor(x, levels = c(0, 1, 2))
+      )
+    }
+  )
+)
+
+colnames(status_counts_vel_k3_w5) <-
+  c("Status0", "Status1", "Status2")
+
+head(status_counts_vel_k3_w5)
+```
+
+```{r}
+matplot(
+  status_counts_vel_k3_w5,
+  type = "l",
+  lty = 1,
+  xlab = "Sliding window",
+  ylab = "Number of points",
+  main = "W5 k=3 velocity clustering status"
+)
+
+legend(
+  "topright",
+  legend = c("Status 0", "Status 1", "Status 2"),
+  lty = 1
+)
+```
+
+```{r}
+summary(silhouette_vel_k3_w5)
+mean(silhouette_vel_k3_w5)
+```
+
+##### Exporting:
+
+```{r}
+cluster_vel_df_k3_w5 <-
+  as.data.frame(cluster_membership_vel_k3_w5)
+
+cluster_vel_df_k3_w5$PointID <-
+  cadia_info_sliding$PointID
+
+cluster_vel_long_k3_w5 <-
+  cluster_vel_df_k3_w5 %>%
+  pivot_longer(
+    cols = -PointID,
+    names_to = "Date",
+    values_to = "RawCluster"
+  )
+
+
+status_vel_df_k3_w5 <-
+  as.data.frame(status_vel_k3_w5)
+
+status_vel_df_k3_w5$PointID <-
+  cadia_info_sliding$PointID
+
+status_vel_long_k3_w5 <-
+  status_vel_df_k3_w5 %>%
+  pivot_longer(
+    cols = -PointID,
+    names_to = "Date",
+    values_to = "Status"
+  )
+```
+
+```{r}
+# join membership + status
+cadia_velcluster_k3_w5 <-
+  cluster_vel_long_k3_w5 %>%
+  left_join(
+    status_vel_long_k3_w5,
+    by = c("PointID", "Date")
+  ) %>%
+  mutate(
+    Date = sub("^cluster_", "", Date),
+    Date = as.Date(Date, format = "%Y%m%d")
+  ) %>%
+  left_join(
+    cadia_info_sliding,
+    by = "PointID"
+  )
+```
+
+```{r}
+head(cadia_velcluster_k3_w5)
+
+table(cadia_velcluster_k3_w5$Status)
+
+length(unique(cadia_velcluster_k3_w5$PointID))
+length(unique(cadia_velcluster_k3_w5$Date))
+
+nrow(cadia_velcluster_k3_w5)
+
+sum(is.na(cadia_velcluster_k3_w5$Status))
+sum(is.na(cadia_velcluster_k3_w5$lon))
+sum(is.na(cadia_velcluster_k3_w5$lat))
+```
+
+```{r}
+# export
+write.csv(
+  cadia_velcluster_k3_w5,
+  "cadia_sw_km3_vel_w5_thresholds35_50.csv",
+  row.names = FALSE
+)
+```
+
 ## 8. Silhouette Score Comparison
 
 ```{r}
@@ -3956,7 +4631,9 @@ silhouette_summary <- data.frame(
     "Velocity W3 k2",
     "Velocity W3 k3",
     "Disp W5 k2",
-    "Disp W5 k3"
+    "Disp W5 k3",
+    "Velocity W5 k2",
+    "Velocity W5 k3"
   ),
 
   MeanSilhouette = c(
@@ -3965,7 +4642,9 @@ silhouette_summary <- data.frame(
     mean(silhouette_vel_k2_w3),
     mean(silhouette_vel_k3_w3),
     mean(silhouette_w5),
-    mean(silhouette_k3_w5)
+    mean(silhouette_k3_w5),
+    mean(silhouette_vel_k2_w5),
+    mean(silhouette_vel_k3_w5)
   ),
 
   MedianSilhouette = c(
@@ -3974,7 +4653,9 @@ silhouette_summary <- data.frame(
     median(silhouette_vel_k2_w3),
     median(silhouette_vel_k3_w3),
     median(silhouette_w5),
-    median(silhouette_k3_w5)
+    median(silhouette_k3_w5),
+    median(silhouette_vel_k2_w5),
+    median(silhouette_vel_k3_w5)
   ),
 
   MinSilhouette = c(
@@ -3983,7 +4664,9 @@ silhouette_summary <- data.frame(
     min(silhouette_vel_k2_w3),
     min(silhouette_vel_k3_w3),
     min(silhouette_w5),
-    min(silhouette_k3_w5)
+    min(silhouette_k3_w5),
+    min(silhouette_vel_k2_w5),
+    min(silhouette_vel_k3_w5)
   ),
 
   MaxSilhouette = c(
@@ -3992,11 +4675,11 @@ silhouette_summary <- data.frame(
     max(silhouette_vel_k2_w3),
     max(silhouette_vel_k3_w3),
     max(silhouette_w5),
-    max(silhouette_k3_w5)
+    max(silhouette_k3_w5),
+    max(silhouette_vel_k2_w5),
+    max(silhouette_vel_k3_w5)
   )
 )
 
 silhouette_summary
 ```
-
-

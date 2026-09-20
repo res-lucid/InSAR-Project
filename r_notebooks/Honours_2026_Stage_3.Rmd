@@ -1600,7 +1600,7 @@ Instead of interpreting the clusters after reordering their respective labels (b
 
 We still compute the median cumulative displacement of the latest acquisition, but instead of relabelling clusters by ordering the medians, we compare it to a threshold to determine whether it is "concerning" or "normal" (which are the two different clusters).
 
-## 1. K-means clustering
+## 3.1.1. K-means clustering
 
 ### K = 2
 
@@ -2697,6 +2697,91 @@ write.csv(
 
 ```{r}
 View(cadia_temporal_threshold_filtered_k3)
+```
+
+## 3.1.2 Silhouette Score
+
+We calculate the silhouette score for the filtered data versions.
+
+```{r}
+# expanding-window silhouette: k = 2
+
+n_iters_expand_k2 <- ncol(
+  cluster_membership_mat_filtered_k2
+)
+
+silhouette_expand_k2 <- numeric(
+  n_iters_expand_k2
+)
+
+for (iter in 1:n_iters_expand_k2) {
+  
+  # expanding window ends at:
+  i <- start_window + iter - 1
+  
+  x <- cadia_D_filtered[
+    , 1:i,
+    drop = FALSE
+  ]
+  
+  clusters <-
+    cluster_membership_mat_filtered_k2[, iter]
+  
+  sil <- cluster::silhouette(
+    clusters,
+    dist(x)
+  )
+  
+  silhouette_expand_k2[iter] <-
+    mean(sil[, "sil_width"])
+}
+```
+
+```{r}
+summary(silhouette_expand_k2)
+mean(silhouette_expand_k2)
+```
+
+```{r}
+n_iters_expand_k3 <- ncol(
+  cluster_membership_mat_filtered_k3
+)
+
+silhouette_expand_k3 <- numeric(
+  n_iters_expand_k3
+)
+
+for (iter in 1:n_iters_expand_k3) {
+  
+  i <- start_window + iter - 1
+  
+  x <- cadia_D_filtered[
+    , 1:i,
+    drop = FALSE
+  ]
+  
+  clusters <-
+    cluster_membership_mat_filtered_k3[, iter]
+  
+  sil <- cluster::silhouette(
+    clusters,
+    dist(x)
+  )
+  
+  silhouette_expand_k3[iter] <-
+    mean(sil[, "sil_width"])
+}
+```
+
+```{r}
+summary(silhouette_expand_k3)
+mean(silhouette_expand_k3)
+```
+
+```{r}
+start_window
+ncol(cluster_membership_mat_filtered_k2)
+ncol(cluster_membership_mat_filtered_k3)
 ```
 
 # 4. Sliding Window Temporal Clustering Workflow
