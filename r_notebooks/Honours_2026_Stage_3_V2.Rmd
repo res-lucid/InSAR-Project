@@ -415,7 +415,7 @@ plot(
 )
 ```
 
-##### Exporting:
+**Exporting:**
 
 - From wide to long.
 
@@ -761,7 +761,7 @@ legend(
 )
 ```
 
-##### Exporting
+**Exporting**
 
 ```{r}
 # cluster membership conversion
@@ -840,7 +840,7 @@ write.csv(
 )
 ```
 
-##### Results check
+**Results check**
 
 1.  How many points are flagged at each iteration?
 
@@ -943,7 +943,7 @@ colnames(cluster_velocity_mat_k2) <- c(
 ```
 
 ```{r}
-silhouette_vel_k2_w3 <- numeric(n_iters_filtered)
+silhouette_vel_k2_w3_old <- numeric(n_iters_filtered)
 ```
 
 ```{r}
@@ -990,7 +990,7 @@ for (i in window_size:n_dates_filtered) {
   dist(x)
   )
   
-  silhouette_vel_k2_w3[iter] <- mean(sil[, "sil_width"])
+  silhouette_vel_k2_w3_old[iter] <- mean(sil[, "sil_width"])
   
   # store raw cluster membership
   cluster_membership_mat_velocity_k2[
@@ -1111,7 +1111,7 @@ head(colnames(cluster_status_mat_velocity_k2))
 head(colnames(cluster_membership_mat_velocity_k2))
 ```
 
-##### Exporting:
+**Exporting:**
 
 ```{r}
 cadia_info_velocity <- cadia_co_filtered %>%
@@ -1298,7 +1298,7 @@ colnames(cluster_velocity_mat_k3) <- c(
 ```
 
 ```{r}
-silhouette_vel_k3_w3 <- numeric(n_iters_filtered)
+silhouette_vel_k3_w3_old <- numeric(n_iters_filtered)
 ```
 
 ```{r}
@@ -1342,7 +1342,7 @@ for (i in window_size:n_dates_filtered) {
     dist(x)
   )
   
-  silhouette_vel_k3_w3[iter] <- mean(sil[, "sil_width"])  
+  silhouette_vel_k3_w3_old[iter] <- mean(sil[, "sil_width"])  
   
   # store RAW K-means membership
   cluster_membership_mat_velocity_k3[
@@ -1786,7 +1786,7 @@ legend(
 dev.off()
 ```
 
-##### Exporting
+**Exporting**
 
 ```{r}
 # convert to long: clusters
@@ -2137,7 +2137,7 @@ sapply(
 )
 ```
 
-##### Results checking:
+**Results checking:**
 
 ```{r}
 flagged_w5 <- colSums(status_mat_w5 == 1)
@@ -2198,7 +2198,7 @@ plot(
 )
 ```
 
-##### Exporting:
+**Exporting:**
 
 ```{r}
 # converting to long: cluster
@@ -2529,7 +2529,7 @@ vel_medians_w5 <- matrix(
   ncol = 2
 )
 
-silhouette_vel_w5 <- numeric(n_iters_vel_w5)
+silhouette_vel_w5_old <- numeric(n_iters_vel_w5)
 
 colnames(vel_medians_w5) <-
   c("Lower_Cluster", "Higher_Cluster")
@@ -2610,7 +2610,7 @@ for (i in window_size:n_dates_filtered) {
     dist(x)
   )
   
-  silhouette_vel_w5[iter] <-
+  silhouette_vel_w5_old[iter] <-
     mean(sil[, "sil_width"])
 }
 ```
@@ -2647,7 +2647,7 @@ plot(
 )
 ```
 
-##### Exporting:
+**Exporting:**
 
 ```{r}
 cluster_vel_df_w5 <- as.data.frame(
@@ -2750,7 +2750,7 @@ velocity_medians_k3_w5 <- matrix(
   ncol = 3
 )
 
-silhouette_vel_k3_w5 <-
+silhouette_vel_k3_w5_old <-
   numeric(n_iters_vel_k3_w5)
 
 colnames(velocity_medians_k3_w5) <- c(
@@ -2863,7 +2863,7 @@ for (i in window_size:n_dates_filtered) {
     dist(x)
   )
   
-  silhouette_vel_k3_w5[iter] <-
+  silhouette_vel_k3_w5_old[iter] <-
     mean(sil[, "sil_width"])
 }
 ```
@@ -2945,20 +2945,20 @@ legend(
 ##### Silhouette score
 
 ```{r}
-summary(silhouette_vel_k3_w5)
-mean(silhouette_vel_k3_w5)
+summary(silhouette_vel_k3_w5_old)
+mean(silhouette_vel_k3_w5_old)
 ```
 
 ```{r}
 plot(
-  silhouette_vel_k3_w5,
+  silhouette_vel_k3_w5_old,
   type = "l",
   xlab = "Sliding window",
   ylab = "Average silhouette score"
 )
 ```
 
-##### Exporting:
+**Exporting:**
 
 ```{r}
 # convert to long: cluster
@@ -3199,7 +3199,7 @@ summary(n_clusters_w5)
 table(n_clusters_w5)
 ```
 
-##### Exporting
+**Exporting**
 
 ```{r}
 head(colnames(dbscan_membership_w5))
@@ -3326,7 +3326,7 @@ cluster_velocity_vel_k2_w3 <- matrix(
   ncol = k
 )
 
-silhouette_vel_k2_w3 <- numeric(
+silhouette_vel_k2_w3_new <- numeric(
   n_iters_filtered
 )
 
@@ -3444,7 +3444,7 @@ for (i in window_size:n_dates_filtered) {
     dist(x_vel)
   )
   
-  silhouette_vel_k2_w3[iter] <-
+  silhouette_vel_k2_w3_new[iter] <-
     mean(sil[, "sil_width"])
 }
 ```
@@ -3492,11 +3492,11 @@ plot(
 ```
 
 ```{r}
-summary(silhouette_vel_k2_w3)
-mean(silhouette_vel_k2_w3)
+summary(silhouette_vel_k2_w3_new)
+mean(silhouette_vel_k2_w3_new)
 
 plot(
-  silhouette_vel_k2_w3,
+  silhouette_vel_k2_w3_new,
   type = "l",
   xlab = "Sliding window",
   ylab = "Average silhouette score",
@@ -3504,7 +3504,7 @@ plot(
 )
 ```
 
-##### Exporting:
+**Exporting:**
 
 ```{r}
 cluster_vel_df_k2_w3 <- as.data.frame(
@@ -3622,7 +3622,7 @@ cluster_velocity_vel_k3_w3 <- matrix(
   ncol = k
 )
 
-silhouette_vel_k3_w3 <- numeric(
+silhouette_vel_k3_w3_new <- numeric(
   n_iters_vel_k3_w3
 )
 
@@ -3751,7 +3751,7 @@ for (i in window_size:n_dates_filtered) {
     dist(x_vel)
   )
   
-  silhouette_vel_k3_w3[iter] <-
+  silhouette_vel_k3_w3_new[iter] <-
     mean(sil[, "sil_width"])
 }
 ```
@@ -3859,7 +3859,7 @@ legend(
 )
 ```
 
-##### Exporting:
+**Exporting:**
 
 ```{r}
 cluster_vel_df_k3_w3 <- as.data.frame(
@@ -3991,7 +3991,7 @@ cluster_velocity_vel_k2_w5 <- matrix(
   ncol = k
 )
 
-silhouette_vel_k2_w5 <- numeric(
+silhouette_vel_k2_w5_new <- numeric(
   n_iters_vel_k2_w5
 )
 
@@ -4111,7 +4111,7 @@ for (i in window_size:n_dates_filtered) {
     dist(x_vel)
   )
   
-  silhouette_vel_k2_w5[iter] <-
+  silhouette_vel_k2_w5_new[iter] <-
     mean(sil[, "sil_width"])
 }
 ```
@@ -4176,7 +4176,7 @@ plot(
 )
 ```
 
-##### Exporting:
+**Exporting:**
 
 ```{r}
 # convert membership from wide to long
@@ -4300,7 +4300,7 @@ cluster_velocity_vel_k3_w5 <- matrix(
   ncol = k
 )
 
-silhouette_vel_k3_w5 <- numeric(
+silhouette_vel_k3_w5_new <- numeric(
   n_iters_vel_k3_w5
 )
 
@@ -4423,7 +4423,7 @@ for (i in window_size:n_dates_filtered) {
     dist(x_vel)
   )
   
-  silhouette_vel_k3_w5[iter] <-
+  silhouette_vel_k3_w5_new[iter] <-
     mean(sil[, "sil_width"])
 }
 ```
@@ -4542,11 +4542,11 @@ legend(
 ```
 
 ```{r}
-summary(silhouette_vel_k3_w5)
-mean(silhouette_vel_k3_w5)
+summary(silhouette_vel_k3_w5_new)
+mean(silhouette_vel_k3_w5_new)
 ```
 
-##### Exporting:
+**Exporting:**
 
 ```{r}
 cluster_vel_df_k3_w5 <-
@@ -4639,47 +4639,1256 @@ silhouette_summary <- data.frame(
   MeanSilhouette = c(
     mean(silhouette_disp_k2_w3),
     mean(silhouette_disp_k3_w3),
-    mean(silhouette_vel_k2_w3),
-    mean(silhouette_vel_k3_w3),
+    mean(silhouette_vel_k2_w3_new),
+    mean(silhouette_vel_k3_w3_new),
     mean(silhouette_w5),
     mean(silhouette_k3_w5),
-    mean(silhouette_vel_k2_w5),
-    mean(silhouette_vel_k3_w5)
+    mean(silhouette_vel_k2_w5_new),
+    mean(silhouette_vel_k3_w5_new)
   ),
 
   MedianSilhouette = c(
     median(silhouette_disp_k2_w3),
     median(silhouette_disp_k3_w3),
-    median(silhouette_vel_k2_w3),
-    median(silhouette_vel_k3_w3),
+    median(silhouette_vel_k2_w3_new),
+    median(silhouette_vel_k3_w3_new),
     median(silhouette_w5),
     median(silhouette_k3_w5),
-    median(silhouette_vel_k2_w5),
-    median(silhouette_vel_k3_w5)
+    median(silhouette_vel_k2_w5_new),
+    median(silhouette_vel_k3_w5_new)
   ),
 
   MinSilhouette = c(
     min(silhouette_disp_k2_w3),
     min(silhouette_disp_k3_w3),
-    min(silhouette_vel_k2_w3),
-    min(silhouette_vel_k3_w3),
+    min(silhouette_vel_k2_w3_new),
+    min(silhouette_vel_k3_w3_new),
     min(silhouette_w5),
     min(silhouette_k3_w5),
-    min(silhouette_vel_k2_w5),
-    min(silhouette_vel_k3_w5)
+    min(silhouette_vel_k2_w5_new),
+    min(silhouette_vel_k3_w5_new)
   ),
 
   MaxSilhouette = c(
     max(silhouette_disp_k2_w3),
     max(silhouette_disp_k3_w3),
-    max(silhouette_vel_k2_w3),
-    max(silhouette_vel_k3_w3),
+    max(silhouette_vel_k2_w3_new),
+    max(silhouette_vel_k3_w3_new),
     max(silhouette_w5),
     max(silhouette_k3_w5),
-    max(silhouette_vel_k2_w5),
-    max(silhouette_vel_k3_w5)
+    max(silhouette_vel_k2_w5_new),
+    max(silhouette_vel_k3_w5_new)
   )
 )
 
 silhouette_summary
+```
+
+```{r}
+silhouette_summary_vel_nvo <- data.frame(
+  Method = c(
+    "Velocity W3 k2 - old",
+    "Velocity W3 k3 - old",
+    "Velocity W3 k2 - new",
+    "Velocity W3 k3 - new"
+  ),
+  
+  MeanSilhouette = c(
+    mean(silhouette_vel_k2_w3_old),
+    mean(silhouette_vel_k3_w3_old),
+    mean(silhouette_vel_k2_w3_new),
+    mean(silhouette_vel_k3_w3_new)
+  ),
+  
+  MedianSilhouette = c(
+    median(silhouette_vel_k2_w3_old),
+    median(silhouette_vel_k3_w3_old),
+    median(silhouette_vel_k2_w3_new),
+    median(silhouette_vel_k3_w3_new)
+  ),
+  
+  MinSilhouette = c(
+    min(silhouette_vel_k2_w3_old),
+    min(silhouette_vel_k3_w3_old),
+    min(silhouette_vel_k2_w3_new),
+    min(silhouette_vel_k3_w3_new)
+  ),
+  
+  MaxSilhouette = c(
+    max(silhouette_vel_k2_w3_old),
+    max(silhouette_vel_k3_w3_old),
+    max(silhouette_vel_k2_w3_new),
+    max(silhouette_vel_k3_w3_new)
+  )
+)
+
+silhouette_summary_vel_nvo
+```
+
+## 9. Peru Comparison
+
+```{r}
+dim(peru_failed)
+dim(peru_unfailed)
+```
+
+```{r}
+ggplot(peru_failed, aes(x = lon, y = lat)) +
+  geom_point(size = 0.5) +
+  coord_fixed() +
+  labs(
+    title = "Peru (Failed) InSAR points",
+    x = "Longitude",
+    y = "Latitude"
+  )
+```
+
+```{r}
+ggplot(peru_unfailed, aes(x = lon, y = lat)) +
+  geom_point(size = 0.5) +
+  coord_fixed() +
+  labs(
+    title = "Peru (Unfailed) InSAR points",
+    x = "Longitude",
+    y = "Latitude"
+  )
+```
+
+```{r}
+# Peru datasets prep
+
+# displacement columns
+d_cols_peru_F <- grep("^D_", names(peru_failed), value = TRUE)
+d_cols_peru_U <- grep("^D_", names(peru_unfailed), value = TRUE)
+
+# keep baseline for sliding windows
+peru_F_sliding <- as.matrix(
+  peru_failed[, d_cols_peru_F]
+)
+
+peru_U_sliding <- as.matrix(
+  peru_unfailed[, d_cols_peru_U]
+)
+
+dim(peru_F_sliding)
+dim(peru_U_sliding)
+```
+
+```{r}
+names(peru_failed)
+names(peru_unfailed)
+
+summary(peru_failed$coherence)
+summary(peru_unfailed$coherence)
+```
+
+```{r}
+# checking coherence filtering
+c(
+  Failed_total = nrow(peru_failed),
+  Failed_ge_070 = sum(peru_failed$coherence >= 0.70),
+  Unfailed_total = nrow(peru_unfailed),
+  Unfailed_ge_070 = sum(peru_unfailed$coherence >= 0.70)
+)
+
+c(
+  Failed_pct = mean(peru_failed$coherence >= 0.70) * 100,
+  Unfailed_pct = mean(peru_unfailed$coherence >= 0.70) * 100
+)
+```
+
+There's too little points to apply coherence filtering and retain a valuable number of observations.
+
+```{r}
+# metadata for exporting later
+peru_F_info <- peru_failed %>%
+  select(FID, lon, lat, coherence)
+
+peru_U_info <- peru_unfailed %>%
+  select(FID, lon, lat, coherence)
+```
+
+```{r}
+# dates
+peru_F_dates <- as.Date(
+  sub("^D_", "", colnames(peru_F_sliding)),
+  format = "%Y%m%d"
+)
+
+peru_U_dates <- as.Date(
+  sub("^D_", "", colnames(peru_U_sliding)),
+  format = "%Y%m%d"
+)
+```
+
+### 9.1 Peru (failed)
+
+#### 9.1.1 Median displacement; k = 2
+
+```{r}
+# setup
+set.seed(1234)
+
+k <- 2
+window_size <- 3
+threshold_peru_F_disp <- -4
+
+n_pts_peru_F <- nrow(peru_F_sliding)
+n_dates_peru_F <- ncol(peru_F_sliding)
+
+n_iters_peru_F <-
+  n_dates_peru_F - window_size + 1
+
+iter_dates_peru_F <-
+  colnames(peru_F_sliding)[
+    window_size:n_dates_peru_F
+  ]
+
+date_names_peru_F <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates_peru_F)
+)
+```
+
+```{r}
+# matrices
+cluster_membership_peru_F_disp_k2_w3 <- matrix(
+  NA,
+  nrow = n_pts_peru_F,
+  ncol = n_iters_peru_F
+)
+
+cluster_medians_peru_F_disp_k2_w3 <- matrix(
+  NA,
+  nrow = n_iters_peru_F,
+  ncol = 2
+)
+
+silhouette_peru_F_disp_k2_w3 <-
+  numeric(n_iters_peru_F)
+
+colnames(cluster_membership_peru_F_disp_k2_w3) <-
+  date_names_peru_F
+
+colnames(cluster_medians_peru_F_disp_k2_w3) <-
+  c("Lower_Cluster", "Higher_Cluster")
+```
+
+```{r}
+# status
+status_peru_F_disp_k2_w3 <- matrix(
+  NA,
+  nrow = n_pts_peru_F,
+  ncol = n_iters_peru_F
+)
+
+colnames(status_peru_F_disp_k2_w3) <-
+  date_names_peru_F
+```
+
+```{r}
+# temporal clustering loop
+set.seed(1234)
+
+for (i in window_size:n_dates_peru_F) {
+  
+  start_idx <- i - window_size + 1
+  iter <- i - window_size + 1
+  
+  # W3 displacement window
+  x <- peru_F_sliding[
+    , start_idx:i,
+    drop = FALSE
+  ]
+  
+  # Rebase each point to zero
+  x <- sweep(
+    x,
+    1,
+    x[, 1],
+    FUN = "-"
+  )
+  
+  # K-means on displacement trajectory
+  km <- kmeans(
+    x,
+    centers = 2,
+    nstart = 20
+  )
+  
+  cluster_membership_peru_F_disp_k2_w3[, iter] <-
+    km$cluster
+  
+  # Latest displacement in window
+  latest_disp <- x[, ncol(x)]
+  
+  cluster_medians <- tapply(
+    latest_disp,
+    km$cluster,
+    median
+  )
+  
+  cluster_status <- ifelse(
+    cluster_medians <= threshold_peru_F_disp,
+    1,
+    0
+  )
+  
+  status_peru_F_disp_k2_w3[, iter] <-
+    cluster_status[km$cluster]
+  
+  cluster_medians_peru_F_disp_k2_w3[iter, ] <-
+    sort(cluster_medians)
+  
+  # Silhouette in displacement feature space
+  sil <- cluster::silhouette(
+    km$cluster,
+    dist(x)
+  )
+  
+  silhouette_peru_F_disp_k2_w3[iter] <-
+    mean(sil[, "sil_width"])
+}
+```
+
+```{r}
+# inspect results to choose threshold
+summary(cluster_medians_peru_F_disp_k2_w3)
+
+summary(silhouette_peru_F_disp_k2_w3)
+mean(silhouette_peru_F_disp_k2_w3)
+```
+
+```{r}
+# test thresholds
+lower_disp_peru_F <-
+  cluster_medians_peru_F_disp_k2_w3[, "Lower_Cluster"]
+
+thresholds <- c(-2, -2.5, -3, -3.5, -4, -5)
+
+threshold_check_peru_F_disp <- data.frame(
+  Threshold = thresholds,
+  WindowsBelow = sapply(
+    thresholds,
+    function(th) {
+      sum(lower_disp_peru_F <= th, na.rm = TRUE)
+    }
+  )
+)
+
+threshold_check_peru_F_disp
+```
+
+```{r}
+plot(
+  lower_disp_peru_F,
+  type = "l",
+  xlab = "Sliding window",
+  ylab = "Median displacement (mm)",
+  main = "Peru Failed W3 k=2 - Lower cluster"
+)
+
+abline(h = 0, lty = 2)
+```
+
+```{r}
+# results check
+table(status_peru_F_disp_k2_w3)
+
+flagged_peru_F_disp <- colSums(
+  status_peru_F_disp_k2_w3 == 1
+)
+
+plot(
+  flagged_peru_F_disp,
+  type = "l",
+  xlab = "Sliding window",
+  ylab = "Number of Status 1 points",
+  main = "Peru Failed W3 displacement k=2"
+)
+```
+
+```{r}
+# exporting
+# convert from wide to long
+
+# cluster membership
+cluster_peru_F_disp_df <-
+  as.data.frame(cluster_membership_peru_F_disp_k2_w3)
+
+cluster_peru_F_disp_df$FID <-
+  peru_failed$FID
+
+cluster_peru_F_disp_long <-
+  cluster_peru_F_disp_df %>%
+  pivot_longer(
+    cols = -FID,
+    names_to = "Date",
+    values_to = "RawCluster"
+  )
+
+
+# status
+status_peru_F_disp_df <-
+  as.data.frame(status_peru_F_disp_k2_w3)
+
+status_peru_F_disp_df$FID <-
+  peru_failed$FID
+
+status_peru_F_disp_long <-
+  status_peru_F_disp_df %>%
+  pivot_longer(
+    cols = -FID,
+    names_to = "Date",
+    values_to = "Status"
+  )
+```
+
+```{r}
+# join cluster and status
+peru_F_disp_k2_w3_export <-
+  cluster_peru_F_disp_long %>%
+  left_join(
+    status_peru_F_disp_long,
+    by = c("FID", "Date")
+  ) %>%
+  mutate(
+    Date = sub("^cluster_", "", Date),
+    Date = as.Date(Date, format = "%Y%m%d")
+  ) %>%
+  left_join(
+    peru_F_info,
+    by = "FID"
+  )
+```
+
+```{r}
+# check
+head(peru_F_disp_k2_w3_export)
+
+table(peru_F_disp_k2_w3_export$Status)
+
+n_distinct(peru_F_disp_k2_w3_export$FID)
+n_distinct(peru_F_disp_k2_w3_export$Date)
+
+sum(is.na(peru_F_disp_k2_w3_export$Status))
+sum(is.na(peru_F_disp_k2_w3_export$lon))
+sum(is.na(peru_F_disp_k2_w3_export$lat))
+```
+
+```{r}
+write.csv(
+  peru_F_disp_k2_w3_export,
+  "../outputs/peru_failed_sw_disp_w3_k2_threshold4.csv",
+  row.names = FALSE
+)
+```
+
+#### 9.1.2 Median velocity; k = 2
+
+```{r}
+# setup
+set.seed(1234)
+
+k <- 2
+window_size <- 3
+threshold_peru_F_vel <- -60
+
+n_pts_peru_F <- nrow(peru_F_sliding)
+n_dates_peru_F <- ncol(peru_F_sliding)
+
+n_iters_peru_F <- n_dates_peru_F - window_size + 1
+
+iter_dates_peru_F <- colnames(peru_F_sliding)[
+  window_size:n_dates_peru_F
+]
+
+date_names_peru_F <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates_peru_F)
+)
+```
+
+```{r}
+# matrices
+cluster_membership_peru_F_vel_k2_w3 <- matrix(
+  NA,
+  nrow = n_pts_peru_F,
+  ncol = n_iters_peru_F
+)
+
+cluster_velocity_peru_F_vel_k2_w3 <- matrix(
+  NA,
+  nrow = n_iters_peru_F,
+  ncol = 2
+)
+
+silhouette_peru_F_vel_k2_w3 <- numeric(
+  n_iters_peru_F
+)
+
+colnames(cluster_membership_peru_F_vel_k2_w3) <-
+  date_names_peru_F
+
+colnames(cluster_velocity_peru_F_vel_k2_w3) <-
+  c("Lower_Cluster", "Higher_Cluster")
+```
+
+```{r}
+status_peru_F_vel_k2_w3 <- matrix(
+  NA,
+  nrow = n_pts_peru_F,
+  ncol = n_iters_peru_F
+)
+
+colnames(status_peru_F_vel_k2_w3) <-
+  date_names_peru_F
+```
+
+```{r}
+# temporal loop
+set.seed(1234)
+
+for (i in window_size:n_dates_peru_F) {
+  
+  start_idx <- i - window_size + 1
+  iter <- i - window_size + 1
+  
+  # Extract W3 displacement window
+  x <- peru_F_sliding[
+    , start_idx:i,
+    drop = FALSE
+  ]
+  
+  # Rebase each point to zero
+  x <- sweep(
+    x,
+    1,
+    x[, 1],
+    FUN = "-"
+  )
+  
+  # Actual acquisition dates
+  window_dates <- peru_F_dates[start_idx:i]
+  
+  time_days <- as.numeric(
+    window_dates - window_dates[1]
+  )
+  
+  # One regression velocity per point
+  point_velocity <- apply(
+    x,
+    1,
+    function(y) {
+      coef(lm(y ~ time_days))[2]
+    }
+  )
+  
+  # Convert mm/day -> mm/year
+  point_velocity <- point_velocity * 365.25
+  
+  # K-means DIRECTLY on velocity
+  x_vel <- matrix(
+    point_velocity,
+    ncol = 1
+  )
+  
+  km <- kmeans(
+    x_vel,
+    centers = 2,
+    nstart = 20
+  )
+  
+  # Store raw memberships
+  cluster_membership_peru_F_vel_k2_w3[, iter] <-
+    km$cluster
+  
+  # Median velocity of each cluster
+  cluster_velocity <- tapply(
+    point_velocity,
+    km$cluster,
+    median
+  )
+  
+  cluster_status <- ifelse(
+    cluster_velocity <= threshold_peru_F_vel,
+    1,
+    0
+  )
+  
+  status_peru_F_vel_k2_w3[, iter] <-
+    cluster_status[km$cluster]
+  
+  # Sorted only for examining the lower/higher groups
+  cluster_velocity_peru_F_vel_k2_w3[iter, ] <-
+    sort(cluster_velocity)
+  
+  # Silhouette in VELOCITY feature space
+  sil <- cluster::silhouette(
+    km$cluster,
+    dist(x_vel)
+  )
+  
+  silhouette_peru_F_vel_k2_w3[iter] <-
+    mean(sil[, "sil_width"])
+}
+```
+
+```{r}
+# inspect
+summary(cluster_velocity_peru_F_vel_k2_w3)
+
+summary(silhouette_peru_F_vel_k2_w3)
+mean(silhouette_peru_F_vel_k2_w3)
+
+lower_vel_peru_F <-
+  cluster_velocity_peru_F_vel_k2_w3[, "Lower_Cluster"]
+
+plot(
+  lower_vel_peru_F,
+  type = "l",
+  xlab = "Sliding window",
+  ylab = "Median LOS velocity (mm/year)",
+  main = "Peru Failed W3 k=2 - Lower velocity cluster"
+)
+
+abline(h = 0, lty = 2)
+```
+
+```{r}
+# threshold checking
+lower_vel_peru_F <-
+  cluster_velocity_peru_F_vel_k2_w3[, "Lower_Cluster"]
+
+thresholds <- c(-30, -40, -50, -60, -70, -80, -100)
+
+threshold_check_peru_F_vel <- data.frame(
+  Threshold = thresholds,
+  WindowsBelow = sapply(
+    thresholds,
+    function(th) {
+      sum(lower_vel_peru_F <= th, na.rm = TRUE)
+    }
+  )
+)
+
+threshold_check_peru_F_vel
+```
+
+```{r}
+# results
+table(status_peru_F_vel_k2_w3)
+
+flagged_peru_F_vel <- colSums(
+  status_peru_F_vel_k2_w3 == 1
+)
+
+plot(
+  flagged_peru_F_vel,
+  type = "l",
+  xlab = "Sliding window",
+  ylab = "Number of Status 1 points",
+  main = "Peru Failed W3 velocity k=2"
+)
+```
+
+**Exporting:**
+
+```{r}
+# convert from wide to long
+cluster_peru_F_vel_df <-
+  as.data.frame(cluster_membership_peru_F_vel_k2_w3)
+
+cluster_peru_F_vel_df$FID <-
+  peru_failed$FID
+
+cluster_peru_F_vel_long <-
+  cluster_peru_F_vel_df %>%
+  pivot_longer(
+    cols = -FID,
+    names_to = "Date",
+    values_to = "RawCluster"
+  )
+```
+
+```{r}
+# status
+status_peru_F_vel_df <-
+  as.data.frame(status_peru_F_vel_k2_w3)
+
+status_peru_F_vel_df$FID <-
+  peru_failed$FID
+
+status_peru_F_vel_long <-
+  status_peru_F_vel_df %>%
+  pivot_longer(
+    cols = -FID,
+    names_to = "Date",
+    values_to = "Status"
+  )
+```
+
+```{r}
+# join cluster and status
+peru_F_vel_k2_w3_export <-
+  cluster_peru_F_vel_long %>%
+  left_join(
+    status_peru_F_vel_long,
+    by = c("FID", "Date")
+  ) %>%
+  mutate(
+    Date = sub("^cluster_", "", Date),
+    Date = as.Date(Date, format = "%Y%m%d")
+  ) %>%
+  left_join(
+    peru_F_info,
+    by = "FID"
+  )
+```
+
+```{r}
+# check
+head(peru_F_vel_k2_w3_export)
+
+table(peru_F_vel_k2_w3_export$Status)
+
+n_distinct(peru_F_vel_k2_w3_export$FID)
+n_distinct(peru_F_vel_k2_w3_export$Date)
+
+nrow(peru_F_vel_k2_w3_export)
+
+sum(is.na(peru_F_vel_k2_w3_export$Status))
+sum(is.na(peru_F_vel_k2_w3_export$lon))
+sum(is.na(peru_F_vel_k2_w3_export$lat))
+```
+
+```{r}
+# export
+write.csv(
+  peru_F_vel_k2_w3_export,
+  "../outputs/peru_failed_sw_vel_w3_k2_threshold60.csv",
+  row.names = FALSE
+)
+```
+
+### 9.2 Peru (unfailed)
+
+#### 9.2.1 Median displacement; k = 2
+
+```{r}
+# setup
+set.seed(1234)
+
+k <- 2
+window_size <- 3
+threshold_peru_U_disp <- -4
+
+n_pts_peru_U <- nrow(peru_U_sliding)
+n_dates_peru_U <- ncol(peru_U_sliding)
+
+n_iters_peru_U <-
+  n_dates_peru_U - window_size + 1
+
+iter_dates_peru_U <-
+  colnames(peru_U_sliding)[
+    window_size:n_dates_peru_U
+  ]
+
+date_names_peru_U <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates_peru_U)
+)
+```
+
+```{r}
+# matrices
+cluster_membership_peru_U_disp_k2_w3 <- matrix(
+  NA,
+  nrow = n_pts_peru_U,
+  ncol = n_iters_peru_U
+)
+
+cluster_medians_peru_U_disp_k2_w3 <- matrix(
+  NA,
+  nrow = n_iters_peru_U,
+  ncol = 2
+)
+
+silhouette_peru_U_disp_k2_w3 <-
+  numeric(n_iters_peru_U)
+
+colnames(cluster_membership_peru_U_disp_k2_w3) <-
+  date_names_peru_U
+
+colnames(cluster_medians_peru_U_disp_k2_w3) <-
+  c("Lower_Cluster", "Higher_Cluster")
+```
+
+```{r}
+status_peru_U_disp_k2_w3 <- matrix(
+  NA,
+  nrow = n_pts_peru_U,
+  ncol = n_iters_peru_U
+)
+
+colnames(status_peru_U_disp_k2_w3) <-
+  date_names_peru_U
+```
+
+```{r}
+# temporal loop
+set.seed(1234)
+
+for (i in window_size:n_dates_peru_U) {
+  
+  start_idx <- i - window_size + 1
+  iter <- i - window_size + 1
+  
+  # Extract W3
+  x <- peru_U_sliding[
+    , start_idx:i,
+    drop = FALSE
+  ]
+  
+  # Rebase first observation to 0
+  x <- sweep(
+    x,
+    1,
+    x[, 1],
+    FUN = "-"
+  )
+  
+  # K-means on displacement trajectory
+  km <- kmeans(
+    x,
+    centers = 2,
+    nstart = 20
+  )
+  
+  cluster_membership_peru_U_disp_k2_w3[, iter] <-
+    km$cluster
+  
+  # Latest displacement
+  latest_disp <- x[, ncol(x)]
+  
+  # Median latest displacement per cluster
+  cluster_medians <- tapply(
+    latest_disp,
+    km$cluster,
+    median
+  )
+  
+  cluster_status <- ifelse(
+    cluster_medians <= threshold_peru_U_disp,
+    1,
+    0
+  )
+  
+  status_peru_U_disp_k2_w3[, iter] <-
+    cluster_status[km$cluster]
+  
+  cluster_medians_peru_U_disp_k2_w3[iter, ] <-
+    sort(cluster_medians)
+  
+  # Silhouette
+  sil <- cluster::silhouette(
+    km$cluster,
+    dist(x)
+  )
+  
+  silhouette_peru_U_disp_k2_w3[iter] <-
+    mean(sil[, "sil_width"])
+}
+```
+
+```{r}
+# inspect for threshold
+summary(cluster_medians_peru_U_disp_k2_w3)
+
+summary(silhouette_peru_U_disp_k2_w3)
+mean(silhouette_peru_U_disp_k2_w3)
+
+lower_disp_peru_U <-
+  cluster_medians_peru_U_disp_k2_w3[, "Lower_Cluster"]
+
+plot(
+  lower_disp_peru_U,
+  type = "l",
+  xlab = "Sliding window",
+  ylab = "Median displacement (mm)",
+  main = "Peru Unfailed W3 k=2 - Lower cluster"
+)
+
+abline(h = 0, lty = 2)
+```
+
+```{r}
+lower_disp_peru_U <-
+  cluster_medians_peru_U_disp_k2_w3[, "Lower_Cluster"]
+
+thresholds <- c(-2, -2.5, -3, -3.5, -4, -5)
+
+threshold_check_peru_U_disp <- data.frame(
+  Threshold = thresholds,
+  WindowsBelow = sapply(
+    thresholds,
+    function(th) {
+      sum(lower_disp_peru_U <= th, na.rm = TRUE)
+    }
+  )
+)
+
+threshold_check_peru_U_disp
+```
+
+```{r}
+# results checking
+table(status_peru_U_disp_k2_w3)
+
+flagged_peru_U_disp <- colSums(
+  status_peru_U_disp_k2_w3 == 1
+)
+
+plot(
+  flagged_peru_U_disp,
+  type = "l",
+  xlab = "Sliding window",
+  ylab = "Number of Status 1 points",
+  main = "Peru Unfailed W3 displacement k=2"
+)
+```
+
+**Exporting:**
+
+```{r}
+# convert from wide to long
+cluster_peru_U_disp_df <-
+  as.data.frame(cluster_membership_peru_U_disp_k2_w3)
+
+cluster_peru_U_disp_df$FID <-
+  peru_unfailed$FID
+
+cluster_peru_U_disp_long <-
+  cluster_peru_U_disp_df %>%
+  pivot_longer(
+    cols = -FID,
+    names_to = "Date",
+    values_to = "RawCluster"
+  )
+```
+
+```{r}
+# status
+status_peru_U_disp_df <-
+  as.data.frame(status_peru_U_disp_k2_w3)
+
+status_peru_U_disp_df$FID <-
+  peru_unfailed$FID
+
+status_peru_U_disp_long <-
+  status_peru_U_disp_df %>%
+  pivot_longer(
+    cols = -FID,
+    names_to = "Date",
+    values_to = "Status"
+  )
+```
+
+```{r}
+# join cluster and status
+peru_U_disp_k2_w3_export <-
+  cluster_peru_U_disp_long %>%
+  left_join(
+    status_peru_U_disp_long,
+    by = c("FID", "Date")
+  ) %>%
+  mutate(
+    Date = sub("^cluster_", "", Date),
+    Date = as.Date(Date, format = "%Y%m%d")
+  ) %>%
+  left_join(
+    peru_U_info,
+    by = "FID"
+  )
+```
+
+```{r}
+head(peru_U_disp_k2_w3_export)
+
+table(peru_U_disp_k2_w3_export$Status)
+
+nrow(peru_U_disp_k2_w3_export)
+
+n_distinct(peru_U_disp_k2_w3_export$FID)
+n_distinct(peru_U_disp_k2_w3_export$Date)
+
+sum(is.na(peru_U_disp_k2_w3_export$Status))
+sum(is.na(peru_U_disp_k2_w3_export$lon))
+sum(is.na(peru_U_disp_k2_w3_export$lat))
+```
+
+```{r}
+# exporting
+write.csv(
+  peru_U_disp_k2_w3_export,
+  "../outputs/peru_unfailed_sw_disp_w3_k2_threshold4.csv",
+  row.names = FALSE
+)
+```
+
+#### 9.2.2 Median velocity; k = 2
+
+```{r}
+# setup
+set.seed(1234)
+
+k <- 2
+window_size <- 3
+threshold_peru_U_vel <- -60
+
+n_pts_peru_U <- nrow(peru_U_sliding)
+n_dates_peru_U <- ncol(peru_U_sliding)
+n_iters_peru_U <- n_dates_peru_U - window_size + 1
+
+iter_dates_peru_U <-
+  colnames(peru_U_sliding)[window_size:n_dates_peru_U]
+
+date_names_peru_U <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates_peru_U)
+)
+```
+
+```{r}
+# matrices
+cluster_membership_peru_U_vel_k2_w3 <- matrix(
+  NA, nrow = n_pts_peru_U, ncol = n_iters_peru_U
+)
+
+cluster_velocity_peru_U_vel_k2_w3 <- matrix(
+  NA, nrow = n_iters_peru_U, ncol = 2
+)
+
+silhouette_peru_U_vel_k2_w3 <- numeric(n_iters_peru_U)
+
+colnames(cluster_membership_peru_U_vel_k2_w3) <-
+  date_names_peru_U
+
+colnames(cluster_velocity_peru_U_vel_k2_w3) <-
+  c("Lower_Cluster", "Higher_Cluster")
+```
+
+```{r}
+status_peru_U_vel_k2_w3 <- matrix(
+  NA,
+  nrow = n_pts_peru_U,
+  ncol = n_iters_peru_U
+)
+
+colnames(status_peru_U_vel_k2_w3) <-
+  date_names_peru_U
+```
+
+```{r}
+# temporal loop
+set.seed(1234)
+
+for (i in window_size:n_dates_peru_U) {
+  
+  start_idx <- i - window_size + 1
+  iter <- i - window_size + 1
+  
+  # W3 displacement window
+  x <- peru_U_sliding[, start_idx:i, drop = FALSE]
+  
+  # Rebase first date to zero
+  x <- sweep(x, 1, x[, 1], FUN = "-")
+  
+  # Actual dates
+  window_dates <- peru_U_dates[start_idx:i]
+  time_days <- as.numeric(window_dates - window_dates[1])
+  
+  # One velocity per point over the window
+  point_velocity <- apply(
+    x,
+    1,
+    function(y) coef(lm(y ~ time_days))[2]
+  ) * 365.25
+  
+  # K-means DIRECTLY on velocity
+  x_vel <- matrix(point_velocity, ncol = 1)
+  
+  km <- kmeans(
+    x_vel,
+    centers = 2,
+    nstart = 20
+  )
+  
+  # Membership
+  cluster_membership_peru_U_vel_k2_w3[, iter] <-
+    km$cluster
+  
+  # Median velocity of each cluster
+  cluster_velocity <- tapply(
+    point_velocity,
+    km$cluster,
+    median
+  )
+  
+  cluster_status <- ifelse(
+    cluster_velocity <= threshold_peru_U_vel,
+    1,
+    0
+  )
+  
+  status_peru_U_vel_k2_w3[, iter] <-
+    cluster_status[km$cluster]
+  
+  cluster_velocity_peru_U_vel_k2_w3[iter, ] <-
+    sort(cluster_velocity)
+  
+  # Silhouette in velocity space
+  sil <- cluster::silhouette(
+    km$cluster,
+    dist(x_vel)
+  )
+  
+  silhouette_peru_U_vel_k2_w3[iter] <-
+    mean(sil[, "sil_width"])
+}
+```
+
+```{r}
+summary(cluster_velocity_peru_U_vel_k2_w3)
+
+summary(silhouette_peru_U_vel_k2_w3)
+mean(silhouette_peru_U_vel_k2_w3)
+
+lower_vel_peru_U <-
+  cluster_velocity_peru_U_vel_k2_w3[, "Lower_Cluster"]
+
+plot(
+  lower_vel_peru_U,
+  type = "l",
+  xlab = "Sliding window",
+  ylab = "Median LOS velocity (mm/year)",
+  main = "Peru Unfailed W3 k=2 - Lower velocity cluster"
+)
+
+abline(h = 0, lty = 2)
+```
+
+```{r}
+# threshold checking
+lower_vel_peru_U <-
+  cluster_velocity_peru_U_vel_k2_w3[, "Lower_Cluster"]
+
+thresholds <- c(-30, -40, -50, -60, -70, -80, -100)
+
+threshold_check_peru_U_vel <- data.frame(
+  Threshold = thresholds,
+  WindowsBelow = sapply(
+    thresholds,
+    function(th) {
+      sum(lower_vel_peru_U <= th, na.rm = TRUE)
+    }
+  )
+)
+
+threshold_check_peru_U_vel
+```
+
+```{r}
+# results checking
+table(status_peru_U_vel_k2_w3)
+
+flagged_peru_U_vel <- colSums(
+  status_peru_U_vel_k2_w3 == 1
+)
+
+plot(
+  flagged_peru_U_vel,
+  type = "l",
+  xlab = "Sliding window",
+  ylab = "Number of Status 1 points",
+  main = "Peru Unfailed W3 velocity k=2"
+)
+```
+
+**Exporting:**
+
+```{r}
+# convert from wide to long
+cluster_peru_U_vel_df <-
+  as.data.frame(cluster_membership_peru_U_vel_k2_w3)
+
+cluster_peru_U_vel_df$FID <-
+  peru_unfailed$FID
+
+cluster_peru_U_vel_long <-
+  cluster_peru_U_vel_df %>%
+  pivot_longer(
+    cols = -FID,
+    names_to = "Date",
+    values_to = "RawCluster"
+  )
+```
+
+```{r}
+# status
+status_peru_U_vel_df <-
+  as.data.frame(status_peru_U_vel_k2_w3)
+
+status_peru_U_vel_df$FID <-
+  peru_unfailed$FID
+
+status_peru_U_vel_long <-
+  status_peru_U_vel_df %>%
+  pivot_longer(
+    cols = -FID,
+    names_to = "Date",
+    values_to = "Status"
+  )
+```
+
+```{r}
+# join cluster and status
+peru_U_vel_k2_w3_export <-
+  cluster_peru_U_vel_long %>%
+  left_join(
+    status_peru_U_vel_long,
+    by = c("FID", "Date")
+  ) %>%
+  mutate(
+    Date = sub("^cluster_", "", Date),
+    Date = as.Date(Date, format = "%Y%m%d")
+  ) %>%
+  left_join(
+    peru_U_info,
+    by = "FID"
+  )
+```
+
+```{r}
+head(peru_U_vel_k2_w3_export)
+
+table(peru_U_vel_k2_w3_export$Status)
+
+nrow(peru_U_vel_k2_w3_export)
+
+n_distinct(peru_U_vel_k2_w3_export$FID)
+n_distinct(peru_U_vel_k2_w3_export$Date)
+
+sum(is.na(peru_U_vel_k2_w3_export$Status))
+sum(is.na(peru_U_vel_k2_w3_export$lon))
+sum(is.na(peru_U_vel_k2_w3_export$lat))
+```
+
+```{r}
+# export
+write.csv(
+  peru_U_vel_k2_w3_export,
+  "../outputs/peru_unfailed_sw_vel_w3_k2_threshold60.csv",
+  row.names = FALSE
+)
 ```
