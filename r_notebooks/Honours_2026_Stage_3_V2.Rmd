@@ -3171,7 +3171,7 @@ for (i in window_size:n_dates_filtered) {
 }
 ```
 
-#### Results checking:
+**Results checking:**
 
 ```{r}
 noise_per_iter_w5 <- colSums(
@@ -5371,6 +5371,200 @@ write.csv(
 )
 ```
 
+#### 9.1.3 DBSCAN
+
+```{r}
+library(dbscan)
+
+window_size <- 3
+
+n_pts_peru_F <- nrow(peru_F_sliding)
+n_dates_peru_F <- ncol(peru_F_sliding)
+n_iters_peru_F <- n_dates_peru_F - window_size + 1
+
+iter_dates_peru_F <-
+  colnames(peru_F_sliding)[window_size:n_dates_peru_F]
+
+date_names_peru_F <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates_peru_F)
+)
+```
+
+```{r}
+# inspect k-NN plot
+i <- n_dates_peru_F
+start_idx <- i - window_size + 1
+
+x <- peru_F_sliding[, start_idx:i, drop = FALSE]
+
+# Rebase
+x <- sweep(x, 1, x[, 1], FUN = "-")
+
+# Remove constant zero baseline
+x_db <- x[, -1, drop = FALSE]
+
+dbscan::kNNdistplot(
+  x_db,
+  k = 4
+)
+
+abline(h = 1, lty = 2)
+```
+
+```{r}
+eps_values <- c(0.75, 1, 1.25, 1.5, 2)
+
+for (e in eps_values) {
+  
+  db <- dbscan(
+    x_db,
+    eps = e,
+    minPts = 5
+  )
+  
+  cat(
+    "\neps =", e,
+    "\nclusters =", length(unique(db$cluster[db$cluster != 0])),
+    "\nnoise =", sum(db$cluster == 0),
+    "\nnoise % =", round(mean(db$cluster == 0) * 100, 1),
+    "\n"
+  )
+}
+```
+
+```{r}
+eps_peru_F <- 1.5
+minPts <- 5
+```
+
+```{r}
+dbscan_membership_peru_F_w3 <- matrix(
+  NA,
+  nrow = n_pts_peru_F,
+  ncol = n_iters_peru_F
+)
+
+colnames(dbscan_membership_peru_F_w3) <-
+  date_names_peru_F
+
+noise_count_peru_F <- numeric(n_iters_peru_F)
+n_clusters_peru_F <- numeric(n_iters_peru_F)
+```
+
+```{r}
+for (i in window_size:n_dates_peru_F) {
+  
+  start_idx <- i - window_size + 1
+  iter <- i - window_size + 1
+  
+  x <- peru_F_sliding[, start_idx:i, drop = FALSE]
+  
+  # Rebase
+  x <- sweep(x, 1, x[, 1], FUN = "-")
+  
+  # Remove constant baseline
+  x_db <- x[, -1, drop = FALSE]
+  
+  db <- dbscan::dbscan(
+    x_db,
+    eps = eps_peru_F,
+    minPts = minPts
+  )
+  
+  dbscan_membership_peru_F_w3[, iter] <-
+    db$cluster
+  
+  noise_count_peru_F[iter] <-
+    sum(db$cluster == 0)
+  
+  n_clusters_peru_F[iter] <-
+    length(unique(db$cluster[db$cluster != 0]))
+}
+```
+
+```{r}
+noise_pct_peru_F <-
+  noise_count_peru_F / n_pts_peru_F * 100
+
+summary(noise_pct_peru_F)
+
+plot(
+  noise_pct_peru_F,
+  type = "l",
+  xlab = "Sliding window",
+  ylab = "Noise points (%)",
+  main = "Peru Failed W3 DBSCAN"
+)
+```
+
+```{r}
+png(
+  "../outputs/peru_failed_w3_dbscan_noise.png",
+  width = 1000,
+  height = 700,
+  res = 120
+)
+
+plot(
+  noise_count_peru_F,
+  type = "l",
+  xlab = "Sliding window",
+  ylab = "Number of noise points",
+  main = "Peru Failed W3 DBSCAN"
+)
+
+dev.off()
+```
+
+```{r}
+data.frame(
+  Window = 1:n_iters_peru_F,
+  Noise = noise_count_peru_F,
+  NoisePct = round(noise_pct_peru_F, 2),
+  Clusters = n_clusters_peru_F
+)
+```
+
+**Exporting:**
+
+```{r}
+dbscan_peru_F_df <- as.data.frame(
+  dbscan_membership_peru_F_w3
+)
+
+dbscan_peru_F_df$FID <- peru_failed$FID
+
+dbscan_peru_F_long <- dbscan_peru_F_df %>%
+  pivot_longer(
+    cols = -FID,
+    names_to = "Date",
+    values_to = "DBSCANCluster"
+  ) %>%
+  mutate(
+    Date = sub("^cluster_", "", Date),
+    Date = as.Date(Date, format = "%Y%m%d"),
+    Noise = ifelse(DBSCANCluster == 0, 1, 0)
+  ) %>%
+  left_join(
+    peru_F_info,
+    by = "FID"
+  )
+```
+
+```{r}
+head(dbscan_peru_F_long)
+table(dbscan_peru_F_long$Noise)
+```
+
+```{r}
+write.csv(
+  dbscan_peru_F_long,
+  "../outputs/peru_failed_dbscan_w3.csv",
+  row.names = FALSE
+)
+```
+
 ### 9.2 Peru (unfailed)
 
 #### 9.2.1 Median displacement; k = 2
@@ -5889,6 +6083,212 @@ sum(is.na(peru_U_vel_k2_w3_export$lat))
 write.csv(
   peru_U_vel_k2_w3_export,
   "../outputs/peru_unfailed_sw_vel_w3_k2_threshold60.csv",
+  row.names = FALSE
+)
+```
+
+#### 9.2.3 DBSCAN
+
+```{r}
+window_size <- 3
+
+n_pts_peru_U <- nrow(peru_U_sliding)
+n_dates_peru_U <- ncol(peru_U_sliding)
+n_iters_peru_U <- n_dates_peru_U - window_size + 1
+
+iter_dates_peru_U <-
+  colnames(peru_U_sliding)[window_size:n_dates_peru_U]
+
+date_names_peru_U <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates_peru_U)
+)
+```
+
+```{r}
+i <- n_dates_peru_U
+start_idx <- i - window_size + 1
+
+x <- peru_U_sliding[, start_idx:i, drop = FALSE]
+
+# Rebase first observation to zero
+x <- sweep(x, 1, x[, 1], FUN = "-")
+
+# Remove zero baseline column
+x_db <- x[, -1, drop = FALSE]
+
+dbscan::kNNdistplot(
+  x_db,
+  k = 4
+)
+
+abline(h = 1.5, lty = 2)
+```
+
+```{r}
+eps_values <- c(0.75, 1, 1.25, 1.5, 2)
+
+for (e in eps_values) {
+  
+  db <- dbscan::dbscan(
+    x_db,
+    eps = e,
+    minPts = 5
+  )
+  
+  cat(
+    "\neps =", e,
+    "\nclusters =", length(unique(db$cluster[db$cluster != 0])),
+    "\nnoise =", sum(db$cluster == 0),
+    "\nnoise % =", round(mean(db$cluster == 0) * 100, 1),
+    "\n"
+  )
+}
+```
+
+```{r}
+eps_peru_U <- 1.5
+minPts <- 5
+```
+
+```{r}
+dbscan_membership_peru_U_w3 <- matrix(
+  NA,
+  nrow = n_pts_peru_U,
+  ncol = n_iters_peru_U
+)
+
+colnames(dbscan_membership_peru_U_w3) <-
+  date_names_peru_U
+
+noise_count_peru_U <- numeric(n_iters_peru_U)
+n_clusters_peru_U <- numeric(n_iters_peru_U)
+```
+
+```{r}
+# temporal loop
+for (i in window_size:n_dates_peru_U) {
+  
+  start_idx <- i - window_size + 1
+  iter <- i - window_size + 1
+  
+  x <- peru_U_sliding[, start_idx:i, drop = FALSE]
+  
+  # Rebase first observation to zero
+  x <- sweep(x, 1, x[, 1], FUN = "-")
+  
+  # Remove constant baseline
+  x_db <- x[, -1, drop = FALSE]
+  
+  db <- dbscan::dbscan(
+    x_db,
+    eps = eps_peru_U,
+    minPts = minPts
+  )
+  
+  dbscan_membership_peru_U_w3[, iter] <- db$cluster
+  
+  noise_count_peru_U[iter] <-
+    sum(db$cluster == 0)
+  
+  n_clusters_peru_U[iter] <-
+    length(unique(db$cluster[db$cluster != 0]))
+}
+```
+
+```{r}
+noise_pct_peru_U <-
+  noise_count_peru_U / n_pts_peru_U * 100
+
+summary(noise_pct_peru_U)
+
+plot(
+  noise_pct_peru_U,
+  type = "l",
+  xlab = "Sliding window",
+  ylab = "Noise points (%)",
+  main = "Peru Unfailed W3 DBSCAN"
+)
+```
+
+```{r}
+png(
+  "../outputs/peru_unfailed_w3_dbscan_noise.png",
+  width = 1000,
+  height = 700,
+  res = 120
+)
+
+plot(
+  noise_count_peru_U,
+  type = "l",
+  xlab = "Sliding window",
+  ylab = "Number of noise points",
+  main = "Peru Unfailed W3 DBSCAN"
+)
+
+dev.off()
+```
+
+```{r}
+png(
+  "../outputs/peru_failed_w3_dbscan_noise_pct.png",
+  width = 1000,
+  height = 700,
+  res = 120
+)
+
+plot(
+  noise_pct_peru_F,
+  type = "l",
+  xlab = "Sliding window",
+  ylab = "Noise points (%)",
+  main = "Peru Failed W3 DBSCAN"
+)
+
+dev.off()
+```
+
+**Exporting:**
+
+```{r}
+dbscan_peru_U_df <- as.data.frame(
+  dbscan_membership_peru_U_w3
+)
+
+dbscan_peru_U_df$FID <- peru_unfailed$FID
+
+dbscan_peru_U_long <- dbscan_peru_U_df %>%
+  pivot_longer(
+    cols = -FID,
+    names_to = "Date",
+    values_to = "DBSCANCluster"
+  )
+
+dbscan_peru_U_long <- dbscan_peru_U_long %>%
+  mutate(
+    Date = sub("^cluster_", "", Date),
+    Date = as.Date(Date, format = "%Y%m%d"),
+    Noise = ifelse(DBSCANCluster == 0, 1, 0)
+  )
+
+dbscan_peru_U_long <- dbscan_peru_U_long %>%
+  left_join(
+    peru_U_info,
+    by = "FID"
+  )
+```
+
+```{r}
+head(dbscan_peru_U_long)
+names(dbscan_peru_U_long)
+table(dbscan_peru_U_long$Noise)
+```
+
+```{r}
+write.csv(
+  dbscan_peru_U_long,
+  "../outputs/peru_unfailed_dbscan_w3.csv",
   row.names = FALSE
 )
 ```
