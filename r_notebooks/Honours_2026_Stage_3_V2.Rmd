@@ -414,6 +414,43 @@ plot(
   ylab = "Average silhouette score"
 )
 ```
+```{r}
+# Percentage of points flagged through time
+cadia_dates_w3 <- as.Date(
+  sub("^D_", "", iter_dates_filtered),
+  format = "%Y%m%d"
+)
+
+cadia_disp_w3_k2_pct <-
+  colMeans(cluster_status_mat_sliding_k2 == 1) * 100
+
+png(
+  "../outputs/cadia_sw_km2_disp_w3_threshold_pts.png",
+  width = 2400,
+  height = 1600,
+  res = 300
+)
+
+plot(
+  cadia_dates_w3,
+  cadia_disp_w3_k2_pct,
+  type = "l",
+  ylim = c(0, 100),
+  xlab = "Date",
+  ylab = "Points in threshold-exceeding cluster (%)",
+  main = "Cadia W3 Displacement K-means (k = 2, threshold = -3 mm)",
+  xaxt = "n"
+)
+
+axis.Date(
+  1,
+  at = seq(min(cadia_dates_w3), max(cadia_dates_w3), by = "3 months"),
+  format = "%Y-%m"
+)
+
+dev.off()
+```
+
 
 **Exporting:**
 
@@ -722,43 +759,66 @@ table(cluster_status_mat_sliding_k3)
 ```
 
 ```{r}
-status_counts_k3 <- t(
+status_pct_k3 <- t(
   apply(
     cluster_status_mat_sliding_k3,
     2,
-    function(x) table(
-      factor(x, levels = c(0, 1, 2))
-    )
+    function(x) {
+      table(factor(x, levels = c(0, 1, 2))) / length(x) * 100
+    }
   )
 )
 
-colnames(status_counts_k3) <- c(
+colnames(status_pct_k3) <- c(
   "Status0",
   "Status1",
   "Status2"
 )
 
-status_counts_k3
+status_pct_k3
 ```
 
 ```{r}
+png(
+  "../outputs/cadia_sw_km3_disp_w3_threshold_pts.png",
+  width = 2400,
+  height = 1600,
+  res = 300
+)
+
 matplot(
-  status_counts_k3,
+  cadia_dates_w3,
+  status_pct_k3,
   type = "l",
   lty = 1,
-  xlab = "Sliding window iteration",
-  ylab = "Number of points"
+  ylim = c(0, 100),
+  xaxt = "n",
+  xlab = "Date",
+  ylab = "Points in each status category (%)",
+  main = "Cadia W3 Displacement K-means (k = 3)"
 )
 
 legend(
-  "topleft",
+  x = as.Date("2016-11-15"),
+  y = 60,
   legend = c(
-    "Status 0",
-    "Status 1",
-    "Status 2"
+    "Status 0 (> -3 mm)",
+    "Status 1 (-5 to -3 mm)",
+    "Status 2 (<= -5 mm)"
   ),
-  lty = 1
+  lty = 1,
+  col = 1:3,
+  bty = "n",
+  cex = 0.8
 )
+
+axis.Date(
+  1,
+  at = seq(min(cadia_dates_w3), max(cadia_dates_w3), by = "3 months"),
+  format = "%Y-%m"
+)
+
+dev.off()
 ```
 
 **Exporting**
@@ -1635,7 +1695,7 @@ abline(h = 1, col = "red")
 The k-NN plot suggests an eps value of approximately 1 to be appropriate (for an initial test).\
 
 ```{r}
-eps <- 1
+eps <- 1.2
 ```
 
 ```{r}
@@ -1720,7 +1780,7 @@ noise_per_iter_eps1p2 <- colSums(
   na.rm = TRUE
 )
 
-summary(noise_per_iter)
+summary(noise_per_iter_eps1p2)
 ```
 
 ```{r}
@@ -1732,6 +1792,21 @@ noise_per_iter_eps1 <- colSums(
 
 summary(noise_per_iter_eps1)
 ```
+
+```{r}
+noise_pct_eps1 <- 
+  noise_per_iter_eps1 / nrow(dbscan_noise_mat) * 100
+
+noise_pct_eps1p2 <- 
+  noise_per_iter_eps1p2 / nrow(dbscan_noise_mat) * 100
+```
+
+```{r}
+summary(noise_pct_eps1)
+summary(noise_pct_eps1p2)
+```
+
+
 
 ```{r}
 png(
@@ -1761,17 +1836,34 @@ png(
 )
 
 plot(
-  noise_per_iter_eps1,
+  cadia_dates_w3,
+  noise_pct_eps1,
   type = "l",
   lty = 1,
-  ylim = c(0, 420),
-  xlab = "Sliding window iteration",
-  ylab = "Number of DBSCAN noise points"
+  xaxt = "n",
+  ylim = c(
+    0,
+    max(noise_pct_eps1, noise_pct_eps1p2) * 1.1
+  ),
+  xlab = "Date",
+  ylab = "Points classified as DBSCAN noise (%)",
+  main = "Cadia DBSCAN Noise Comparison"
 )
 
 lines(
-  noise_per_iter_eps1p2,
+  cadia_dates_w3,
+  noise_pct_eps1p2,
   lty = 2
+)
+
+axis.Date(
+  1,
+  at = seq(
+    min(cadia_dates_w3),
+    max(cadia_dates_w3),
+    by = "3 months"
+  ),
+  format = "%Y-%m"
 )
 
 legend(
@@ -1780,7 +1872,8 @@ legend(
     "eps = 1.0",
     "eps = 1.2"
   ),
-  lty = c(1, 2)
+  lty = c(1, 2),
+  bty = "n"
 )
 
 dev.off()
@@ -2140,18 +2233,47 @@ sapply(
 **Results checking:**
 
 ```{r}
-flagged_w5 <- colSums(status_mat_w5 == 1)
+flagged_w5_pct <- colMeans(status_mat_w5 == 1) * 100
 
-plot(
-  flagged_w5,
-  type = "l",
-  xlab = "Sliding window",
-  ylab = "Number of points with Status = 1",
-  main = "W=5 K-means displacement"
+summary(flagged_w5_pct)
+
+cadia_dates_w5 <- as.Date(
+  sub("^D_", "", iter_dates_filtered),
+  format = "%Y%m%d"
 )
 
-summary(flagged_w5)
+length(cadia_dates_w5)
+ncol(status_mat_w5)
 ```
+```{r}
+png(
+  "../outputs/cadia_sw_km2_disp_w5_threshold_pts.png",
+  width = 2400,
+  height = 1600,
+  res = 300
+)
+
+plot(
+  cadia_dates_w5,
+  flagged_w5_pct,
+  type = "l",
+  ylim = c(0, 100),
+  xaxt = "n",
+  xlab = "Date",
+  ylab = "Points in threshold-exceeding cluster (%)",
+  main = "Cadia W5 Displacement K-means (k = 2, threshold = -4 mm)"
+)
+
+axis.Date(
+  1,
+  at = seq(min(cadia_dates_w5), max(cadia_dates_w5), by = "3 months"),
+  format = "%Y-%m"
+)
+
+dev.off()
+```
+
+
 
 ```{r}
 which(medians_mat_w5[, "Lower_Cluster"] <= threshold_w5)
@@ -2340,7 +2462,7 @@ for (i in window_size:n_dates_filtered) {
     FUN = "-"
   )
   
-  # K-means k=3
+  # km k=3
   km <- kmeans(
     x,
     centers = k,
@@ -2408,6 +2530,80 @@ date_names_k3_w5 <- paste0(
 colnames(cluster_membership_k3_w5) <- date_names_k3_w5
 colnames(status_k3_w5) <- date_names_k3_w5
 ```
+
+```{r}
+status_pct_k3_w5 <- t(
+  apply(
+    status_k3_w5,
+    2,
+    function(x) {
+      table(
+        factor(x, levels = c(0, 1, 2))
+      ) / length(x) * 100
+    }
+  )
+)
+
+colnames(status_pct_k3_w5) <- c(
+  "Status0",
+  "Status1",
+  "Status2"
+)
+
+head(status_pct_k3_w5)
+```
+```{r}
+cadia_dates_w5_k3 <- as.Date(
+  sub("^D_", "", iter_dates_k3_w5),
+  format = "%Y%m%d"
+)
+
+length(cadia_dates_w5_k3)
+nrow(status_pct_k3_w5)
+```
+
+```{r}
+png(
+  "../outputs/cadia_sw_km3_disp_w5_threshold_pts.png",
+  width = 2400,
+  height = 1600,
+  res = 300
+)
+
+matplot(
+  cadia_dates_w5_k3,
+  status_pct_k3_w5,
+  type = "l",
+  lty = 1,
+  ylim = c(0, 100),
+  xaxt = "n",
+  xlab = "Date",
+  ylab = "Points in each status category (%)",
+  main = "Cadia W5 Displacement K-means (k = 3)"
+)
+
+legend(
+  "left",
+  legend = c(
+    "Status 0 (> -5 mm)",
+    "Status 1 (-7 to -5 mm)",
+    "Status 2 (<= -7 mm)"
+  ),
+  lty = 1,
+  col = 1:3,
+  bty = "n",
+  cex = 0.8
+)
+
+axis.Date(
+  1,
+  at = seq(min(cadia_dates_w5_k3), max(cadia_dates_w5_k3), by = "3 months"),
+  format = "%Y-%m"
+)
+
+dev.off()
+```
+
 
 ```{r}
 # convert to long
@@ -3477,18 +3673,36 @@ threshold_check_vel
 ```
 
 ```{r}
-table(status_vel_k2_w3)
-
-flagged_vel_k2_w3 <- colSums(
+# Percentage of points in velocity threshold-exceeding cluster
+flagged_vel_k2_w3_pct <- colMeans(
   status_vel_k2_w3 == 1
+) * 100
+
+png(
+  "../outputs/cadia_sw_km2_vel_w3_threshold_pts.png",
+  width = 2400,
+  height = 1600,
+  res = 300
 )
 
 plot(
-  flagged_vel_k2_w3,
+  cadia_dates_w3,
+  flagged_vel_k2_w3_pct,
   type = "l",
-  xlab = "Sliding window",
-  ylab = "Number of Status 1 points"
+  ylim = c(0, 100),
+  xaxt = "n",
+  xlab = "Date",
+  ylab = "Points in velocity threshold-exceeding cluster (%)",
+  main = "Cadia W3 Velocity K-means (k = 2, threshold = -30mm/yr)"
 )
+
+axis.Date(
+  1,
+  at = seq(min(cadia_dates_w3), max(cadia_dates_w3), by = "3 months"),
+  format = "%Y-%m"
+)
+
+dev.off()
 ```
 
 ```{r}
@@ -3814,49 +4028,68 @@ table(
 ```
 
 ```{r}
-status_counts_vel_k3_w3 <- t(
+status_pct_vel_k3_w3 <- t(
   apply(
     status_vel_k3_w3,
     2,
     function(x) {
       table(
-        factor(
-          x,
-          levels = c(0, 1, 2)
-        )
-      )
+        factor(x, levels = c(0, 1, 2))
+      ) / length(x) * 100
     }
   )
 )
 
-colnames(status_counts_vel_k3_w3) <- c(
+colnames(status_pct_vel_k3_w3) <- c(
   "Status0",
   "Status1",
   "Status2"
 )
 
-head(status_counts_vel_k3_w3)
+head(status_pct_vel_k3_w3)
 ```
 
 ```{r}
+png(
+  "../outputs/cadia_sw_km3_vel_w3_threshold_pts.png",
+  width = 2400,
+  height = 1600,
+  res = 300
+)
+
 matplot(
-  status_counts_vel_k3_w3,
+  cadia_dates_w3,
+  status_pct_vel_k3_w3,
   type = "l",
   lty = 1,
-  xlab = "Sliding window",
-  ylab = "Number of points",
-  main = "W3 k=3 velocity clustering status"
+  ylim = c(0, 100),
+  xaxt = "n",
+  xlab = "Date",
+  ylab = "Points in each status category (%)",
+  main = "Cadia W3 Velocity K-means (k = 3)"
 )
 
 legend(
-  "topright",
+  x = as.Date("2016-11-15"),
+  y = 60,
   legend = c(
-    "Status 0",
-    "Status 1",
-    "Status 2"
+    "Status 0 (> -50 mm)",
+    "Status 1 (-75 to -50 mm)",
+    "Status 2 (<= -75 mm)"
   ),
-  lty = 1
+  lty = 1,
+  col = 1:3,
+  bty = "n",
+  cex = 0.8
 )
+
+axis.Date(
+  1,
+  at = seq(min(cadia_dates_w3), max(cadia_dates_w3), by = "3 months"),
+  format = "%Y-%m"
+)
+
+dev.off()
 ```
 
 **Exporting:**
@@ -4161,19 +4394,50 @@ threshold_check_vel_w5
 **Checking results:**
 
 ```{r}
+cadia_dates_w5 <- as.Date(
+  sub("^D_", "", iter_dates_vel_k2_w5),
+  format = "%Y%m%d"
+)
+```
+
+
+```{r}
 table(status_vel_k2_w5)
 
-flagged_vel_k2_w5 <- colSums(
+# percentage
+flagged_vel_k2_w5_pct <- colMeans(
   status_vel_k2_w5 == 1
+) * 100
+
+png(
+  "../outputs/cadia_sw_km2_vel_w5_threshold_pts.png",
+  width = 2400,
+  height = 1600,
+  res = 300
 )
 
 plot(
-  flagged_vel_k2_w5,
+  cadia_dates_w5,
+  flagged_vel_k2_w5_pct,
   type = "l",
-  xlab = "Sliding window",
-  ylab = "Number of Status 1 points",
-  main = "W5 k=2 velocity clustering"
+  ylim = c(0, 100),
+  xaxt = "n",
+  xlab = "Date",
+  ylab = "Points in velocity threshold-exceeding cluster (%)",
+  main = "Cadia W5 Velocity K-means (k = 2, threshold = -30 mm/yr)"
 )
+
+axis.Date(
+  1,
+  at = seq(
+    min(cadia_dates_w5),
+    max(cadia_dates_w5),
+    by = "3 months"
+  ),
+  format = "%Y-%m"
+)
+
+dev.off()
 ```
 
 **Exporting:**
@@ -4258,7 +4522,7 @@ write.csv(
 )
 ```
 
-#### K = 3:
+#### K = 3
 
 ```{r}
 # setup
@@ -4506,39 +4770,68 @@ threshold_check_k3_w5
 ```{r}
 table(status_vel_k3_w5)
 
-status_counts_vel_k3_w5 <- t(
+status_pct_vel_k3_w5 <- t(
   apply(
     status_vel_k3_w5,
     2,
     function(x) {
       table(
         factor(x, levels = c(0, 1, 2))
-      )
+      ) / length(x) * 100
     }
   )
 )
 
-colnames(status_counts_vel_k3_w5) <-
+colnames(status_pct_vel_k3_w5) <-
   c("Status0", "Status1", "Status2")
 
-head(status_counts_vel_k3_w5)
+head(status_pct_vel_k3_w5)
 ```
 
 ```{r}
+png(
+  "../outputs/cadia_sw_km3_vel_w5_threshold_pts.png",
+  width = 2400,
+  height = 1600,
+  res = 300
+)
+
 matplot(
-  status_counts_vel_k3_w5,
+  cadia_dates_w5,
+  status_pct_vel_k3_w5,
   type = "l",
   lty = 1,
-  xlab = "Sliding window",
-  ylab = "Number of points",
-  main = "W5 k=3 velocity clustering status"
+  ylim = c(0, 100),
+  xaxt = "n",
+  xlab = "Date",
+  ylab = "Points in each status category (%)",
+  main = "Cadia W5 Velocity K-means (k = 3)"
+)
+
+axis.Date(
+  1,
+  at = seq(
+    min(cadia_dates_w5),
+    max(cadia_dates_w5),
+    by = "3 months"
+  ),
+  format = "%Y-%m"
 )
 
 legend(
-  "topright",
-  legend = c("Status 0", "Status 1", "Status 2"),
-  lty = 1
+  "left",
+  legend = c(
+    "Status 0 (> -35 mm/yr)",
+    "Status 1 (-50 to -35 mm/yr)",
+    "Status 2 (<= -50 mm/yr)"
+  ),
+  lty = 1,
+  col = 1:3,
+  bty = "n",
+  cex = 0.8
 )
+
+dev.off()
 ```
 
 ```{r}
@@ -5009,6 +5302,50 @@ plot(
 ```
 
 ```{r}
+# dates corresponding to W3 window ends
+peru_F_plot_dates <- as.Date(
+  sub("^D_", "", iter_dates_peru_F),
+  format = "%Y%m%d"
+)
+
+# percentage Status 1
+flagged_peru_F_disp_pct <- colMeans(
+  status_peru_F_disp_k2_w3 == 1
+) * 100
+
+png(
+  "../outputs/peru_F_km2_w3_disp_threshold_pts.png",
+  width = 2400,
+  height = 1600,
+  res = 300
+)
+
+plot(
+  peru_F_plot_dates,
+  flagged_peru_F_disp_pct,
+  type = "l",
+  ylim = c(0, 100),
+  xaxt = "n",
+  xlab = "Date",
+  ylab = "Points in threshold-exceeding cluster (%)",
+  main = "Peru (F) W3 Displacement K-means (k = 2, threshold = -4 mm)"
+)
+
+axis.Date(
+  1,
+  at = seq(
+    min(peru_F_plot_dates),
+    max(peru_F_plot_dates),
+    by = "3 months"
+  ),
+  format = "%Y-%m"
+)
+
+dev.off()
+```
+
+
+```{r}
 # exporting
 # convert from wide to long
 
@@ -5276,20 +5613,39 @@ threshold_check_peru_F_vel
 ```
 
 ```{r}
-# results
-table(status_peru_F_vel_k2_w3)
-
-flagged_peru_F_vel <- colSums(
+flagged_peru_F_vel_pct <- colMeans(
   status_peru_F_vel_k2_w3 == 1
+) * 100
+
+png(
+  "../outputs/peru_F_km2_w3_vel_threshold_pts.png",
+  width = 2400,
+  height = 1600,
+  res = 300
 )
 
 plot(
-  flagged_peru_F_vel,
+  peru_F_plot_dates,
+  flagged_peru_F_vel_pct,
   type = "l",
-  xlab = "Sliding window",
-  ylab = "Number of Status 1 points",
-  main = "Peru Failed W3 velocity k=2"
+  ylim = c(0, 100),
+  xaxt = "n",
+  xlab = "Date",
+  ylab = "Points in velocity threshold-exceeding cluster (%)",
+  main = "Peru (F) W3 Velocity K-means (k = 2, threshold = -60 mm/yr)"
 )
+
+axis.Date(
+  1,
+  at = seq(
+    min(peru_F_plot_dates),
+    max(peru_F_plot_dates),
+    by = "3 months"
+  ),
+  format = "%Y-%m"
+)
+
+dev.off()
 ```
 
 **Exporting:**
@@ -5501,9 +5857,9 @@ plot(
 ```{r}
 png(
   "../outputs/peru_failed_w3_dbscan_noise.png",
-  width = 1000,
-  height = 700,
-  res = 120
+  width = 2400,
+  height = 1600,
+  res = 300
 )
 
 plot(
@@ -5736,20 +6092,48 @@ threshold_check_peru_U_disp
 ```
 
 ```{r}
-# results checking
-table(status_peru_U_disp_k2_w3)
+peru_U_plot_dates <- as.Date(
+  sub("^D_", "", iter_dates_peru_U),
+  format = "%Y%m%d"
+)
+```
 
-flagged_peru_U_disp <- colSums(
+
+```{r}
+# results checking
+flagged_peru_U_disp_pct <- colMeans(
   status_peru_U_disp_k2_w3 == 1
+) * 100
+
+png(
+  "../outputs/peru_U_km2_w3_disp_threshold_pts.png",
+  width = 2400,
+  height = 1600,
+  res = 300
 )
 
 plot(
-  flagged_peru_U_disp,
+  peru_U_plot_dates,
+  flagged_peru_U_disp_pct,
   type = "l",
-  xlab = "Sliding window",
-  ylab = "Number of Status 1 points",
-  main = "Peru Unfailed W3 displacement k=2"
+  ylim = c(0, 100),
+  xaxt = "n",
+  xlab = "Date",
+  ylab = "Points in threshold-exceeding cluster (%)",
+  main = "Peru (U) W3 Displacement K-means (k = 2, threshold = -4 mm)"
 )
+
+axis.Date(
+  1,
+  at = seq(
+    min(peru_U_plot_dates),
+    max(peru_U_plot_dates),
+    by = "3 months"
+  ),
+  format = "%Y-%m"
+)
+
+dev.off()
 ```
 
 **Exporting:**
@@ -5994,19 +6378,39 @@ threshold_check_peru_U_vel
 
 ```{r}
 # results checking
-table(status_peru_U_vel_k2_w3)
-
-flagged_peru_U_vel <- colSums(
+flagged_peru_U_vel_pct <- colMeans(
   status_peru_U_vel_k2_w3 == 1
+) * 100
+
+png(
+  "../outputs/peru_U_km2_w3_vel_threshold_pts.png",
+  width = 2400,
+  height = 1600,
+  res = 300
 )
 
 plot(
-  flagged_peru_U_vel,
+  peru_U_plot_dates,
+  flagged_peru_U_vel_pct,
   type = "l",
-  xlab = "Sliding window",
-  ylab = "Number of Status 1 points",
-  main = "Peru Unfailed W3 velocity k=2"
+  ylim = c(0, 100),
+  xaxt = "n",
+  xlab = "Date",
+  ylab = "Points in velocity threshold-exceeding cluster (%)",
+  main = "Peru (U) W3 Velocity K-means (k = 2, threshold = -60 mm/yr)"
 )
+
+axis.Date(
+  1,
+  at = seq(
+    min(peru_U_plot_dates),
+    max(peru_U_plot_dates),
+    by = "3 months"
+  ),
+  format = "%Y-%m"
+)
+
+dev.off()
 ```
 
 **Exporting:**
@@ -6214,9 +6618,9 @@ plot(
 ```{r}
 png(
   "../outputs/peru_unfailed_w3_dbscan_noise.png",
-  width = 1000,
-  height = 700,
-  res = 120
+  width = 2400,
+  height = 1600,
+  res = 300
 )
 
 plot(
@@ -6292,3 +6696,183 @@ write.csv(
   row.names = FALSE
 )
 ```
+
+### 9.3 Silhouette Score
+
+```{r}
+silhouette_summary_peru <- data.frame(
+  Method = c(
+    "Peru (F) Disp W3 k2",
+    "Peru (F) Velocity W3 k2",
+    "Peru (U) Disp W3 k2",
+    "Peru (U) Velocity W3 k2"
+  ),
+
+  MeanSilhouette = c(
+    mean(silhouette_peru_F_disp_k2_w3),
+    mean(silhouette_peru_F_vel_k2_w3),
+    mean(silhouette_peru_U_disp_k2_w3),
+    mean(silhouette_peru_U_vel_k2_w3)
+  ),
+
+  MedianSilhouette = c(
+    median(silhouette_peru_F_disp_k2_w3),
+    median(silhouette_peru_F_vel_k2_w3),
+    median(silhouette_peru_U_disp_k2_w3),
+    median(silhouette_peru_U_vel_k2_w3)
+  ),
+
+  MinSilhouette = c(
+    min(silhouette_peru_F_disp_k2_w3),
+    min(silhouette_peru_F_vel_k2_w3),
+    min(silhouette_peru_U_disp_k2_w3),
+    min(silhouette_peru_U_vel_k2_w3)
+  ),
+
+  MaxSilhouette = c(
+    max(silhouette_peru_F_disp_k2_w3),
+    max(silhouette_peru_F_vel_k2_w3),
+    max(silhouette_peru_U_disp_k2_w3),
+    max(silhouette_peru_U_vel_k2_w3)
+  )
+)
+
+silhouette_summary_peru
+```
+
+
+### Additional Plots
+
+```{r}
+dates_F <- as.Date(
+  sub("^D_", "", iter_dates_peru_F),
+  format = "%Y%m%d"
+)
+
+dates_U <- as.Date(
+  sub("^D_", "", iter_dates_peru_U),
+  format = "%Y%m%d"
+)
+```
+
+```{r}
+head(dates_F)
+head(dates_U)
+```
+
+
+```{r}
+png(
+  "../outputs/peru_comparison_dbscan_noise.png",
+  width = 2400,
+  height = 1600,
+  res = 300
+)
+
+plot(
+  dates_F,
+  noise_pct_peru_F,
+  type = "l",
+  col = "red",
+  ylim = range(c(noise_pct_peru_F, noise_pct_peru_U)),
+  xlab = "Date",
+  ylab = "DBSCAN noise (%)",
+  main = "Peru Cases - DBSCAN Noise (%)"
+)
+
+lines(
+  dates_U,
+  noise_pct_peru_U,
+  lty = 1
+)
+
+legend(
+  "topright",
+  c("Failed", "Unfailed"),
+  col = c("red", "black"),
+  lty = c(1, 1)
+)
+
+dev.off()
+```
+
+
+```{r}
+plot_flagged_pct <- function(status_matrix, dates, title) {
+
+  flagged_pct <- colMeans(status_matrix == 1) * 100
+
+  plot(
+    dates,
+    flagged_pct,
+    type = "l",
+    ylim = c(0, 100),
+    xlab = "Date",
+    ylab = "Flagged points (%)",
+    main = title
+  )
+
+  return(flagged_pct)
+}
+```
+
+
+```{r}
+plot_status_pct_k3 <- function(status_matrix, dates, title) {
+
+  status_pct <- sapply(
+    0:2,
+    function(s) colMeans(status_matrix == s) * 100
+  )
+
+  matplot(
+    dates,
+    status_pct,
+    type = "l",
+    lty = 1,
+    ylim = c(0, 100),
+    xlab = "Date",
+    ylab = "Points (%)",
+    main = title
+  )
+
+  legend(
+    "right",
+    legend = c("Status 0", "Status 1", "Status 2"),
+    lty = 1
+  )
+
+  return(status_pct)
+}
+```
+
+#### Percentage of Points Flagged / in each Status Category:
+
+```{r}
+cadia_w3_dates <- as.Date(
+  sub("^D_", "", iter_dates_filtered),
+  format = "%Y%m%d"
+)
+
+head(cadia_w3_dates)
+```
+
+```{r}
+length(cadia_w3_dates)
+ncol(cluster_status_mat_sliding_k2)
+length(iter_dates_filtered)
+
+head(iter_dates_filtered)
+tail(iter_dates_filtered)
+```
+
+
+```{r}
+cadia_disp_w3_k2_pct <- plot_flagged_pct(
+  cluster_status_mat_sliding_k2,
+  cadia_w3_dates,
+  "Cadia W3 Displacement K-means (k = 2)"
+)
+```
+
+
