@@ -10708,33 +10708,17 @@ p_cadia_elbow_vel &lt;- fviz_nbclust(
 &lt;!-- rnb-chunk-begin --&gt;
 
 
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVablpwZWw5dVltTnNkWE4wS0dOaFpHbGhYMFFzSUd0dFpXRnVjeXdnYldWMGFHOWtJRDBnWENKemFXeG9iM1ZsZEhSbFhDSXBJQ3NnWjJkMGFYUnNaU2hjSWs5d2RHbHRZV3dnYm5WdFltVnlJRzltSUdOc2RYTjBaWEp6T2lCRFlXUnBZVndpS1Z4dVhHNW1kbWw2WDI1aVkyeDFjM1FvWTJGa2FXRmZjR2xsWTJWM2FYTmxMQ0JyYldWaGJuTXNJRzFsZEdodlpDQTlJRndpYzJsc2FHOTFaWFIwWlZ3aUtTQXJJR2RuZEdsMGJHVW9YQ0pQY0hScGJXRnNJRzUxYldKbGNpQnZaaUJqYkhWemRHVnljem9nUTJGa2FXRmNJaWxjYmx4dVpuWnBlbDl1WW1Oc2RYTjBLR05oWkdsaFgzWmxiQ3dnYTIxbFlXNXpMQ0J0WlhSb2IyUWdQU0JjSW5OcGJHaHZkV1YwZEdWY0lpa2dLeUJuWjNScGRHeGxLRndpVDNCMGFXMWhiQ0J1ZFcxaVpYSWdiMllnWTJ4MWMzUmxjbk02SUVOaFpHbGhYQ0lwWEc1Z1lHQWlmUT09IC0tPlxuXG5gYGByXG5mdml6X25iY2x1c3QoY2FkaWFfRCwga21lYW5zLCBtZXRob2QgPSBcXHNpbGhvdWV0dGVcXCkgKyBnZ3RpdGxlKFxcT3B0aW1hbCBudW1iZXIgb2YgY2x1c3RlcnM6IENhZGlhXFwpXG5cbmZ2aXpfbmJjbHVzdChjYWRpYV9waWVjZXdpc2UsIGttZWFucywgbWV0aG9kID0gXFxzaWxob3VldHRlXFwpICsgZ2d0aXRsZShcXE9wdGltYWwgbnVtYmVyIG9mIGNsdXN0ZXJzOiBDYWRpYVxcKVxuXG5mdml6X25iY2x1c3QoY2FkaWFfdmVsLCBrbWVhbnMsIG1ldGhvZCA9IFxcc2lsaG91ZXR0ZVxcKSArIGdndGl0bGUoXFxPcHRpbWFsIG51bWJlciBvZiBjbHVzdGVyczogQ2FkaWFcXClcbmBgYFxuXG48IS0tIHJuYi1zb3VyY2UtZW5kIC0tPlxuIn0= --&gt;
-</code></pre>
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZnZpel9uYmNsdXN0KGNhZGlhX0QsIGttZWFucywgbWV0aG9kID0gXCJzaWxob3VldHRlXCIpICsgZ2d0aXRsZShcIk9wdGltYWwgbnVtYmVyIG9mIGNsdXN0ZXJzOiBDYWRpYVwiKVxuXG5mdml6X25iY2x1c3QoY2FkaWFfcGllY2V3aXNlLCBrbWVhbnMsIG1ldGhvZCA9IFwic2lsaG91ZXR0ZVwiKSArIGdndGl0bGUoXCJPcHRpbWFsIG51bWJlciBvZiBjbHVzdGVyczogQ2FkaWFcIilcblxuZnZpel9uYmNsdXN0KGNhZGlhX3ZlbCwga21lYW5zLCBtZXRob2QgPSBcInNpbGhvdWV0dGVcIikgKyBnZ3RpdGxlKFwiT3B0aW1hbCBudW1iZXIgb2YgY2x1c3RlcnM6IENhZGlhXCIpXG5gYGAifQ== -->
-<pre class="r"><code>fviz_nbclust(cadia_D, kmeans, method = \silhouette\) + ggtitle(\Optimal number of clusters: Cadia\)
-
-fviz_nbclust(cadia_piecewise, kmeans, method = \silhouette\) + ggtitle(\Optimal number of clusters: Cadia\)
-
-fviz_nbclust(cadia_vel, kmeans, method = \silhouette\) + ggtitle(\Optimal number of clusters: Cadia\)</code></pre>
-<!-- rnb-source-end -->
-<pre><code>
+&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVablpwZWw5dVltTnNkWE4wS0dOaFpHbGhYMFFzSUd0dFpXRnVjeXdnYldWMGFHOWtJRDBnWENKemFXeG9iM1ZsZEhSbFhDSXBJQ3NnWjJkMGFYUnNaU2hjSWs5d2RHbHRZV3dnYm5WdFltVnlJRzltSUdOc2RYTjBaWEp6T2lCRFlXUnBZVndpS1Z4dVhHNW1kbWw2WDI1aVkyeDFjM1FvWTJGa2FXRmZjR2xsWTJWM2FYTmxMQ0JyYldWaGJuTXNJRzFsZEdodlpDQTlJRndpYzJsc2FHOTFaWFIwWlZ3aUtTQXJJR2RuZEdsMGJHVW9YQ0pQY0hScGJXRnNJRzUxYldKbGNpQnZaaUJqYkhWemRHVnljem9nUTJGa2FXRmNJaWxjYmx4dVpuWnBlbDl1WW1Oc2RYTjBLR05oWkdsaFgzWmxiQ3dnYTIxbFlXNXpMQ0J0WlhSb2IyUWdQU0JjSW5OcGJHaHZkV1YwZEdWY0lpa2dLeUJuWjNScGRHeGxLRndpVDNCMGFXMWhiQ0J1ZFcxaVpYSWdiMllnWTJ4MWMzUmxjbk02SUVOaFpHbGhYQ0lwWEc1Z1lHQWlmUT09IC0tPlxuXG5gYGByXG5mdml6X25iY2x1c3QoY2FkaWFfRCwga21lYW5zLCBtZXRob2QgPSBcInNpbGhvdWV0dGVcIikgKyBnZ3RpdGxlKFwiT3B0aW1hbCBudW1iZXIgb2YgY2x1c3RlcnM6IENhZGlhXCIpXG5cbmZ2aXpfbmJjbHVzdChjYWRpYV9waWVjZXdpc2UsIGttZWFucywgbWV0aG9kID0gXCJzaWxob3VldHRlXCIpICsgZ2d0aXRsZShcIk9wdGltYWwgbnVtYmVyIG9mIGNsdXN0ZXJzOiBDYWRpYVwiKVxuXG5mdml6X25iY2x1c3QoY2FkaWFfdmVsLCBrbWVhbnMsIG1ldGhvZCA9IFwic2lsaG91ZXR0ZVwiKSArIGdndGl0bGUoXCJPcHRpbWFsIG51bWJlciBvZiBjbHVzdGVyczogQ2FkaWFcIilcbmBgYFxuXG48IS0tIHJuYi1zb3VyY2UtZW5kIC0tPlxuIn0= --&gt;
 
 
-&lt;!-- rnb-output-end --&gt;
-
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZR0JnY2x4dVpuWnBlbDl1WW1Oc2RYTjBLR05oWkdsaFgwUXNJR3R0WldGdWN5d2diV1YwYUc5a0lEMGdYRnh6YVd4b2IzVmxkSFJsWEZ3cElDc2daMmQwYVhSc1pTaGNYRTl3ZEdsdFlXd2diblZ0WW1WeUlHOW1JR05zZFhOMFpYSnpPaUJEWVdScFlWeGNLVnh1WEc1bWRtbDZYMjVpWTJ4MWMzUW9ZMkZrYVdGZmNHbGxZMlYzYVhObExDQnJiV1ZoYm5Nc0lHMWxkR2h2WkNBOUlGeGNjMmxzYUc5MVpYUjBaVnhjS1NBcklHZG5kR2wwYkdVb1hGeFBjSFJwYldGc0lHNTFiV0psY2lCdlppQmpiSFZ6ZEdWeWN6b2dRMkZrYVdGY1hDbGNibHh1Wm5acGVsOXVZbU5zZFhOMEtHTmhaR2xoWDNabGJDd2dhMjFsWVc1ekxDQnRaWFJvYjJRZ1BTQmNYSE5wYkdodmRXVjBkR1ZjWENrZ0t5Qm5aM1JwZEd4bEtGeGNUM0IwYVcxaGJDQnVkVzFpWlhJZ2IyWWdZMngxYzNSbGNuTTZJRU5oWkdsaFhGd3BYRzVnWUdCY2JtQmdZQ0o5IC0tPlxuXG5gYGByXG5gYGByXG5mdml6X25iY2x1c3QoY2FkaWFfRCwga21lYW5zLCBtZXRob2QgPSBcXHNpbGhvdWV0dGVcXCkgKyBnZ3RpdGxlKFxcT3B0aW1hbCBudW1iZXIgb2YgY2x1c3RlcnM6IENhZGlhXFwpXG5cbmZ2aXpfbmJjbHVzdChjYWRpYV9waWVjZXdpc2UsIGttZWFucywgbWV0aG9kID0gXFxzaWxob3VldHRlXFwpICsgZ2d0aXRsZShcXE9wdGltYWwgbnVtYmVyIG9mIGNsdXN0ZXJzOiBDYWRpYVxcKVxuXG5mdml6X25iY2x1c3QoY2FkaWFfdmVsLCBrbWVhbnMsIG1ldGhvZCA9IFxcc2lsaG91ZXR0ZVxcKSArIGdndGl0bGUoXFxPcHRpbWFsIG51bWJlciBvZiBjbHVzdGVyczogQ2FkaWFcXClcbmBgYFxuYGBgXG5cbjwhLS0gcm5iLXNvdXJjZS1lbmQgLS0+XG4ifQ== --&gt;
-
-
-&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuZnZpel9uYmNsdXN0KGNhZGlhX0QsIGttZWFucywgbWV0aG9kID0gXFxzaWxob3VldHRlXFwpICsgZ2d0aXRsZShcXE9wdGltYWwgbnVtYmVyIG9mIGNsdXN0ZXJzOiBDYWRpYVxcKVxuXG5mdml6X25iY2x1c3QoY2FkaWFfcGllY2V3aXNlLCBrbWVhbnMsIG1ldGhvZCA9IFxcc2lsaG91ZXR0ZVxcKSArIGdndGl0bGUoXFxPcHRpbWFsIG51bWJlciBvZiBjbHVzdGVyczogQ2FkaWFcXClcblxuZnZpel9uYmNsdXN0KGNhZGlhX3ZlbCwga21lYW5zLCBtZXRob2QgPSBcXHNpbGhvdWV0dGVcXCkgKyBnZ3RpdGxlKFxcT3B0aW1hbCBudW1iZXIgb2YgY2x1c3RlcnM6IENhZGlhXFwpXG5gYGBcbmBgYCJ9 --&gt;
+&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZnZpel9uYmNsdXN0KGNhZGlhX0QsIGttZWFucywgbWV0aG9kID0gXCJzaWxob3VldHRlXCIpICsgZ2d0aXRsZShcIk9wdGltYWwgbnVtYmVyIG9mIGNsdXN0ZXJzOiBDYWRpYVwiKVxuXG5mdml6X25iY2x1c3QoY2FkaWFfcGllY2V3aXNlLCBrbWVhbnMsIG1ldGhvZCA9IFwic2lsaG91ZXR0ZVwiKSArIGdndGl0bGUoXCJPcHRpbWFsIG51bWJlciBvZiBjbHVzdGVyczogQ2FkaWFcIilcblxuZnZpel9uYmNsdXN0KGNhZGlhX3ZlbCwga21lYW5zLCBtZXRob2QgPSBcInNpbGhvdWV0dGVcIikgKyBnZ3RpdGxlKFwiT3B0aW1hbCBudW1iZXIgb2YgY2x1c3RlcnM6IENhZGlhXCIpXG5gYGAifQ== --&gt;
 
 ```r
-```r
-fviz_nbclust(cadia_D, kmeans, method = \silhouette\) + ggtitle(\Optimal number of clusters: Cadia\)
+fviz_nbclust(cadia_D, kmeans, method = &quot;silhouette&quot;) + ggtitle(&quot;Optimal number of clusters: Cadia&quot;)
 
-fviz_nbclust(cadia_piecewise, kmeans, method = \silhouette\) + ggtitle(\Optimal number of clusters: Cadia\)
+fviz_nbclust(cadia_piecewise, kmeans, method = &quot;silhouette&quot;) + ggtitle(&quot;Optimal number of clusters: Cadia&quot;)
 
-fviz_nbclust(cadia_vel, kmeans, method = \silhouette\) + ggtitle(\Optimal number of clusters: Cadia\)
-```
+fviz_nbclust(cadia_vel, kmeans, method = &quot;silhouette&quot;) + ggtitle(&quot;Optimal number of clusters: Cadia&quot;)
 ```
 
 &lt;!-- rnb-source-end --&gt;
@@ -10787,39 +10771,6 @@ p_cadia_sil_vel &lt;- fviz_nbclust(
 &lt;!-- rnb-chunk-begin --&gt;
 
 
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVablpwZWw5dVltTnNkWE4wS0dOaFpHbGhYMFFzSUd0dFpXRnVjeXdnYldWMGFHOWtJRDBnWENKemFXeG9iM1ZsZEhSbFhDSXBJQ3NnWjJkMGFYUnNaU2hjSWs5d2RHbHRZV3dnYm5WdFltVnlJRzltSUdOc2RYTjBaWEp6T2lCRFlXUnBZVndpS1Z4dVhHNW1kbWw2WDI1aVkyeDFjM1FvWTJGa2FXRmZjR2xsWTJWM2FYTmxMQ0JyYldWaGJuTXNJRzFsZEdodlpDQTlJRndpYzJsc2FHOTFaWFIwWlZ3aUtTQXJJR2RuZEdsMGJHVW9YQ0pQY0hScGJXRnNJRzUxYldKbGNpQnZaaUJqYkhWemRHVnljem9nUTJGa2FXRmNJaWxjYmx4dVpuWnBlbDl1WW1Oc2RYTjBLR05oWkdsaFgzWmxiQ3dnYTIxbFlXNXpMQ0J0WlhSb2IyUWdQU0JjSW5OcGJHaHZkV1YwZEdWY0lpa2dLeUJuWjNScGRHeGxLRndpVDNCMGFXMWhiQ0J1ZFcxaVpYSWdiMllnWTJ4MWMzUmxjbk02SUVOaFpHbGhYQ0lwWEc1Z1lHQWlmUT09IC0tPlxuXG5gYGByXG5mdml6X25iY2x1c3QoY2FkaWFfRCwga21lYW5zLCBtZXRob2QgPSBcXHNpbGhvdWV0dGVcXCkgKyBnZ3RpdGxlKFxcT3B0aW1hbCBudW1iZXIgb2YgY2x1c3RlcnM6IENhZGlhXFwpXG5cbmZ2aXpfbmJjbHVzdChjYWRpYV9waWVjZXdpc2UsIGttZWFucywgbWV0aG9kID0gXFxzaWxob3VldHRlXFwpICsgZ2d0aXRsZShcXE9wdGltYWwgbnVtYmVyIG9mIGNsdXN0ZXJzOiBDYWRpYVxcKVxuXG5mdml6X25iY2x1c3QoY2FkaWFfdmVsLCBrbWVhbnMsIG1ldGhvZCA9IFxcc2lsaG91ZXR0ZVxcKSArIGdndGl0bGUoXFxPcHRpbWFsIG51bWJlciBvZiBjbHVzdGVyczogQ2FkaWFcXClcbmBgYFxuXG48IS0tIHJuYi1zb3VyY2UtZW5kIC0tPlxuIn0= --&gt;
-</code></pre>
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZnZpel9uYmNsdXN0KGNhZGlhX0QsIGttZWFucywgbWV0aG9kID0gXCJzaWxob3VldHRlXCIpICsgZ2d0aXRsZShcIk9wdGltYWwgbnVtYmVyIG9mIGNsdXN0ZXJzOiBDYWRpYVwiKVxuXG5mdml6X25iY2x1c3QoY2FkaWFfcGllY2V3aXNlLCBrbWVhbnMsIG1ldGhvZCA9IFwic2lsaG91ZXR0ZVwiKSArIGdndGl0bGUoXCJPcHRpbWFsIG51bWJlciBvZiBjbHVzdGVyczogQ2FkaWFcIilcblxuZnZpel9uYmNsdXN0KGNhZGlhX3ZlbCwga21lYW5zLCBtZXRob2QgPSBcInNpbGhvdWV0dGVcIikgKyBnZ3RpdGxlKFwiT3B0aW1hbCBudW1iZXIgb2YgY2x1c3RlcnM6IENhZGlhXCIpXG5gYGAifQ== -->
-<pre class="r"><code>fviz_nbclust(cadia_D, kmeans, method = \silhouette\) + ggtitle(\Optimal number of clusters: Cadia\)
-
-fviz_nbclust(cadia_piecewise, kmeans, method = \silhouette\) + ggtitle(\Optimal number of clusters: Cadia\)
-
-fviz_nbclust(cadia_vel, kmeans, method = \silhouette\) + ggtitle(\Optimal number of clusters: Cadia\)</code></pre>
-<!-- rnb-source-end -->
-<pre><code>
-
-
-&lt;!-- rnb-output-end --&gt;
-
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZR0JnY2x4dVpuWnBlbDl1WW1Oc2RYTjBLR05oWkdsaFgwUXNJR3R0WldGdWN5d2diV1YwYUc5a0lEMGdYRnh6YVd4b2IzVmxkSFJsWEZ3cElDc2daMmQwYVhSc1pTaGNYRTl3ZEdsdFlXd2diblZ0WW1WeUlHOW1JR05zZFhOMFpYSnpPaUJEWVdScFlWeGNLVnh1WEc1bWRtbDZYMjVpWTJ4MWMzUW9ZMkZrYVdGZmNHbGxZMlYzYVhObExDQnJiV1ZoYm5Nc0lHMWxkR2h2WkNBOUlGeGNjMmxzYUc5MVpYUjBaVnhjS1NBcklHZG5kR2wwYkdVb1hGeFBjSFJwYldGc0lHNTFiV0psY2lCdlppQmpiSFZ6ZEdWeWN6b2dRMkZrYVdGY1hDbGNibHh1Wm5acGVsOXVZbU5zZFhOMEtHTmhaR2xoWDNabGJDd2dhMjFsWVc1ekxDQnRaWFJvYjJRZ1BTQmNYSE5wYkdodmRXVjBkR1ZjWENrZ0t5Qm5aM1JwZEd4bEtGeGNUM0IwYVcxaGJDQnVkVzFpWlhJZ2IyWWdZMngxYzNSbGNuTTZJRU5oWkdsaFhGd3BYRzVnWUdCY2JtQmdZQ0o5IC0tPlxuXG5gYGByXG5gYGByXG5mdml6X25iY2x1c3QoY2FkaWFfRCwga21lYW5zLCBtZXRob2QgPSBcXHNpbGhvdWV0dGVcXCkgKyBnZ3RpdGxlKFxcT3B0aW1hbCBudW1iZXIgb2YgY2x1c3RlcnM6IENhZGlhXFwpXG5cbmZ2aXpfbmJjbHVzdChjYWRpYV9waWVjZXdpc2UsIGttZWFucywgbWV0aG9kID0gXFxzaWxob3VldHRlXFwpICsgZ2d0aXRsZShcXE9wdGltYWwgbnVtYmVyIG9mIGNsdXN0ZXJzOiBDYWRpYVxcKVxuXG5mdml6X25iY2x1c3QoY2FkaWFfdmVsLCBrbWVhbnMsIG1ldGhvZCA9IFxcc2lsaG91ZXR0ZVxcKSArIGdndGl0bGUoXFxPcHRpbWFsIG51bWJlciBvZiBjbHVzdGVyczogQ2FkaWFcXClcbmBgYFxuYGBgXG5cbjwhLS0gcm5iLXNvdXJjZS1lbmQgLS0+XG4ifQ== --&gt;
-
-
-&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuZnZpel9uYmNsdXN0KGNhZGlhX0QsIGttZWFucywgbWV0aG9kID0gXFxzaWxob3VldHRlXFwpICsgZ2d0aXRsZShcXE9wdGltYWwgbnVtYmVyIG9mIGNsdXN0ZXJzOiBDYWRpYVxcKVxuXG5mdml6X25iY2x1c3QoY2FkaWFfcGllY2V3aXNlLCBrbWVhbnMsIG1ldGhvZCA9IFxcc2lsaG91ZXR0ZVxcKSArIGdndGl0bGUoXFxPcHRpbWFsIG51bWJlciBvZiBjbHVzdGVyczogQ2FkaWFcXClcblxuZnZpel9uYmNsdXN0KGNhZGlhX3ZlbCwga21lYW5zLCBtZXRob2QgPSBcXHNpbGhvdWV0dGVcXCkgKyBnZ3RpdGxlKFxcT3B0aW1hbCBudW1iZXIgb2YgY2x1c3RlcnM6IENhZGlhXFwpXG5gYGBcbmBgYCJ9 --&gt;
-
-```r
-```r
-fviz_nbclust(cadia_D, kmeans, method = \silhouette\) + ggtitle(\Optimal number of clusters: Cadia\)
-
-fviz_nbclust(cadia_piecewise, kmeans, method = \silhouette\) + ggtitle(\Optimal number of clusters: Cadia\)
-
-fviz_nbclust(cadia_vel, kmeans, method = \silhouette\) + ggtitle(\Optimal number of clusters: Cadia\)
-```
-```
-
-&lt;!-- rnb-source-end --&gt;
-
-
-&lt;!-- rnb-output-end --&gt;
 
 &lt;!-- rnb-chunk-end --&gt;
 
@@ -10889,73 +10840,21 @@ cadia_vel_km_5 &lt;- kmeans(
 &lt;!-- rnb-chunk-begin --&gt;
 
 
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVjMlYwTG5ObFpXUW9NVEl6TkNsY2JseHVZMkZrYVdGZmRtVnNYMnR0WHpJZ1BDMGdhMjFsWVc1ektGeHVJQ0JqWVdScFlWOTJaV3dzWEc0Z0lHTmxiblJsY25NZ1BTQXlMRnh1SUNCdWMzUmhjblFnUFNBeU1GeHVLVnh1WEc1allXUnBZVjkyWld4ZmEyMWZNeUE4TFNCcmJXVmhibk1vWEc0Z0lHTmhaR2xoWDNabGJDeGNiaUFnWTJWdWRHVnljeUE5SURNc1hHNGdJRzV6ZEdGeWRDQTlJREl3WEc0cFhHNWNibU5oWkdsaFgzWmxiRjlyYlY4MElEd3RJR3R0WldGdWN5aGNiaUFnWTJGa2FXRmZkbVZzTEZ4dUlDQmpaVzUwWlhKeklEMGdOQ3hjYmlBZ2JuTjBZWEowSUQwZ01qQmNiaWxjYmx4dVkyRmthV0ZmZG1Wc1gydHRYelVnUEMwZ2EyMWxZVzV6S0Z4dUlDQmpZV1JwWVY5MlpXd3NYRzRnSUdObGJuUmxjbk1nUFNBMUxGeHVJQ0J1YzNSaGNuUWdQU0F5TUZ4dUtWeHVZR0JnSW4wPSAtLT5cblxuYGBgclxuc2V0LnNlZWQoMTIzNClcblxuY2FkaWFfdmVsX2ttXzIgPC0ga21lYW5zKFxuICBjYWRpYV92ZWwsXG4gIGNlbnRlcnMgPSAyLFxuICBuc3RhcnQgPSAyMFxuKVxuXG5jYWRpYV92ZWxfa21fMyA8LSBrbWVhbnMoXG4gIGNhZGlhX3ZlbCxcbiAgY2VudGVycyA9IDMsXG4gIG5zdGFydCA9IDIwXG4pXG5cbmNhZGlhX3ZlbF9rbV80IDwtIGttZWFucyhcbiAgY2FkaWFfdmVsLFxuICBjZW50ZXJzID0gNCxcbiAgbnN0YXJ0ID0gMjBcbilcblxuY2FkaWFfdmVsX2ttXzUgPC0ga21lYW5zKFxuICBjYWRpYV92ZWwsXG4gIGNlbnRlcnMgPSA1LFxuICBuc3RhcnQgPSAyMFxuKVxuYGBgXG5cbjwhLS0gcm5iLXNvdXJjZS1lbmQgLS0+XG4ifQ== --&gt;
-</code></pre>
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc2V0LnNlZWQoMTIzNClcblxuY2FkaWFfdmVsX2ttXzIgPC0ga21lYW5zKFxuICBjYWRpYV92ZWwsXG4gIGNlbnRlcnMgPSAyLFxuICBuc3RhcnQgPSAyMFxuKVxuXG5jYWRpYV92ZWxfa21fMyA8LSBrbWVhbnMoXG4gIGNhZGlhX3ZlbCxcbiAgY2VudGVycyA9IDMsXG4gIG5zdGFydCA9IDIwXG4pXG5cbmNhZGlhX3ZlbF9rbV80IDwtIGttZWFucyhcbiAgY2FkaWFfdmVsLFxuICBjZW50ZXJzID0gNCxcbiAgbnN0YXJ0ID0gMjBcbilcblxuY2FkaWFfdmVsX2ttXzUgPC0ga21lYW5zKFxuICBjYWRpYV92ZWwsXG4gIGNlbnRlcnMgPSA1LFxuICBuc3RhcnQgPSAyMFxuKVxuYGBgIn0= -->
-<pre class="r"><code>set.seed(1234)
-
-cadia_vel_km_2 &lt;- kmeans(
-  cadia_vel,
-  centers = 2,
-  nstart = 20
-)
-
-cadia_vel_km_3 &lt;- kmeans(
-  cadia_vel,
-  centers = 3,
-  nstart = 20
-)
-
-cadia_vel_km_4 &lt;- kmeans(
-  cadia_vel,
-  centers = 4,
-  nstart = 20
-)
-
-cadia_vel_km_5 &lt;- kmeans(
-  cadia_vel,
-  centers = 5,
-  nstart = 20
-)</code></pre>
-<!-- rnb-source-end -->
-<pre><code>
+&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZMkZrYVdGZmRtVnNYMnR0WDNOcGJDQThMU0JoZG1kZmMybHNYM05qYjNKbFgydHRLRnh1SUNCc2FYTjBLR05oWkdsaFgzWmxiRjlyYlY4eUxGeHVJQ0FnSUNBZ0lHTmhaR2xoWDNabGJGOXJiVjh6TEZ4dUlDQWdJQ0FnSUdOaFpHbGhYM1psYkY5cmJWODBMRnh1SUNBZ0lDQWdJR05oWkdsaFgzWmxiRjlyYlY4MUtTeGNiaUFnWTJGa2FXRmZkbVZzWDJScGMzUmNiaWxjYmx4dVkyRmthV0ZmZG1Wc1gydHRYM05wYkZ4dVlHQmdJbjA9IC0tPlxuXG5gYGByXG5jYWRpYV92ZWxfa21fc2lsIDwtIGF2Z19zaWxfc2NvcmVfa20oXG4gIGxpc3QoY2FkaWFfdmVsX2ttXzIsXG4gICAgICAgY2FkaWFfdmVsX2ttXzMsXG4gICAgICAgY2FkaWFfdmVsX2ttXzQsXG4gICAgICAgY2FkaWFfdmVsX2ttXzUpLFxuICBjYWRpYV92ZWxfZGlzdFxuKVxuXG5jYWRpYV92ZWxfa21fc2lsXG5gYGBcblxuPCEtLSBybmItc291cmNlLWVuZCAtLT5cbiJ9 --&gt;
 
 
-&lt;!-- rnb-output-end --&gt;
-
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZR0JnY2x4dWMyVjBMbk5sWldRb01USXpOQ2xjYmx4dVkyRmthV0ZmZG1Wc1gydHRYeklnUEMwZ2EyMWxZVzV6S0Z4dUlDQmpZV1JwWVY5MlpXd3NYRzRnSUdObGJuUmxjbk1nUFNBeUxGeHVJQ0J1YzNSaGNuUWdQU0F5TUZ4dUtWeHVYRzVqWVdScFlWOTJaV3hmYTIxZk15QThMU0JyYldWaGJuTW9YRzRnSUdOaFpHbGhYM1psYkN4Y2JpQWdZMlZ1ZEdWeWN5QTlJRE1zWEc0Z0lHNXpkR0Z5ZENBOUlESXdYRzRwWEc1Y2JtTmhaR2xoWDNabGJGOXJiVjgwSUR3dElHdHRaV0Z1Y3loY2JpQWdZMkZrYVdGZmRtVnNMRnh1SUNCalpXNTBaWEp6SUQwZ05DeGNiaUFnYm5OMFlYSjBJRDBnTWpCY2JpbGNibHh1WTJGa2FXRmZkbVZzWDJ0dFh6VWdQQzBnYTIxbFlXNXpLRnh1SUNCallXUnBZVjkyWld3c1hHNGdJR05sYm5SbGNuTWdQU0ExTEZ4dUlDQnVjM1JoY25RZ1BTQXlNRnh1S1Z4dVlHQmdYRzVnWUdBaWZRPT0gLS0+XG5cbmBgYHJcbmBgYHJcbnNldC5zZWVkKDEyMzQpXG5cbmNhZGlhX3ZlbF9rbV8yIDwtIGttZWFucyhcbiAgY2FkaWFfdmVsLFxuICBjZW50ZXJzID0gMixcbiAgbnN0YXJ0ID0gMjBcbilcblxuY2FkaWFfdmVsX2ttXzMgPC0ga21lYW5zKFxuICBjYWRpYV92ZWwsXG4gIGNlbnRlcnMgPSAzLFxuICBuc3RhcnQgPSAyMFxuKVxuXG5jYWRpYV92ZWxfa21fNCA8LSBrbWVhbnMoXG4gIGNhZGlhX3ZlbCxcbiAgY2VudGVycyA9IDQsXG4gIG5zdGFydCA9IDIwXG4pXG5cbmNhZGlhX3ZlbF9rbV81IDwtIGttZWFucyhcbiAgY2FkaWFfdmVsLFxuICBjZW50ZXJzID0gNSxcbiAgbnN0YXJ0ID0gMjBcbilcbmBgYFxuYGBgXG5cbjwhLS0gcm5iLXNvdXJjZS1lbmQgLS0+XG4ifQ== --&gt;
-
-
-&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuc2V0LnNlZWQoMTIzNClcblxuY2FkaWFfdmVsX2ttXzIgPC0ga21lYW5zKFxuICBjYWRpYV92ZWwsXG4gIGNlbnRlcnMgPSAyLFxuICBuc3RhcnQgPSAyMFxuKVxuXG5jYWRpYV92ZWxfa21fMyA8LSBrbWVhbnMoXG4gIGNhZGlhX3ZlbCxcbiAgY2VudGVycyA9IDMsXG4gIG5zdGFydCA9IDIwXG4pXG5cbmNhZGlhX3ZlbF9rbV80IDwtIGttZWFucyhcbiAgY2FkaWFfdmVsLFxuICBjZW50ZXJzID0gNCxcbiAgbnN0YXJ0ID0gMjBcbilcblxuY2FkaWFfdmVsX2ttXzUgPC0ga21lYW5zKFxuICBjYWRpYV92ZWwsXG4gIGNlbnRlcnMgPSA1LFxuICBuc3RhcnQgPSAyMFxuKVxuYGBgXG5gYGAifQ== --&gt;
+&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2FkaWFfdmVsX2ttX3NpbCA8LSBhdmdfc2lsX3Njb3JlX2ttKFxuICBsaXN0KGNhZGlhX3ZlbF9rbV8yLFxuICAgICAgIGNhZGlhX3ZlbF9rbV8zLFxuICAgICAgIGNhZGlhX3ZlbF9rbV80LFxuICAgICAgIGNhZGlhX3ZlbF9rbV81KSxcbiAgY2FkaWFfdmVsX2Rpc3RcbilcblxuY2FkaWFfdmVsX2ttX3NpbFxuYGBgIn0= --&gt;
 
 ```r
-```r
-set.seed(1234)
-
-cadia_vel_km_2 &lt;- kmeans(
-  cadia_vel,
-  centers = 2,
-  nstart = 20
+cadia_vel_km_sil &lt;- avg_sil_score_km(
+  list(cadia_vel_km_2,
+       cadia_vel_km_3,
+       cadia_vel_km_4,
+       cadia_vel_km_5),
+  cadia_vel_dist
 )
 
-cadia_vel_km_3 &lt;- kmeans(
-  cadia_vel,
-  centers = 3,
-  nstart = 20
-)
-
-cadia_vel_km_4 &lt;- kmeans(
-  cadia_vel,
-  centers = 4,
-  nstart = 20
-)
-
-cadia_vel_km_5 &lt;- kmeans(
-  cadia_vel,
-  centers = 5,
-  nstart = 20
-)
-```
+cadia_vel_km_sil
 ```
 
 &lt;!-- rnb-source-end --&gt;
@@ -10978,73 +10877,42 @@ cadia_vel_km_5 &lt;- kmeans(
 &lt;!-- rnb-chunk-begin --&gt;
 
 
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVjMlYwTG5ObFpXUW9NVEl6TkNsY2JseHVZMkZrYVdGZmRtVnNYMnR0WHpJZ1BDMGdhMjFsWVc1ektGeHVJQ0JqWVdScFlWOTJaV3dzWEc0Z0lHTmxiblJsY25NZ1BTQXlMRnh1SUNCdWMzUmhjblFnUFNBeU1GeHVLVnh1WEc1allXUnBZVjkyWld4ZmEyMWZNeUE4TFNCcmJXVmhibk1vWEc0Z0lHTmhaR2xoWDNabGJDeGNiaUFnWTJWdWRHVnljeUE5SURNc1hHNGdJRzV6ZEdGeWRDQTlJREl3WEc0cFhHNWNibU5oWkdsaFgzWmxiRjlyYlY4MElEd3RJR3R0WldGdWN5aGNiaUFnWTJGa2FXRmZkbVZzTEZ4dUlDQmpaVzUwWlhKeklEMGdOQ3hjYmlBZ2JuTjBZWEowSUQwZ01qQmNiaWxjYmx4dVkyRmthV0ZmZG1Wc1gydHRYelVnUEMwZ2EyMWxZVzV6S0Z4dUlDQmpZV1JwWVY5MlpXd3NYRzRnSUdObGJuUmxjbk1nUFNBMUxGeHVJQ0J1YzNSaGNuUWdQU0F5TUZ4dUtWeHVZR0JnSW4wPSAtLT5cblxuYGBgclxuc2V0LnNlZWQoMTIzNClcblxuY2FkaWFfdmVsX2ttXzIgPC0ga21lYW5zKFxuICBjYWRpYV92ZWwsXG4gIGNlbnRlcnMgPSAyLFxuICBuc3RhcnQgPSAyMFxuKVxuXG5jYWRpYV92ZWxfa21fMyA8LSBrbWVhbnMoXG4gIGNhZGlhX3ZlbCxcbiAgY2VudGVycyA9IDMsXG4gIG5zdGFydCA9IDIwXG4pXG5cbmNhZGlhX3ZlbF9rbV80IDwtIGttZWFucyhcbiAgY2FkaWFfdmVsLFxuICBjZW50ZXJzID0gNCxcbiAgbnN0YXJ0ID0gMjBcbilcblxuY2FkaWFfdmVsX2ttXzUgPC0ga21lYW5zKFxuICBjYWRpYV92ZWwsXG4gIGNlbnRlcnMgPSA1LFxuICBuc3RhcnQgPSAyMFxuKVxuYGBgXG5cbjwhLS0gcm5iLXNvdXJjZS1lbmQgLS0+XG4ifQ== --&gt;
-</code></pre>
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc2V0LnNlZWQoMTIzNClcblxuY2FkaWFfdmVsX2ttXzIgPC0ga21lYW5zKFxuICBjYWRpYV92ZWwsXG4gIGNlbnRlcnMgPSAyLFxuICBuc3RhcnQgPSAyMFxuKVxuXG5jYWRpYV92ZWxfa21fMyA8LSBrbWVhbnMoXG4gIGNhZGlhX3ZlbCxcbiAgY2VudGVycyA9IDMsXG4gIG5zdGFydCA9IDIwXG4pXG5cbmNhZGlhX3ZlbF9rbV80IDwtIGttZWFucyhcbiAgY2FkaWFfdmVsLFxuICBjZW50ZXJzID0gNCxcbiAgbnN0YXJ0ID0gMjBcbilcblxuY2FkaWFfdmVsX2ttXzUgPC0ga21lYW5zKFxuICBjYWRpYV92ZWwsXG4gIGNlbnRlcnMgPSA1LFxuICBuc3RhcnQgPSAyMFxuKVxuYGBgIn0= -->
-<pre class="r"><code>set.seed(1234)
 
-cadia_vel_km_2 &lt;- kmeans(
-  cadia_vel,
-  centers = 2,
-  nstart = 20
-)
-
-cadia_vel_km_3 &lt;- kmeans(
-  cadia_vel,
-  centers = 3,
-  nstart = 20
-)
-
-cadia_vel_km_4 &lt;- kmeans(
-  cadia_vel,
-  centers = 4,
-  nstart = 20
-)
-
-cadia_vel_km_5 &lt;- kmeans(
-  cadia_vel,
-  centers = 5,
-  nstart = 20
-)</code></pre>
-<!-- rnb-source-end -->
-<pre><code>
+&lt;!-- rnb-chunk-end --&gt;
 
 
-&lt;!-- rnb-output-end --&gt;
-
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZR0JnY2x4dWMyVjBMbk5sWldRb01USXpOQ2xjYmx4dVkyRmthV0ZmZG1Wc1gydHRYeklnUEMwZ2EyMWxZVzV6S0Z4dUlDQmpZV1JwWVY5MlpXd3NYRzRnSUdObGJuUmxjbk1nUFNBeUxGeHVJQ0J1YzNSaGNuUWdQU0F5TUZ4dUtWeHVYRzVqWVdScFlWOTJaV3hmYTIxZk15QThMU0JyYldWaGJuTW9YRzRnSUdOaFpHbGhYM1psYkN4Y2JpQWdZMlZ1ZEdWeWN5QTlJRE1zWEc0Z0lHNXpkR0Z5ZENBOUlESXdYRzRwWEc1Y2JtTmhaR2xoWDNabGJGOXJiVjgwSUR3dElHdHRaV0Z1Y3loY2JpQWdZMkZrYVdGZmRtVnNMRnh1SUNCalpXNTBaWEp6SUQwZ05DeGNiaUFnYm5OMFlYSjBJRDBnTWpCY2JpbGNibHh1WTJGa2FXRmZkbVZzWDJ0dFh6VWdQQzBnYTIxbFlXNXpLRnh1SUNCallXUnBZVjkyWld3c1hHNGdJR05sYm5SbGNuTWdQU0ExTEZ4dUlDQnVjM1JoY25RZ1BTQXlNRnh1S1Z4dVlHQmdYRzVnWUdBaWZRPT0gLS0+XG5cbmBgYHJcbmBgYHJcbnNldC5zZWVkKDEyMzQpXG5cbmNhZGlhX3ZlbF9rbV8yIDwtIGttZWFucyhcbiAgY2FkaWFfdmVsLFxuICBjZW50ZXJzID0gMixcbiAgbnN0YXJ0ID0gMjBcbilcblxuY2FkaWFfdmVsX2ttXzMgPC0ga21lYW5zKFxuICBjYWRpYV92ZWwsXG4gIGNlbnRlcnMgPSAzLFxuICBuc3RhcnQgPSAyMFxuKVxuXG5jYWRpYV92ZWxfa21fNCA8LSBrbWVhbnMoXG4gIGNhZGlhX3ZlbCxcbiAgY2VudGVycyA9IDQsXG4gIG5zdGFydCA9IDIwXG4pXG5cbmNhZGlhX3ZlbF9rbV81IDwtIGttZWFucyhcbiAgY2FkaWFfdmVsLFxuICBjZW50ZXJzID0gNSxcbiAgbnN0YXJ0ID0gMjBcbilcbmBgYFxuYGBgXG5cbjwhLS0gcm5iLXNvdXJjZS1lbmQgLS0+XG4ifQ== --&gt;
+&lt;!-- rnb-text-begin --&gt;
 
 
-&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuc2V0LnNlZWQoMTIzNClcblxuY2FkaWFfdmVsX2ttXzIgPC0ga21lYW5zKFxuICBjYWRpYV92ZWwsXG4gIGNlbnRlcnMgPSAyLFxuICBuc3RhcnQgPSAyMFxuKVxuXG5jYWRpYV92ZWxfa21fMyA8LSBrbWVhbnMoXG4gIGNhZGlhX3ZlbCxcbiAgY2VudGVycyA9IDMsXG4gIG5zdGFydCA9IDIwXG4pXG5cbmNhZGlhX3ZlbF9rbV80IDwtIGttZWFucyhcbiAgY2FkaWFfdmVsLFxuICBjZW50ZXJzID0gNCxcbiAgbnN0YXJ0ID0gMjBcbilcblxuY2FkaWFfdmVsX2ttXzUgPC0ga21lYW5zKFxuICBjYWRpYV92ZWwsXG4gIGNlbnRlcnMgPSA1LFxuICBuc3RhcnQgPSAyMFxuKVxuYGBgXG5gYGAifQ== --&gt;
+
+&lt;!-- rnb-text-end --&gt;
+
+
+&lt;!-- rnb-chunk-begin --&gt;
+
+
+&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVjRjlrWWw5allXUnBZVjkyWld3Z1BDMGdaMmR3Ykc5MEtGeHVJQ0JqWVdScFlWOTJaV3hmYTIxZlpHSXNYRzRnSUdGbGN5aGNiaUFnSUNCNElEMGdheXhjYmlBZ0lDQjVJRDBnWkdGMmFXVnpYMkp2ZFd4a2FXNWNiaUFnS1Z4dUtTQXJYRzRnSUdkbGIyMWZiR2x1WlNncElDdGNiaUFnWjJWdmJWOXdiMmx1ZENoemFYcGxJRDBnTWk0MUtTQXJYRzRnSUhOallXeGxYM2hmWTI5dWRHbHVkVzkxY3loaWNtVmhhM01nUFNBeU9qVXBJQ3RjYmlBZ2JHRmljeWhjYmlBZ0lDQjBhWFJzWlNBOUlGd2lSR0YyYVdWejRvQ1RRbTkxYkdScGJpQkpibVJsZURvZ1EyRmthV0VnS0VsdWRHVnlibUZzSUZabGJHOWphWFI1S1Z3aUxGeHVJQ0FnSUhnZ1BTQmNJazUxYldKbGNpQnZaaUJqYkhWemRHVnljMXdpTEZ4dUlDQWdJSGtnUFNCY0lrUmhkbWxsYytLQWswSnZkV3hrYVc0Z2FXNWtaWGhjSWx4dUlDQXBJQ3RjYmlBZ2RHaGxiV1ZmYldsdWFXMWhiQ2dwWEc1Z1lHQWlmUT09IC0tPlxuXG5gYGByXG5wX2RiX2NhZGlhX3ZlbCA8LSBnZ3Bsb3QoXG4gIGNhZGlhX3ZlbF9rbV9kYixcbiAgYWVzKFxuICAgIHggPSBrLFxuICAgIHkgPSBkYXZpZXNfYm91bGRpblxuICApXG4pICtcbiAgZ2VvbV9saW5lKCkgK1xuICBnZW9tX3BvaW50KHNpemUgPSAyLjUpICtcbiAgc2NhbGVfeF9jb250aW51b3VzKGJyZWFrcyA9IDI6NSkgK1xuICBsYWJzKFxuICAgIHRpdGxlID0gXCJEYXZpZXPigJNCb3VsZGluIEluZGV4OiBDYWRpYSAoSW50ZXJuYWwgVmVsb2NpdHkpXCIsXG4gICAgeCA9IFwiTnVtYmVyIG9mIGNsdXN0ZXJzXCIsXG4gICAgeSA9IFwiRGF2aWVz4oCTQm91bGRpbiBpbmRleFwiXG4gICkgK1xuICB0aGVtZV9taW5pbWFsKClcbmBgYFxuXG48IS0tIHJuYi1zb3VyY2UtZW5kIC0tPlxuIn0= --&gt;
+
+
+&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucF9kYl9jYWRpYV92ZWwgPC0gZ2dwbG90KFxuICBjYWRpYV92ZWxfa21fZGIsXG4gIGFlcyhcbiAgICB4ID0gayxcbiAgICB5ID0gZGF2aWVzX2JvdWxkaW5cbiAgKVxuKSArXG4gIGdlb21fbGluZSgpICtcbiAgZ2VvbV9wb2ludChzaXplID0gMi41KSArXG4gIHNjYWxlX3hfY29udGludW91cyhicmVha3MgPSAyOjUpICtcbiAgbGFicyhcbiAgICB0aXRsZSA9IFwiRGF2aWVz4oCTQm91bGRpbiBJbmRleDogQ2FkaWEgKEludGVybmFsIFZlbG9jaXR5KVwiLFxuICAgIHggPSBcIk51bWJlciBvZiBjbHVzdGVyc1wiLFxuICAgIHkgPSBcIkRhdmllc+KAk0JvdWxkaW4gaW5kZXhcIlxuICApICtcbiAgdGhlbWVfbWluaW1hbCgpXG5gYGAifQ== --&gt;
 
 ```r
-```r
-set.seed(1234)
-
-cadia_vel_km_2 &lt;- kmeans(
-  cadia_vel,
-  centers = 2,
-  nstart = 20
-)
-
-cadia_vel_km_3 &lt;- kmeans(
-  cadia_vel,
-  centers = 3,
-  nstart = 20
-)
-
-cadia_vel_km_4 &lt;- kmeans(
-  cadia_vel,
-  centers = 4,
-  nstart = 20
-)
-
-cadia_vel_km_5 &lt;- kmeans(
-  cadia_vel,
-  centers = 5,
-  nstart = 20
-)
-```
+p_db_cadia_vel &lt;- ggplot(
+  cadia_vel_km_db,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = &quot;Davies–Bouldin Index: Cadia (Internal Velocity)&quot;,
+    x = &quot;Number of clusters&quot;,
+    y = &quot;Davies–Bouldin index&quot;
+  ) +
+  theme_minimal()
 ```
 
 &lt;!-- rnb-source-end --&gt;
@@ -11065,96 +10933,19 @@ cadia_vel_km_5 &lt;- kmeans(
 &lt;!-- rnb-chunk-begin --&gt;
 
 
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZMkZrYVdGZmRtVnNYMnR0WDJSaUlEd3RJR1JpYVY5cmJTaGNiaUFnWTJGa2FXRmZkbVZzTEZ4dUlDQnNhWE4wS0dOaFpHbGhYM1psYkY5cmJWOHlMRnh1SUNBZ0lDQWdJR05oWkdsaFgzWmxiRjlyYlY4ekxGeHVJQ0FnSUNBZ0lHTmhaR2xoWDNabGJGOXJiVjgwTEZ4dUlDQWdJQ0FnSUdOaFpHbGhYM1psYkY5cmJWODFLVnh1S1Z4dVhHNWpZV1JwWVY5MlpXeGZhMjFmWkdKY2JtQmdZQ0o5IC0tPlxuXG5gYGByXG5jYWRpYV92ZWxfa21fZGIgPC0gZGJpX2ttKFxuICBjYWRpYV92ZWwsXG4gIGxpc3QoY2FkaWFfdmVsX2ttXzIsXG4gICAgICAgY2FkaWFfdmVsX2ttXzMsXG4gICAgICAgY2FkaWFfdmVsX2ttXzQsXG4gICAgICAgY2FkaWFfdmVsX2ttXzUpXG4pXG5cbmNhZGlhX3ZlbF9rbV9kYlxuYGBgXG5cbjwhLS0gcm5iLXNvdXJjZS1lbmQgLS0+XG4ifQ== --&gt;
-</code></pre>
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2FkaWFfdmVsX2ttX2RiIDwtIGRiaV9rbShcbiAgY2FkaWFfdmVsLFxuICBsaXN0KGNhZGlhX3ZlbF9rbV8yLFxuICAgICAgIGNhZGlhX3ZlbF9rbV8zLFxuICAgICAgIGNhZGlhX3ZlbF9rbV80LFxuICAgICAgIGNhZGlhX3ZlbF9rbV81KVxuKVxuXG5jYWRpYV92ZWxfa21fZGJcbmBgYCJ9 -->
-<pre class="r"><code>cadia_vel_km_db &lt;- dbi_km(
-  cadia_vel,
-  list(cadia_vel_km_2,
-       cadia_vel_km_3,
-       cadia_vel_km_4,
-       cadia_vel_km_5)
-)
-
-cadia_vel_km_db</code></pre>
-<!-- rnb-source-end -->
-<pre><code>
+&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVaMmR6WVhabEtGeHVJQ0JjSW1OaFpHbGhYMlJpYVY5MlpXd3VjRzVuWENJc1hHNGdJSEJmWkdKZlkyRmthV0ZmZG1Wc0xGeHVJQ0IzYVdSMGFDQTlJRGNzWEc0Z0lHaGxhV2RvZENBOUlEVXNYRzRnSUdSd2FTQTlJRE13TUZ4dUtWeHVZR0JnSW4wPSAtLT5cblxuYGBgclxuZ2dzYXZlKFxuICBcImNhZGlhX2RiaV92ZWwucG5nXCIsXG4gIHBfZGJfY2FkaWFfdmVsLFxuICB3aWR0aCA9IDcsXG4gIGhlaWdodCA9IDUsXG4gIGRwaSA9IDMwMFxuKVxuYGBgXG5cbjwhLS0gcm5iLXNvdXJjZS1lbmQgLS0+XG4ifQ== --&gt;
 
 
-&lt;!-- rnb-output-end --&gt;
-
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZR0JnY2x4dVkyRmthV0ZmZG1Wc1gydHRYMlJpSUR3dElHUmlhVjlyYlNoY2JpQWdZMkZrYVdGZmRtVnNMRnh1SUNCc2FYTjBLR05oWkdsaFgzWmxiRjlyYlY4eUxGeHVJQ0FnSUNBZ0lHTmhaR2xoWDNabGJGOXJiVjh6TEZ4dUlDQWdJQ0FnSUdOaFpHbGhYM1psYkY5cmJWODBMRnh1SUNBZ0lDQWdJR05oWkdsaFgzWmxiRjlyYlY4MUtWeHVLVnh1WEc1allXUnBZVjkyWld4ZmEyMWZaR0pjYm1CZ1lGeHVZR0JnSW4wPSAtLT5cblxuYGBgclxuYGBgclxuY2FkaWFfdmVsX2ttX2RiIDwtIGRiaV9rbShcbiAgY2FkaWFfdmVsLFxuICBsaXN0KGNhZGlhX3ZlbF9rbV8yLFxuICAgICAgIGNhZGlhX3ZlbF9rbV8zLFxuICAgICAgIGNhZGlhX3ZlbF9rbV80LFxuICAgICAgIGNhZGlhX3ZlbF9rbV81KVxuKVxuXG5jYWRpYV92ZWxfa21fZGJcbmBgYFxuYGBgXG5cbjwhLS0gcm5iLXNvdXJjZS1lbmQgLS0+XG4ifQ== --&gt;
-
-
-&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuY2FkaWFfdmVsX2ttX2RiIDwtIGRiaV9rbShcbiAgY2FkaWFfdmVsLFxuICBsaXN0KGNhZGlhX3ZlbF9rbV8yLFxuICAgICAgIGNhZGlhX3ZlbF9rbV8zLFxuICAgICAgIGNhZGlhX3ZlbF9rbV80LFxuICAgICAgIGNhZGlhX3ZlbF9rbV81KVxuKVxuXG5jYWRpYV92ZWxfa21fZGJcbmBgYFxuYGBgIn0= --&gt;
+&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZ2dzYXZlKFxuICBcImNhZGlhX2RiaV92ZWwucG5nXCIsXG4gIHBfZGJfY2FkaWFfdmVsLFxuICB3aWR0aCA9IDcsXG4gIGhlaWdodCA9IDUsXG4gIGRwaSA9IDMwMFxuKVxuYGBgIn0= --&gt;
 
 ```r
-```r
-cadia_vel_km_db &lt;- dbi_km(
-  cadia_vel,
-  list(cadia_vel_km_2,
-       cadia_vel_km_3,
-       cadia_vel_km_4,
-       cadia_vel_km_5)
+ggsave(
+  &quot;cadia_dbi_vel.png&quot;,
+  p_db_cadia_vel,
+  width = 7,
+  height = 5,
+  dpi = 300
 )
-
-cadia_vel_km_db
-```
-```
-
-&lt;!-- rnb-source-end --&gt;
-
-
-&lt;!-- rnb-output-end --&gt;
-
-&lt;!-- rnb-chunk-end --&gt;
-
-
-&lt;!-- rnb-text-begin --&gt;
-
-
-
-&lt;!-- rnb-text-end --&gt;
-
-
-&lt;!-- rnb-chunk-begin --&gt;
-
-
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZMkZrYVdGZmRtVnNYMnR0WDJSaUlEd3RJR1JpYVY5cmJTaGNiaUFnWTJGa2FXRmZkbVZzTEZ4dUlDQnNhWE4wS0dOaFpHbGhYM1psYkY5cmJWOHlMRnh1SUNBZ0lDQWdJR05oWkdsaFgzWmxiRjlyYlY4ekxGeHVJQ0FnSUNBZ0lHTmhaR2xoWDNabGJGOXJiVjgwTEZ4dUlDQWdJQ0FnSUdOaFpHbGhYM1psYkY5cmJWODFLVnh1S1Z4dVhHNWpZV1JwWVY5MlpXeGZhMjFmWkdKY2JtQmdZQ0o5IC0tPlxuXG5gYGByXG5jYWRpYV92ZWxfa21fZGIgPC0gZGJpX2ttKFxuICBjYWRpYV92ZWwsXG4gIGxpc3QoY2FkaWFfdmVsX2ttXzIsXG4gICAgICAgY2FkaWFfdmVsX2ttXzMsXG4gICAgICAgY2FkaWFfdmVsX2ttXzQsXG4gICAgICAgY2FkaWFfdmVsX2ttXzUpXG4pXG5cbmNhZGlhX3ZlbF9rbV9kYlxuYGBgXG5cbjwhLS0gcm5iLXNvdXJjZS1lbmQgLS0+XG4ifQ== --&gt;
-</code></pre>
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2FkaWFfdmVsX2ttX2RiIDwtIGRiaV9rbShcbiAgY2FkaWFfdmVsLFxuICBsaXN0KGNhZGlhX3ZlbF9rbV8yLFxuICAgICAgIGNhZGlhX3ZlbF9rbV8zLFxuICAgICAgIGNhZGlhX3ZlbF9rbV80LFxuICAgICAgIGNhZGlhX3ZlbF9rbV81KVxuKVxuXG5jYWRpYV92ZWxfa21fZGJcbmBgYCJ9 -->
-<pre class="r"><code>cadia_vel_km_db &lt;- dbi_km(
-  cadia_vel,
-  list(cadia_vel_km_2,
-       cadia_vel_km_3,
-       cadia_vel_km_4,
-       cadia_vel_km_5)
-)
-
-cadia_vel_km_db</code></pre>
-<!-- rnb-source-end -->
-<pre><code>
-
-
-&lt;!-- rnb-output-end --&gt;
-
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZR0JnY2x4dVkyRmthV0ZmZG1Wc1gydHRYMlJpSUR3dElHUmlhVjlyYlNoY2JpQWdZMkZrYVdGZmRtVnNMRnh1SUNCc2FYTjBLR05oWkdsaFgzWmxiRjlyYlY4eUxGeHVJQ0FnSUNBZ0lHTmhaR2xoWDNabGJGOXJiVjh6TEZ4dUlDQWdJQ0FnSUdOaFpHbGhYM1psYkY5cmJWODBMRnh1SUNBZ0lDQWdJR05oWkdsaFgzWmxiRjlyYlY4MUtWeHVLVnh1WEc1allXUnBZVjkyWld4ZmEyMWZaR0pjYm1CZ1lGeHVZR0JnSW4wPSAtLT5cblxuYGBgclxuYGBgclxuY2FkaWFfdmVsX2ttX2RiIDwtIGRiaV9rbShcbiAgY2FkaWFfdmVsLFxuICBsaXN0KGNhZGlhX3ZlbF9rbV8yLFxuICAgICAgIGNhZGlhX3ZlbF9rbV8zLFxuICAgICAgIGNhZGlhX3ZlbF9rbV80LFxuICAgICAgIGNhZGlhX3ZlbF9rbV81KVxuKVxuXG5jYWRpYV92ZWxfa21fZGJcbmBgYFxuYGBgXG5cbjwhLS0gcm5iLXNvdXJjZS1lbmQgLS0+XG4ifQ== --&gt;
-
-
-&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuY2FkaWFfdmVsX2ttX2RiIDwtIGRiaV9rbShcbiAgY2FkaWFfdmVsLFxuICBsaXN0KGNhZGlhX3ZlbF9rbV8yLFxuICAgICAgIGNhZGlhX3ZlbF9rbV8zLFxuICAgICAgIGNhZGlhX3ZlbF9rbV80LFxuICAgICAgIGNhZGlhX3ZlbF9rbV81KVxuKVxuXG5jYWRpYV92ZWxfa21fZGJcbmBgYFxuYGBgIn0= --&gt;
-
-```r
-```r
-cadia_vel_km_db &lt;- dbi_km(
-  cadia_vel,
-  list(cadia_vel_km_2,
-       cadia_vel_km_3,
-       cadia_vel_km_4,
-       cadia_vel_km_5)
-)
-
-cadia_vel_km_db
-```
 ```
 
 &lt;!-- rnb-source-end --&gt;
@@ -11177,41 +10968,16 @@ cadia_vel_km_db
 &lt;!-- rnb-chunk-begin --&gt;
 
 
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZMkZrYVdGZmRtVnNYMnR0WDJSaUlEd3RJR1JpYVY5cmJTaGNiaUFnWTJGa2FXRmZkbVZzTEZ4dUlDQnNhWE4wS0dOaFpHbGhYM1psYkY5cmJWOHlMRnh1SUNBZ0lDQWdJR05oWkdsaFgzWmxiRjlyYlY4ekxGeHVJQ0FnSUNBZ0lHTmhaR2xoWDNabGJGOXJiVjgwTEZ4dUlDQWdJQ0FnSUdOaFpHbGhYM1psYkY5cmJWODFLVnh1S1Z4dVhHNWpZV1JwWVY5MlpXeGZhMjFmWkdKY2JtQmdZQ0o5IC0tPlxuXG5gYGByXG5jYWRpYV92ZWxfa21fZGIgPC0gZGJpX2ttKFxuICBjYWRpYV92ZWwsXG4gIGxpc3QoY2FkaWFfdmVsX2ttXzIsXG4gICAgICAgY2FkaWFfdmVsX2ttXzMsXG4gICAgICAgY2FkaWFfdmVsX2ttXzQsXG4gICAgICAgY2FkaWFfdmVsX2ttXzUpXG4pXG5cbmNhZGlhX3ZlbF9rbV9kYlxuYGBgXG5cbjwhLS0gcm5iLXNvdXJjZS1lbmQgLS0+XG4ifQ== --&gt;
-</code></pre>
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2FkaWFfdmVsX2ttX2RiIDwtIGRiaV9rbShcbiAgY2FkaWFfdmVsLFxuICBsaXN0KGNhZGlhX3ZlbF9rbV8yLFxuICAgICAgIGNhZGlhX3ZlbF9rbV8zLFxuICAgICAgIGNhZGlhX3ZlbF9rbV80LFxuICAgICAgIGNhZGlhX3ZlbF9rbV81KVxuKVxuXG5jYWRpYV92ZWxfa21fZGJcbmBgYCJ9 -->
-<pre class="r"><code>cadia_vel_km_db &lt;- dbi_km(
-  cadia_vel,
-  list(cadia_vel_km_2,
-       cadia_vel_km_3,
-       cadia_vel_km_4,
-       cadia_vel_km_5)
-)
-
-cadia_vel_km_db</code></pre>
-<!-- rnb-source-end -->
-<pre><code>
+&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZMkZrYVdFa2RtVnNYMnR0WHpJZ1BDMGdZMkZrYVdGZmRtVnNYMnR0WHpJa1kyeDFjM1JsY2x4dVkyRmthV0VrZG1Wc1gydHRYek1nUEMwZ1kyRmthV0ZmZG1Wc1gydHRYek1rWTJ4MWMzUmxjbHh1WTJGa2FXRWtkbVZzWDJ0dFh6UWdQQzBnWTJGa2FXRmZkbVZzWDJ0dFh6UWtZMngxYzNSbGNseHVZMkZrYVdFa2RtVnNYMnR0WHpVZ1BDMGdZMkZrYVdGZmRtVnNYMnR0WHpVa1kyeDFjM1JsY2x4dVlHQmdJbjA9IC0tPlxuXG5gYGByXG5jYWRpYSR2ZWxfa21fMiA8LSBjYWRpYV92ZWxfa21fMiRjbHVzdGVyXG5jYWRpYSR2ZWxfa21fMyA8LSBjYWRpYV92ZWxfa21fMyRjbHVzdGVyXG5jYWRpYSR2ZWxfa21fNCA8LSBjYWRpYV92ZWxfa21fNCRjbHVzdGVyXG5jYWRpYSR2ZWxfa21fNSA8LSBjYWRpYV92ZWxfa21fNSRjbHVzdGVyXG5gYGBcblxuPCEtLSBybmItc291cmNlLWVuZCAtLT5cbiJ9 --&gt;
 
 
-&lt;!-- rnb-output-end --&gt;
-
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZR0JnY2x4dVkyRmthV0ZmZG1Wc1gydHRYMlJpSUR3dElHUmlhVjlyYlNoY2JpQWdZMkZrYVdGZmRtVnNMRnh1SUNCc2FYTjBLR05oWkdsaFgzWmxiRjlyYlY4eUxGeHVJQ0FnSUNBZ0lHTmhaR2xoWDNabGJGOXJiVjh6TEZ4dUlDQWdJQ0FnSUdOaFpHbGhYM1psYkY5cmJWODBMRnh1SUNBZ0lDQWdJR05oWkdsaFgzWmxiRjlyYlY4MUtWeHVLVnh1WEc1allXUnBZVjkyWld4ZmEyMWZaR0pjYm1CZ1lGeHVZR0JnSW4wPSAtLT5cblxuYGBgclxuYGBgclxuY2FkaWFfdmVsX2ttX2RiIDwtIGRiaV9rbShcbiAgY2FkaWFfdmVsLFxuICBsaXN0KGNhZGlhX3ZlbF9rbV8yLFxuICAgICAgIGNhZGlhX3ZlbF9rbV8zLFxuICAgICAgIGNhZGlhX3ZlbF9rbV80LFxuICAgICAgIGNhZGlhX3ZlbF9rbV81KVxuKVxuXG5jYWRpYV92ZWxfa21fZGJcbmBgYFxuYGBgXG5cbjwhLS0gcm5iLXNvdXJjZS1lbmQgLS0+XG4ifQ== --&gt;
-
-
-&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuY2FkaWFfdmVsX2ttX2RiIDwtIGRiaV9rbShcbiAgY2FkaWFfdmVsLFxuICBsaXN0KGNhZGlhX3ZlbF9rbV8yLFxuICAgICAgIGNhZGlhX3ZlbF9rbV8zLFxuICAgICAgIGNhZGlhX3ZlbF9rbV80LFxuICAgICAgIGNhZGlhX3ZlbF9rbV81KVxuKVxuXG5jYWRpYV92ZWxfa21fZGJcbmBgYFxuYGBgIn0= --&gt;
+&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2FkaWEkdmVsX2ttXzIgPC0gY2FkaWFfdmVsX2ttXzIkY2x1c3RlclxuY2FkaWEkdmVsX2ttXzMgPC0gY2FkaWFfdmVsX2ttXzMkY2x1c3RlclxuY2FkaWEkdmVsX2ttXzQgPC0gY2FkaWFfdmVsX2ttXzQkY2x1c3RlclxuY2FkaWEkdmVsX2ttXzUgPC0gY2FkaWFfdmVsX2ttXzUkY2x1c3RlclxuYGBgIn0= --&gt;
 
 ```r
-```r
-cadia_vel_km_db &lt;- dbi_km(
-  cadia_vel,
-  list(cadia_vel_km_2,
-       cadia_vel_km_3,
-       cadia_vel_km_4,
-       cadia_vel_km_5)
-)
-
-cadia_vel_km_db
-```
+cadia$vel_km_2 &lt;- cadia_vel_km_2$cluster
+cadia$vel_km_3 &lt;- cadia_vel_km_3$cluster
+cadia$vel_km_4 &lt;- cadia_vel_km_4$cluster
+cadia$vel_km_5 &lt;- cadia_vel_km_5$cluster
 ```
 
 &lt;!-- rnb-source-end --&gt;
@@ -11283,33 +11049,13 @@ ggsave(
 &lt;!-- rnb-chunk-begin --&gt;
 
 
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVkM0pwZEdVdVkzTjJLRnh1SUNCallXUnBZU3hjYmlBZ1hDSmpZV1JwWVY5MlpXeGZhMjB1WTNOMlhDSXNYRzRnSUhKdmR5NXVZVzFsY3lBOUlFWkJURk5GWEc0cFhHNWdZR0FpZlE9PSAtLT5cblxuYGBgclxud3JpdGUuY3N2KFxuICBjYWRpYSxcbiAgXFxjYWRpYV92ZWxfa20uY3N2XFwsXG4gIHJvdy5uYW1lcyA9IEZBTFNFXG4pXG5gYGBcblxuPCEtLSBybmItc291cmNlLWVuZCAtLT5cbiJ9 --&gt;
-</code></pre>
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxud3JpdGUuY3N2KFxuICBjYWRpYSxcbiAgXCJjYWRpYV92ZWxfa20uY3N2XCIsXG4gIHJvdy5uYW1lcyA9IEZBTFNFXG4pXG5gYGAifQ== -->
-<pre class="r"><code>write.csv(
-  cadia,
-  \cadia_vel_km.csv\,
-  row.names = FALSE
-)</code></pre>
-<!-- rnb-source-end -->
-<pre><code>
+&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZMkZrYVdGZmRtVnNYMnR0WDNSbGMzUWdQQzBnY21WaFpDNWpjM1lvWENKallXUnBZVjkyWld4ZmEyMHVZM04yWENJcFhHNWdZR0FpZlE9PSAtLT5cblxuYGBgclxuY2FkaWFfdmVsX2ttX3Rlc3QgPC0gcmVhZC5jc3YoXCJjYWRpYV92ZWxfa20uY3N2XCIpXG5gYGBcblxuPCEtLSBybmItc291cmNlLWVuZCAtLT5cbiJ9 --&gt;
 
 
-&lt;!-- rnb-output-end --&gt;
-
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZR0JnY2x4dWQzSnBkR1V1WTNOMktGeHVJQ0JqWVdScFlTeGNiaUFnWEZ4allXUnBZVjkyWld4ZmEyMHVZM04yWEZ3c1hHNGdJSEp2ZHk1dVlXMWxjeUE5SUVaQlRGTkZYRzRwWEc1Z1lHQmNibUJnWUNKOSAtLT5cblxuYGBgclxuYGBgclxud3JpdGUuY3N2KFxuICBjYWRpYSxcbiAgXFxjYWRpYV92ZWxfa20uY3N2XFwsXG4gIHJvdy5uYW1lcyA9IEZBTFNFXG4pXG5gYGBcbmBgYFxuXG48IS0tIHJuYi1zb3VyY2UtZW5kIC0tPlxuIn0= --&gt;
-
-
-&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxud3JpdGUuY3N2KFxuICBjYWRpYSxcbiAgXFxjYWRpYV92ZWxfa20uY3N2XFwsXG4gIHJvdy5uYW1lcyA9IEZBTFNFXG4pXG5gYGBcbmBgYCJ9 --&gt;
+&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2FkaWFfdmVsX2ttX3Rlc3QgPC0gcmVhZC5jc3YoXCJjYWRpYV92ZWxfa20uY3N2XCIpXG5gYGAifQ== --&gt;
 
 ```r
-```r
-write.csv(
-  cadia,
-  \cadia_vel_km.csv\,
-  row.names = FALSE
-)
-```
+cadia_vel_km_test &lt;- read.csv(&quot;cadia_vel_km.csv&quot;)
 ```
 
 &lt;!-- rnb-source-end --&gt;
@@ -11373,47 +11119,6 @@ We standardise each row&#39;s displacement values:
 &lt;!-- rnb-chunk-begin --&gt;
 
 
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZMkZrYVdGZmRtVnNYMnR0WDJSaUlEd3RJR1JpYVY5cmJTaGNiaUFnWTJGa2FXRmZkbVZzTEZ4dUlDQnNhWE4wS0dOaFpHbGhYM1psYkY5cmJWOHlMRnh1SUNBZ0lDQWdJR05oWkdsaFgzWmxiRjlyYlY4ekxGeHVJQ0FnSUNBZ0lHTmhaR2xoWDNabGJGOXJiVjgwTEZ4dUlDQWdJQ0FnSUdOaFpHbGhYM1psYkY5cmJWODFLVnh1S1Z4dVhHNWpZV1JwWVY5MlpXeGZhMjFmWkdKY2JtQmdZQ0o5IC0tPlxuXG5gYGByXG5jYWRpYV92ZWxfa21fZGIgPC0gZGJpX2ttKFxuICBjYWRpYV92ZWwsXG4gIGxpc3QoY2FkaWFfdmVsX2ttXzIsXG4gICAgICAgY2FkaWFfdmVsX2ttXzMsXG4gICAgICAgY2FkaWFfdmVsX2ttXzQsXG4gICAgICAgY2FkaWFfdmVsX2ttXzUpXG4pXG5cbmNhZGlhX3ZlbF9rbV9kYlxuYGBgXG5cbjwhLS0gcm5iLXNvdXJjZS1lbmQgLS0+XG4ifQ== --&gt;
-</code></pre>
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2FkaWFfdmVsX2ttX2RiIDwtIGRiaV9rbShcbiAgY2FkaWFfdmVsLFxuICBsaXN0KGNhZGlhX3ZlbF9rbV8yLFxuICAgICAgIGNhZGlhX3ZlbF9rbV8zLFxuICAgICAgIGNhZGlhX3ZlbF9rbV80LFxuICAgICAgIGNhZGlhX3ZlbF9rbV81KVxuKVxuXG5jYWRpYV92ZWxfa21fZGJcbmBgYCJ9 -->
-<pre class="r"><code>cadia_vel_km_db &lt;- dbi_km(
-  cadia_vel,
-  list(cadia_vel_km_2,
-       cadia_vel_km_3,
-       cadia_vel_km_4,
-       cadia_vel_km_5)
-)
-
-cadia_vel_km_db</code></pre>
-<!-- rnb-source-end -->
-<pre><code>
-
-
-&lt;!-- rnb-output-end --&gt;
-
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZR0JnY2x4dVkyRmthV0ZmZG1Wc1gydHRYMlJpSUR3dElHUmlhVjlyYlNoY2JpQWdZMkZrYVdGZmRtVnNMRnh1SUNCc2FYTjBLR05oWkdsaFgzWmxiRjlyYlY4eUxGeHVJQ0FnSUNBZ0lHTmhaR2xoWDNabGJGOXJiVjh6TEZ4dUlDQWdJQ0FnSUdOaFpHbGhYM1psYkY5cmJWODBMRnh1SUNBZ0lDQWdJR05oWkdsaFgzWmxiRjlyYlY4MUtWeHVLVnh1WEc1allXUnBZVjkyWld4ZmEyMWZaR0pjYm1CZ1lGeHVZR0JnSW4wPSAtLT5cblxuYGBgclxuYGBgclxuY2FkaWFfdmVsX2ttX2RiIDwtIGRiaV9rbShcbiAgY2FkaWFfdmVsLFxuICBsaXN0KGNhZGlhX3ZlbF9rbV8yLFxuICAgICAgIGNhZGlhX3ZlbF9rbV8zLFxuICAgICAgIGNhZGlhX3ZlbF9rbV80LFxuICAgICAgIGNhZGlhX3ZlbF9rbV81KVxuKVxuXG5jYWRpYV92ZWxfa21fZGJcbmBgYFxuYGBgXG5cbjwhLS0gcm5iLXNvdXJjZS1lbmQgLS0+XG4ifQ== --&gt;
-
-
-&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuY2FkaWFfdmVsX2ttX2RiIDwtIGRiaV9rbShcbiAgY2FkaWFfdmVsLFxuICBsaXN0KGNhZGlhX3ZlbF9rbV8yLFxuICAgICAgIGNhZGlhX3ZlbF9rbV8zLFxuICAgICAgIGNhZGlhX3ZlbF9rbV80LFxuICAgICAgIGNhZGlhX3ZlbF9rbV81KVxuKVxuXG5jYWRpYV92ZWxfa21fZGJcbmBgYFxuYGBgIn0= --&gt;
-
-```r
-```r
-cadia_vel_km_db &lt;- dbi_km(
-  cadia_vel,
-  list(cadia_vel_km_2,
-       cadia_vel_km_3,
-       cadia_vel_km_4,
-       cadia_vel_km_5)
-)
-
-cadia_vel_km_db
-```
-```
-
-&lt;!-- rnb-source-end --&gt;
-
-
-&lt;!-- rnb-output-end --&gt;
 
 &lt;!-- rnb-chunk-end --&gt;
 
@@ -11430,33 +11135,19 @@ cadia_vel_km_db
 &lt;!-- rnb-chunk-begin --&gt;
 
 
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVkM0pwZEdVdVkzTjJLRnh1SUNCallXUnBZU3hjYmlBZ1hDSmpZV1JwWVY5MlpXeGZhMjB1WTNOMlhDSXNYRzRnSUhKdmR5NXVZVzFsY3lBOUlFWkJURk5GWEc0cFhHNWdZR0FpZlE9PSAtLT5cblxuYGBgclxud3JpdGUuY3N2KFxuICBjYWRpYSxcbiAgXFxjYWRpYV92ZWxfa20uY3N2XFwsXG4gIHJvdy5uYW1lcyA9IEZBTFNFXG4pXG5gYGBcblxuPCEtLSBybmItc291cmNlLWVuZCAtLT5cbiJ9 --&gt;
-</code></pre>
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxud3JpdGUuY3N2KFxuICBjYWRpYSxcbiAgXCJjYWRpYV92ZWxfa20uY3N2XCIsXG4gIHJvdy5uYW1lcyA9IEZBTFNFXG4pXG5gYGAifQ== -->
-<pre class="r"><code>write.csv(
-  cadia,
-  \cadia_vel_km.csv\,
-  row.names = FALSE
-)</code></pre>
-<!-- rnb-source-end -->
-<pre><code>
+&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVJeUJUZEdGdVpHRnlaQ0JrWlhacFlYUnBiMjRnYjJZZ1pXRmphQ0IwYVcxbElITmxjbWxsYzF4dVkyRmthV0ZmY205M1gzTmtJRHd0SUdGd2NHeDVLR05oWkdsaFgwUXNJREVzSUhOa0tWeHVYRzRqSUZKdmQzTWdkR2hoZENCallXNGdZV04wZFdGc2JIa2dZbVVnYzNSaGJtUmhjbVJwYzJWa1hHNWpZV1JwWVY5MllXeHBaRjl5YjNkeklEd3RJR05oWkdsaFgzSnZkMTl6WkNBaFBTQXdYRzVjYm5OMWJTZ2hZMkZrYVdGZmRtRnNhV1JmY205M2N5bGNibUJnWUNKOSAtLT5cblxuYGBgclxuIyBTdGFuZGFyZCBkZXZpYXRpb24gb2YgZWFjaCB0aW1lIHNlcmllc1xuY2FkaWFfcm93X3NkIDwtIGFwcGx5KGNhZGlhX0QsIDEsIHNkKVxuXG4jIFJvd3MgdGhhdCBjYW4gYWN0dWFsbHkgYmUgc3RhbmRhcmRpc2VkXG5jYWRpYV92YWxpZF9yb3dzIDwtIGNhZGlhX3Jvd19zZCAhPSAwXG5cbnN1bSghY2FkaWFfdmFsaWRfcm93cylcbmBgYFxuXG48IS0tIHJuYi1zb3VyY2UtZW5kIC0tPlxuIn0= --&gt;
 
 
-&lt;!-- rnb-output-end --&gt;
-
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZR0JnY2x4dWQzSnBkR1V1WTNOMktGeHVJQ0JqWVdScFlTeGNiaUFnWEZ4allXUnBZVjkyWld4ZmEyMHVZM04yWEZ3c1hHNGdJSEp2ZHk1dVlXMWxjeUE5SUVaQlRGTkZYRzRwWEc1Z1lHQmNibUJnWUNKOSAtLT5cblxuYGBgclxuYGBgclxud3JpdGUuY3N2KFxuICBjYWRpYSxcbiAgXFxjYWRpYV92ZWxfa20uY3N2XFwsXG4gIHJvdy5uYW1lcyA9IEZBTFNFXG4pXG5gYGBcbmBgYFxuXG48IS0tIHJuYi1zb3VyY2UtZW5kIC0tPlxuIn0= --&gt;
-
-
-&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxud3JpdGUuY3N2KFxuICBjYWRpYSxcbiAgXFxjYWRpYV92ZWxfa20uY3N2XFwsXG4gIHJvdy5uYW1lcyA9IEZBTFNFXG4pXG5gYGBcbmBgYCJ9 --&gt;
+&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBTdGFuZGFyZCBkZXZpYXRpb24gb2YgZWFjaCB0aW1lIHNlcmllc1xuY2FkaWFfcm93X3NkIDwtIGFwcGx5KGNhZGlhX0QsIDEsIHNkKVxuXG4jIFJvd3MgdGhhdCBjYW4gYWN0dWFsbHkgYmUgc3RhbmRhcmRpc2VkXG5jYWRpYV92YWxpZF9yb3dzIDwtIGNhZGlhX3Jvd19zZCAhPSAwXG5cbnN1bSghY2FkaWFfdmFsaWRfcm93cylcbmBgYCJ9 --&gt;
 
 ```r
-```r
-write.csv(
-  cadia,
-  \cadia_vel_km.csv\,
-  row.names = FALSE
-)
-```
+# Standard deviation of each time series
+cadia_row_sd &lt;- apply(cadia_D, 1, sd)
+
+# Rows that can actually be standardised
+cadia_valid_rows &lt;- cadia_row_sd != 0
+
+sum(!cadia_valid_rows)
 ```
 
 &lt;!-- rnb-source-end --&gt;
@@ -11517,33 +11208,42 @@ anyNA(cadia_std)
 &lt;!-- rnb-chunk-begin --&gt;
 
 
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVkM0pwZEdVdVkzTjJLRnh1SUNCallXUnBZU3hjYmlBZ1hDSmpZV1JwWVY5MlpXeGZhMjB1WTNOMlhDSXNYRzRnSUhKdmR5NXVZVzFsY3lBOUlFWkJURk5GWEc0cFhHNWdZR0FpZlE9PSAtLT5cblxuYGBgclxud3JpdGUuY3N2KFxuICBjYWRpYSxcbiAgXFxjYWRpYV92ZWxfa20uY3N2XFwsXG4gIHJvdy5uYW1lcyA9IEZBTFNFXG4pXG5gYGBcblxuPCEtLSBybmItc291cmNlLWVuZCAtLT5cbiJ9 --&gt;
-</code></pre>
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxud3JpdGUuY3N2KFxuICBjYWRpYSxcbiAgXCJjYWRpYV92ZWxfa20uY3N2XCIsXG4gIHJvdy5uYW1lcyA9IEZBTFNFXG4pXG5gYGAifQ== -->
-<pre class="r"><code>write.csv(
-  cadia,
-  \cadia_vel_km.csv\,
-  row.names = FALSE
-)</code></pre>
-<!-- rnb-source-end -->
-<pre><code>
+&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVJeUJrYVhOMElHMWhkSEpwZUZ4dVkyRmthV0ZmYzNSa1gyUnBjM1FnUEMwZ1pHbHpkQ2hjYmlBZ1kyRmthV0ZmYzNSa0xGeHVJQ0J0WlhSb2IyUWdQU0JjSW1WMVkyeHBaR1ZoYmx3aVhHNHBYRzVjYmlNZ1YyRnlaQ0JJUTF4dVkyRmthV0ZmYzNSa1gyaGpJRHd0SUdoamJIVnpkQ2hjYmlBZ1kyRmthV0ZmYzNSa1gyUnBjM1FzWEc0Z0lHMWxkR2h2WkNBOUlGd2lkMkZ5WkM1RU1sd2lYRzRwWEc1Y2JuQnVaeWhjYmlBZ1hDSmpZV1JwWVY5emRHUmZaR1Z1WkhKdlozSmhiUzV3Ym1kY0lpeGNiaUFnZDJsa2RHZ2dQU0F5TkRBd0xGeHVJQ0JvWldsbmFIUWdQU0F4T0RBd0xGeHVJQ0J5WlhNZ1BTQXpNREJjYmlsY2JseHVJeUJFWlc1a2NtOW5jbUZ0WEc1d2JHOTBLRnh1SUNCallXUnBZVjl6ZEdSZmFHTXNYRzRnSUd4aFltVnNjeUE5SUVaQlRGTkZMRnh1SUNCdFlXbHVJRDBnWENKRFlXUnBZVG9nVTNSaGJtUmhjbVJwYzJWa0lGSmhkeUJFWVhSaFhDSXNYRzRnSUhoc1lXSWdQU0JjSWx3aUxGeHVJQ0J6ZFdJZ1BTQmNJbHdpTEZ4dUlDQjViR0ZpSUQwZ1hDSklaV2xuYUhSY0lseHVLVnh1WEc1a1pYWXViMlptS0NsY2JtQmdZQ0o5IC0tPlxuXG5gYGByXG4jIGRpc3QgbWF0cml4XG5jYWRpYV9zdGRfZGlzdCA8LSBkaXN0KFxuICBjYWRpYV9zdGQsXG4gIG1ldGhvZCA9IFwiZXVjbGlkZWFuXCJcbilcblxuIyBXYXJkIEhDXG5jYWRpYV9zdGRfaGMgPC0gaGNsdXN0KFxuICBjYWRpYV9zdGRfZGlzdCxcbiAgbWV0aG9kID0gXCJ3YXJkLkQyXCJcbilcblxucG5nKFxuICBcImNhZGlhX3N0ZF9kZW5kcm9ncmFtLnBuZ1wiLFxuICB3aWR0aCA9IDI0MDAsXG4gIGhlaWdodCA9IDE4MDAsXG4gIHJlcyA9IDMwMFxuKVxuXG4jIERlbmRyb2dyYW1cbnBsb3QoXG4gIGNhZGlhX3N0ZF9oYyxcbiAgbGFiZWxzID0gRkFMU0UsXG4gIG1haW4gPSBcIkNhZGlhOiBTdGFuZGFyZGlzZWQgUmF3IERhdGFcIixcbiAgeGxhYiA9IFwiXCIsXG4gIHN1YiA9IFwiXCIsXG4gIHlsYWIgPSBcIkhlaWdodFwiXG4pXG5cbmRldi5vZmYoKVxuYGBgXG5cbjwhLS0gcm5iLXNvdXJjZS1lbmQgLS0+XG4ifQ== --&gt;
 
 
-&lt;!-- rnb-output-end --&gt;
-
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZR0JnY2x4dWQzSnBkR1V1WTNOMktGeHVJQ0JqWVdScFlTeGNiaUFnWEZ4allXUnBZVjkyWld4ZmEyMHVZM04yWEZ3c1hHNGdJSEp2ZHk1dVlXMWxjeUE5SUVaQlRGTkZYRzRwWEc1Z1lHQmNibUJnWUNKOSAtLT5cblxuYGBgclxuYGBgclxud3JpdGUuY3N2KFxuICBjYWRpYSxcbiAgXFxjYWRpYV92ZWxfa20uY3N2XFwsXG4gIHJvdy5uYW1lcyA9IEZBTFNFXG4pXG5gYGBcbmBgYFxuXG48IS0tIHJuYi1zb3VyY2UtZW5kIC0tPlxuIn0= --&gt;
-
-
-&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxud3JpdGUuY3N2KFxuICBjYWRpYSxcbiAgXFxjYWRpYV92ZWxfa20uY3N2XFwsXG4gIHJvdy5uYW1lcyA9IEZBTFNFXG4pXG5gYGBcbmBgYCJ9 --&gt;
+&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBkaXN0IG1hdHJpeFxuY2FkaWFfc3RkX2Rpc3QgPC0gZGlzdChcbiAgY2FkaWFfc3RkLFxuICBtZXRob2QgPSBcImV1Y2xpZGVhblwiXG4pXG5cbiMgV2FyZCBIQ1xuY2FkaWFfc3RkX2hjIDwtIGhjbHVzdChcbiAgY2FkaWFfc3RkX2Rpc3QsXG4gIG1ldGhvZCA9IFwid2FyZC5EMlwiXG4pXG5cbnBuZyhcbiAgXCJjYWRpYV9zdGRfZGVuZHJvZ3JhbS5wbmdcIixcbiAgd2lkdGggPSAyNDAwLFxuICBoZWlnaHQgPSAxODAwLFxuICByZXMgPSAzMDBcbilcblxuIyBEZW5kcm9ncmFtXG5wbG90KFxuICBjYWRpYV9zdGRfaGMsXG4gIGxhYmVscyA9IEZBTFNFLFxuICBtYWluID0gXCJDYWRpYTogU3RhbmRhcmRpc2VkIFJhdyBEYXRhXCIsXG4gIHhsYWIgPSBcIlwiLFxuICBzdWIgPSBcIlwiLFxuICB5bGFiID0gXCJIZWlnaHRcIlxuKVxuXG5kZXYub2ZmKClcbmBgYCJ9 --&gt;
 
 ```r
-```r
-write.csv(
-  cadia,
-  \cadia_vel_km.csv\,
-  row.names = FALSE
+# dist matrix
+cadia_std_dist &lt;- dist(
+  cadia_std,
+  method = &quot;euclidean&quot;
 )
-```
+
+# Ward HC
+cadia_std_hc &lt;- hclust(
+  cadia_std_dist,
+  method = &quot;ward.D2&quot;
+)
+
+png(
+  &quot;cadia_std_dendrogram.png&quot;,
+  width = 2400,
+  height = 1800,
+  res = 300
+)
+
+# Dendrogram
+plot(
+  cadia_std_hc,
+  labels = FALSE,
+  main = &quot;Cadia: Standardised Raw Data&quot;,
+  xlab = &quot;&quot;,
+  sub = &quot;&quot;,
+  ylab = &quot;Height&quot;
+)
+
+dev.off()
 ```
 
 &lt;!-- rnb-source-end --&gt;
@@ -11566,33 +11266,18 @@ write.csv(
 &lt;!-- rnb-chunk-begin --&gt;
 
 
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVkM0pwZEdVdVkzTjJLRnh1SUNCallXUnBZU3hjYmlBZ1hDSmpZV1JwWVY5MlpXeGZhMjB1WTNOMlhDSXNYRzRnSUhKdmR5NXVZVzFsY3lBOUlFWkJURk5GWEc0cFhHNWdZR0FpZlE9PSAtLT5cblxuYGBgclxud3JpdGUuY3N2KFxuICBjYWRpYSxcbiAgXFxjYWRpYV92ZWxfa20uY3N2XFwsXG4gIHJvdy5uYW1lcyA9IEZBTFNFXG4pXG5gYGBcblxuPCEtLSBybmItc291cmNlLWVuZCAtLT5cbiJ9 --&gt;
-</code></pre>
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxud3JpdGUuY3N2KFxuICBjYWRpYSxcbiAgXCJjYWRpYV92ZWxfa20uY3N2XCIsXG4gIHJvdy5uYW1lcyA9IEZBTFNFXG4pXG5gYGAifQ== -->
-<pre class="r"><code>write.csv(
-  cadia,
-  \cadia_vel_km.csv\,
-  row.names = FALSE
-)</code></pre>
-<!-- rnb-source-end -->
-<pre><code>
+&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZMkZrYVdGZmMzUmtYMmhqWDNOcGJDQThMU0JoZG1kZmMybHNYM05qYjNKbEtGeHVJQ0JqWVdScFlWOXpkR1JmYUdNc1hHNGdJR05oWkdsaFgzTjBaRjlrYVhOMFhHNHBYRzVjYm1OaFpHbGhYM04wWkY5b1kxOXphV3hjYm1CZ1lDSjkgLS0+XG5cbmBgYHJcbmNhZGlhX3N0ZF9oY19zaWwgPC0gYXZnX3NpbF9zY29yZShcbiAgY2FkaWFfc3RkX2hjLFxuICBjYWRpYV9zdGRfZGlzdFxuKVxuXG5jYWRpYV9zdGRfaGNfc2lsXG5gYGBcblxuPCEtLSBybmItc291cmNlLWVuZCAtLT5cbiJ9 --&gt;
 
 
-&lt;!-- rnb-output-end --&gt;
-
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZR0JnY2x4dWQzSnBkR1V1WTNOMktGeHVJQ0JqWVdScFlTeGNiaUFnWEZ4allXUnBZVjkyWld4ZmEyMHVZM04yWEZ3c1hHNGdJSEp2ZHk1dVlXMWxjeUE5SUVaQlRGTkZYRzRwWEc1Z1lHQmNibUJnWUNKOSAtLT5cblxuYGBgclxuYGBgclxud3JpdGUuY3N2KFxuICBjYWRpYSxcbiAgXFxjYWRpYV92ZWxfa20uY3N2XFwsXG4gIHJvdy5uYW1lcyA9IEZBTFNFXG4pXG5gYGBcbmBgYFxuXG48IS0tIHJuYi1zb3VyY2UtZW5kIC0tPlxuIn0= --&gt;
-
-
-&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxud3JpdGUuY3N2KFxuICBjYWRpYSxcbiAgXFxjYWRpYV92ZWxfa20uY3N2XFwsXG4gIHJvdy5uYW1lcyA9IEZBTFNFXG4pXG5gYGBcbmBgYCJ9 --&gt;
+&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2FkaWFfc3RkX2hjX3NpbCA8LSBhdmdfc2lsX3Njb3JlKFxuICBjYWRpYV9zdGRfaGMsXG4gIGNhZGlhX3N0ZF9kaXN0XG4pXG5cbmNhZGlhX3N0ZF9oY19zaWxcbmBgYCJ9 --&gt;
 
 ```r
-```r
-write.csv(
-  cadia,
-  \cadia_vel_km.csv\,
-  row.names = FALSE
+cadia_std_hc_sil &lt;- avg_sil_score(
+  cadia_std_hc,
+  cadia_std_dist
 )
-```
+
+cadia_std_hc_sil
 ```
 
 &lt;!-- rnb-source-end --&gt;
@@ -11615,39 +11300,6 @@ write.csv(
 &lt;!-- rnb-chunk-begin --&gt;
 
 
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVkM0pwZEdVdVkzTjJLRnh1SUNCallXUnBZU3hjYmlBZ1hDSmpZV1JwWVY5MlpXeGZhMjB1WTNOMlhDSXNYRzRnSUhKdmR5NXVZVzFsY3lBOUlFWkJURk5GWEc0cFhHNWdZR0FpZlE9PSAtLT5cblxuYGBgclxud3JpdGUuY3N2KFxuICBjYWRpYSxcbiAgXFxjYWRpYV92ZWxfa20uY3N2XFwsXG4gIHJvdy5uYW1lcyA9IEZBTFNFXG4pXG5gYGBcblxuPCEtLSBybmItc291cmNlLWVuZCAtLT5cbiJ9 --&gt;
-</code></pre>
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxud3JpdGUuY3N2KFxuICBjYWRpYSxcbiAgXCJjYWRpYV92ZWxfa20uY3N2XCIsXG4gIHJvdy5uYW1lcyA9IEZBTFNFXG4pXG5gYGAifQ== -->
-<pre class="r"><code>write.csv(
-  cadia,
-  \cadia_vel_km.csv\,
-  row.names = FALSE
-)</code></pre>
-<!-- rnb-source-end -->
-<pre><code>
-
-
-&lt;!-- rnb-output-end --&gt;
-
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZR0JnY2x4dWQzSnBkR1V1WTNOMktGeHVJQ0JqWVdScFlTeGNiaUFnWEZ4allXUnBZVjkyWld4ZmEyMHVZM04yWEZ3c1hHNGdJSEp2ZHk1dVlXMWxjeUE5SUVaQlRGTkZYRzRwWEc1Z1lHQmNibUJnWUNKOSAtLT5cblxuYGBgclxuYGBgclxud3JpdGUuY3N2KFxuICBjYWRpYSxcbiAgXFxjYWRpYV92ZWxfa20uY3N2XFwsXG4gIHJvdy5uYW1lcyA9IEZBTFNFXG4pXG5gYGBcbmBgYFxuXG48IS0tIHJuYi1zb3VyY2UtZW5kIC0tPlxuIn0= --&gt;
-
-
-&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxud3JpdGUuY3N2KFxuICBjYWRpYSxcbiAgXFxjYWRpYV92ZWxfa20uY3N2XFwsXG4gIHJvdy5uYW1lcyA9IEZBTFNFXG4pXG5gYGBcbmBgYCJ9 --&gt;
-
-```r
-```r
-write.csv(
-  cadia,
-  \cadia_vel_km.csv\,
-  row.names = FALSE
-)
-```
-```
-
-&lt;!-- rnb-source-end --&gt;
-
-
-&lt;!-- rnb-output-end --&gt;
 
 &lt;!-- rnb-chunk-end --&gt;
 
@@ -11677,18 +11329,11 @@ cadia$std_hc_3[cadia_valid_rows] &lt;- cadia_std_hc_3
 cadia$std_hc_4[cadia_valid_rows] &lt;- cadia_std_hc_4
 cadia$std_hc_5[cadia_valid_rows] &lt;- cadia_std_hc_5</code></pre>
 <!-- rnb-source-end -->
-<pre><code>
-
-
-&lt;!-- rnb-output-end --&gt;
-
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZR0JnY2x4dUl5QkRjbVZoZEdVZ1pXMXdkSGtnWTI5c2RXMXVjeUJtYjNJZ1lXeHNJREV5TERVd01pQnZjbWxuYVc1aGJDQndiMmx1ZEhOY2JtTmhaR2xoSkhOMFpGOW9ZMTh5SUR3dElFNUJYMmx1ZEdWblpYSmZYRzVqWVdScFlTUnpkR1JmYUdOZk15QThMU0JPUVY5cGJuUmxaMlZ5WDF4dVkyRmthV0VrYzNSa1gyaGpYelFnUEMwZ1RrRmZhVzUwWldkbGNsOWNibU5oWkdsaEpITjBaRjlvWTE4MUlEd3RJRTVCWDJsdWRHVm5aWEpmWEc1Y2JpTWdSbWxzYkNCdFpXMWlaWEp6YUdsd2N5QnZibXg1SUdadmNpQjBhR1VnTVRJc05UQXhJSEp2ZDNNZ2RHaGhkQ0IzWlhKbElITjBZVzVrWVhKa2FYTmxaRnh1WTJGa2FXRWtjM1JrWDJoalh6SmJZMkZrYVdGZmRtRnNhV1JmY205M2MxMGdQQzBnWTJGa2FXRmZjM1JrWDJoalh6SmNibU5oWkdsaEpITjBaRjlvWTE4elcyTmhaR2xoWDNaaGJHbGtYM0p2ZDNOZElEd3RJR05oWkdsaFgzTjBaRjlvWTE4elhHNWpZV1JwWVNSemRHUmZhR05mTkZ0allXUnBZVjkyWVd4cFpGOXliM2R6WFNBOExTQmpZV1JwWVY5emRHUmZhR05mTkZ4dVkyRmthV0VrYzNSa1gyaGpYelZiWTJGa2FXRmZkbUZzYVdSZmNtOTNjMTBnUEMwZ1kyRmthV0ZmYzNSa1gyaGpYelZjYm1CZ1lGeHVZR0JnSW4wPSAtLT5cblxuYGBgclxuYGBgclxuIyBDcmVhdGUgZW1wdHkgY29sdW1ucyBmb3IgYWxsIDEyLDUwMiBvcmlnaW5hbCBwb2ludHNcbmNhZGlhJHN0ZF9oY18yIDwtIE5BX2ludGVnZXJfXG5jYWRpYSRzdGRfaGNfMyA8LSBOQV9pbnRlZ2VyX1xuY2FkaWEkc3RkX2hjXzQgPC0gTkFfaW50ZWdlcl9cbmNhZGlhJHN0ZF9oY181IDwtIE5BX2ludGVnZXJfXG5cbiMgRmlsbCBtZW1iZXJzaGlwcyBvbmx5IGZvciB0aGUgMTIsNTAxIHJvd3MgdGhhdCB3ZXJlIHN0YW5kYXJkaXNlZFxuY2FkaWEkc3RkX2hjXzJbY2FkaWFfdmFsaWRfcm93c10gPC0gY2FkaWFfc3RkX2hjXzJcbmNhZGlhJHN0ZF9oY18zW2NhZGlhX3ZhbGlkX3Jvd3NdIDwtIGNhZGlhX3N0ZF9oY18zXG5jYWRpYSRzdGRfaGNfNFtjYWRpYV92YWxpZF9yb3dzXSA8LSBjYWRpYV9zdGRfaGNfNFxuY2FkaWEkc3RkX2hjXzVbY2FkaWFfdmFsaWRfcm93c10gPC0gY2FkaWFfc3RkX2hjXzVcbmBgYFxuYGBgXG5cbjwhLS0gcm5iLXNvdXJjZS1lbmQgLS0+XG4ifQ== --&gt;
-
-
-&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuIyBDcmVhdGUgZW1wdHkgY29sdW1ucyBmb3IgYWxsIDEyLDUwMiBvcmlnaW5hbCBwb2ludHNcbmNhZGlhJHN0ZF9oY18yIDwtIE5BX2ludGVnZXJfXG5jYWRpYSRzdGRfaGNfMyA8LSBOQV9pbnRlZ2VyX1xuY2FkaWEkc3RkX2hjXzQgPC0gTkFfaW50ZWdlcl9cbmNhZGlhJHN0ZF9oY181IDwtIE5BX2ludGVnZXJfXG5cbiMgRmlsbCBtZW1iZXJzaGlwcyBvbmx5IGZvciB0aGUgMTIsNTAxIHJvd3MgdGhhdCB3ZXJlIHN0YW5kYXJkaXNlZFxuY2FkaWEkc3RkX2hjXzJbY2FkaWFfdmFsaWRfcm93c10gPC0gY2FkaWFfc3RkX2hjXzJcbmNhZGlhJHN0ZF9oY18zW2NhZGlhX3ZhbGlkX3Jvd3NdIDwtIGNhZGlhX3N0ZF9oY18zXG5jYWRpYSRzdGRfaGNfNFtjYWRpYV92YWxpZF9yb3dzXSA8LSBjYWRpYV9zdGRfaGNfNFxuY2FkaWEkc3RkX2hjXzVbY2FkaWFfdmFsaWRfcm93c10gPC0gY2FkaWFfc3RkX2hjXzVcbmBgYFxuYGBgIn0= --&gt;
-
-```r
-```r
+<p>````</p>
+<!-- rnb-output-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZR0JnY2x4dUl5QkRjbVZoZEdVZ1pXMXdkSGtnWTI5c2RXMXVjeUJtYjNJZ1lXeHNJREV5TERVd01pQnZjbWxuYVc1aGJDQndiMmx1ZEhOY2JtTmhaR2xoSkhOMFpGOW9ZMTh5SUR3dElFNUJYMmx1ZEdWblpYSmZYRzVqWVdScFlTUnpkR1JmYUdOZk15QThMU0JPUVY5cGJuUmxaMlZ5WDF4dVkyRmthV0VrYzNSa1gyaGpYelFnUEMwZ1RrRmZhVzUwWldkbGNsOWNibU5oWkdsaEpITjBaRjlvWTE4MUlEd3RJRTVCWDJsdWRHVm5aWEpmWEc1Y2JpTWdSbWxzYkNCdFpXMWlaWEp6YUdsd2N5QnZibXg1SUdadmNpQjBhR1VnTVRJc05UQXhJSEp2ZDNNZ2RHaGhkQ0IzWlhKbElITjBZVzVrWVhKa2FYTmxaRnh1WTJGa2FXRWtjM1JrWDJoalh6SmJZMkZrYVdGZmRtRnNhV1JmY205M2MxMGdQQzBnWTJGa2FXRmZjM1JrWDJoalh6SmNibU5oWkdsaEpITjBaRjlvWTE4elcyTmhaR2xoWDNaaGJHbGtYM0p2ZDNOZElEd3RJR05oWkdsaFgzTjBaRjlvWTE4elhHNWpZV1JwWVNSemRHUmZhR05mTkZ0allXUnBZVjkyWVd4cFpGOXliM2R6WFNBOExTQmpZV1JwWVY5emRHUmZhR05mTkZ4dVkyRmthV0VrYzNSa1gyaGpYelZiWTJGa2FXRmZkbUZzYVdSZmNtOTNjMTBnUEMwZ1kyRmthV0ZmYzNSa1gyaGpYelZjYm1CZ1lGeHVZR0JnSW4wPSAtLT5cblxuYGBgclxuYGBgclxuIyBDcmVhdGUgZW1wdHkgY29sdW1ucyBmb3IgYWxsIDEyLDUwMiBvcmlnaW5hbCBwb2ludHNcbmNhZGlhJHN0ZF9oY18yIDwtIE5BX2ludGVnZXJfXG5jYWRpYSRzdGRfaGNfMyA8LSBOQV9pbnRlZ2VyX1xuY2FkaWEkc3RkX2hjXzQgPC0gTkFfaW50ZWdlcl9cbmNhZGlhJHN0ZF9oY181IDwtIE5BX2ludGVnZXJfXG5cbiMgRmlsbCBtZW1iZXJzaGlwcyBvbmx5IGZvciB0aGUgMTIsNTAxIHJvd3MgdGhhdCB3ZXJlIHN0YW5kYXJkaXNlZFxuY2FkaWEkc3RkX2hjXzJbY2FkaWFfdmFsaWRfcm93c10gPC0gY2FkaWFfc3RkX2hjXzJcbmNhZGlhJHN0ZF9oY18zW2NhZGlhX3ZhbGlkX3Jvd3NdIDwtIGNhZGlhX3N0ZF9oY18zXG5jYWRpYSRzdGRfaGNfNFtjYWRpYV92YWxpZF9yb3dzXSA8LSBjYWRpYV9zdGRfaGNfNFxuY2FkaWEkc3RkX2hjXzVbY2FkaWFfdmFsaWRfcm93c10gPC0gY2FkaWFfc3RkX2hjXzVcbmBgYFxuYGBgXG5cbjwhLS0gcm5iLXNvdXJjZS1lbmQgLS0+XG4ifQ== -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuIyBDcmVhdGUgZW1wdHkgY29sdW1ucyBmb3IgYWxsIDEyLDUwMiBvcmlnaW5hbCBwb2ludHNcbmNhZGlhJHN0ZF9oY18yIDwtIE5BX2ludGVnZXJfXG5jYWRpYSRzdGRfaGNfMyA8LSBOQV9pbnRlZ2VyX1xuY2FkaWEkc3RkX2hjXzQgPC0gTkFfaW50ZWdlcl9cbmNhZGlhJHN0ZF9oY181IDwtIE5BX2ludGVnZXJfXG5cbiMgRmlsbCBtZW1iZXJzaGlwcyBvbmx5IGZvciB0aGUgMTIsNTAxIHJvd3MgdGhhdCB3ZXJlIHN0YW5kYXJkaXNlZFxuY2FkaWEkc3RkX2hjXzJbY2FkaWFfdmFsaWRfcm93c10gPC0gY2FkaWFfc3RkX2hjXzJcbmNhZGlhJHN0ZF9oY18zW2NhZGlhX3ZhbGlkX3Jvd3NdIDwtIGNhZGlhX3N0ZF9oY18zXG5jYWRpYSRzdGRfaGNfNFtjYWRpYV92YWxpZF9yb3dzXSA8LSBjYWRpYV9zdGRfaGNfNFxuY2FkaWEkc3RkX2hjXzVbY2FkaWFfdmFsaWRfcm93c10gPC0gY2FkaWFfc3RkX2hjXzVcbmBgYFxuYGBgIn0= -->
+<pre class="r"><code>```r
 # Create empty columns for all 12,502 original points
 cadia$std_hc_2 &lt;- NA_integer_
 cadia$std_hc_3 &lt;- NA_integer_
@@ -11699,10 +11344,8 @@ cadia$std_hc_5 &lt;- NA_integer_
 cadia$std_hc_2[cadia_valid_rows] &lt;- cadia_std_hc_2
 cadia$std_hc_3[cadia_valid_rows] &lt;- cadia_std_hc_3
 cadia$std_hc_4[cadia_valid_rows] &lt;- cadia_std_hc_4
-cadia$std_hc_5[cadia_valid_rows] &lt;- cadia_std_hc_5
-```
-```
-
+cadia$std_hc_5[cadia_valid_rows] &lt;- cadia_std_hc_5</code></pre>
+<pre><code>
 &lt;!-- rnb-source-end --&gt;
 
 
@@ -11721,204 +11364,59 @@ cadia$std_hc_5[cadia_valid_rows] &lt;- cadia_std_hc_5
 &lt;!-- rnb-chunk-begin --&gt;
 
 
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZMkZrYVdGYk56UXlOQ3dnWXloY2JpQWdYQ0p6ZEdSZmFHTmZNbHdpTEZ4dUlDQmNJbk4wWkY5b1kxOHpYQ0lzWEc0Z0lGd2ljM1JrWDJoalh6UmNJaXhjYmlBZ1hDSnpkR1JmYUdOZk5Wd2lYRzRwWFZ4dVlHQmdJbjA9IC0tPlxuXG5gYGByXG5jYWRpYVs3NDI0LCBjKFxuICBcXHN0ZF9oY18yXFwsXG4gIFxcc3RkX2hjXzNcXCxcbiAgXFxzdGRfaGNfNFxcLFxuICBcXHN0ZF9oY181XFxcbildXG5gYGBcblxuPCEtLSBybmItc291cmNlLWVuZCAtLT5cbiJ9 --&gt;
-</code></pre>
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2FkaWFbNzQyNCwgYyhcbiAgXCJzdGRfaGNfMlwiLFxuICBcInN0ZF9oY18zXCIsXG4gIFwic3RkX2hjXzRcIixcbiAgXCJzdGRfaGNfNVwiXG4pXVxuYGBgIn0= -->
-<pre class="r"><code>cadia[7424, c(
-  \std_hc_2\,
-  \std_hc_3\,
-  \std_hc_4\,
-  \std_hc_5\
-)]</code></pre>
-<!-- rnb-source-end -->
-<pre><code>
+&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZMkZrYVdGYk56UXlOQ3dnWXloY2JpQWdYQ0p6ZEdSZmFHTmZNbHdpTEZ4dUlDQmNJbk4wWkY5b1kxOHpYQ0lzWEc0Z0lGd2ljM1JrWDJoalh6UmNJaXhjYmlBZ1hDSnpkR1JmYUdOZk5Wd2lYRzRwWFZ4dVlHQmdJbjA9IC0tPlxuXG5gYGByXG5jYWRpYVs3NDI0LCBjKFxuICBcInN0ZF9oY18yXCIsXG4gIFwic3RkX2hjXzNcIixcbiAgXCJzdGRfaGNfNFwiLFxuICBcInN0ZF9oY181XCJcbildXG5gYGBcblxuPCEtLSBybmItc291cmNlLWVuZCAtLT5cbiJ9 --&gt;
 
 
-&lt;!-- rnb-output-end --&gt;
+&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2FkaWFbNzQyNCwgYyhcbiAgXCJzdGRfaGNfMlwiLFxuICBcInN0ZF9oY18zXCIsXG4gIFwic3RkX2hjXzRcIixcbiAgXCJzdGRfaGNfNVwiXG4pXVxuYGBgIn0= --&gt;
 
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZR0JnY2x4dVkyRmthV0ZiTnpReU5Dd2dZeWhjYmlBZ1hGeHpkR1JmYUdOZk1seGNMRnh1SUNCY1hITjBaRjlvWTE4elhGd3NYRzRnSUZ4Y2MzUmtYMmhqWHpSY1hDeGNiaUFnWEZ4emRHUmZhR05mTlZ4Y1hHNHBYVnh1WUdCZ1hHNWdZR0FpZlE9PSAtLT5cblxuYGBgclxuYGBgclxuY2FkaWFbNzQyNCwgYyhcbiAgXFxzdGRfaGNfMlxcLFxuICBcXHN0ZF9oY18zXFwsXG4gIFxcc3RkX2hjXzRcXCxcbiAgXFxzdGRfaGNfNVxcXG4pXVxuYGBgXG5gYGBcblxuPCEtLSBybmItc291cmNlLWVuZCAtLT5cbiJ9 --&gt;
-
-
-&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuY2FkaWFbNzQyNCwgYyhcbiAgXFxzdGRfaGNfMlxcLFxuICBcXHN0ZF9oY18zXFwsXG4gIFxcc3RkX2hjXzRcXCxcbiAgXFxzdGRfaGNfNVxcXG4pXVxuYGBgXG5gYGAifQ== --&gt;
-
-```r
 ```r
 cadia[7424, c(
-  \std_hc_2\,
-  \std_hc_3\,
-  \std_hc_4\,
-  \std_hc_5\
-)]
-```
-```
-
-&lt;!-- rnb-source-end --&gt;
-
-
-&lt;!-- rnb-output-end --&gt;
-
-&lt;!-- rnb-chunk-end --&gt;
-
-
-&lt;!-- rnb-text-begin --&gt;
-
-
-
-&lt;!-- rnb-text-end --&gt;
-
-
-&lt;!-- rnb-chunk-begin --&gt;
-
-
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZMkZrYVdGYk56UXlOQ3dnWXloY2JpQWdYQ0p6ZEdSZmFHTmZNbHdpTEZ4dUlDQmNJbk4wWkY5b1kxOHpYQ0lzWEc0Z0lGd2ljM1JrWDJoalh6UmNJaXhjYmlBZ1hDSnpkR1JmYUdOZk5Wd2lYRzRwWFZ4dVlHQmdJbjA9IC0tPlxuXG5gYGByXG5jYWRpYVs3NDI0LCBjKFxuICBcXHN0ZF9oY18yXFwsXG4gIFxcc3RkX2hjXzNcXCxcbiAgXFxzdGRfaGNfNFxcLFxuICBcXHN0ZF9oY181XFxcbildXG5gYGBcblxuPCEtLSBybmItc291cmNlLWVuZCAtLT5cbiJ9 --&gt;
-</code></pre>
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2FkaWFbNzQyNCwgYyhcbiAgXCJzdGRfaGNfMlwiLFxuICBcInN0ZF9oY18zXCIsXG4gIFwic3RkX2hjXzRcIixcbiAgXCJzdGRfaGNfNVwiXG4pXVxuYGBgIn0= -->
-<pre class="r"><code>cadia[7424, c(
-  \std_hc_2\,
-  \std_hc_3\,
-  \std_hc_4\,
-  \std_hc_5\
+  &quot;std_hc_2&quot;,
+  &quot;std_hc_3&quot;,
+  &quot;std_hc_4&quot;,
+  &quot;std_hc_5&quot;
 )]</code></pre>
 <!-- rnb-source-end -->
-<pre><code>
-
-
-&lt;!-- rnb-output-end --&gt;
-
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZR0JnY2x4dVkyRmthV0ZiTnpReU5Dd2dZeWhjYmlBZ1hGeHpkR1JmYUdOZk1seGNMRnh1SUNCY1hITjBaRjlvWTE4elhGd3NYRzRnSUZ4Y2MzUmtYMmhqWHpSY1hDeGNiaUFnWEZ4emRHUmZhR05mTlZ4Y1hHNHBYVnh1WUdCZ1hHNWdZR0FpZlE9PSAtLT5cblxuYGBgclxuYGBgclxuY2FkaWFbNzQyNCwgYyhcbiAgXFxzdGRfaGNfMlxcLFxuICBcXHN0ZF9oY18zXFwsXG4gIFxcc3RkX2hjXzRcXCxcbiAgXFxzdGRfaGNfNVxcXG4pXVxuYGBgXG5gYGBcblxuPCEtLSBybmItc291cmNlLWVuZCAtLT5cbiJ9 --&gt;
-
-
-&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuY2FkaWFbNzQyNCwgYyhcbiAgXFxzdGRfaGNfMlxcLFxuICBcXHN0ZF9oY18zXFwsXG4gIFxcc3RkX2hjXzRcXCxcbiAgXFxzdGRfaGNfNVxcXG4pXVxuYGBgXG5gYGAifQ== --&gt;
-
-```r
-```r
-cadia[7424, c(
-  \std_hc_2\,
-  \std_hc_3\,
-  \std_hc_4\,
-  \std_hc_5\
-)]
-```
-```
-
-&lt;!-- rnb-source-end --&gt;
-
-
-&lt;!-- rnb-output-end --&gt;
-
-&lt;!-- rnb-chunk-end --&gt;
-
-
-&lt;!-- rnb-text-begin --&gt;
-
-
-
-&lt;!-- rnb-text-end --&gt;
-
-
-&lt;!-- rnb-chunk-begin --&gt;
-
-
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZMkZrYVdGYk56UXlOQ3dnWXloY2JpQWdYQ0p6ZEdSZmFHTmZNbHdpTEZ4dUlDQmNJbk4wWkY5b1kxOHpYQ0lzWEc0Z0lGd2ljM1JrWDJoalh6UmNJaXhjYmlBZ1hDSnpkR1JmYUdOZk5Wd2lYRzRwWFZ4dVlHQmdJbjA9IC0tPlxuXG5gYGByXG5jYWRpYVs3NDI0LCBjKFxuICBcXHN0ZF9oY18yXFwsXG4gIFxcc3RkX2hjXzNcXCxcbiAgXFxzdGRfaGNfNFxcLFxuICBcXHN0ZF9oY181XFxcbildXG5gYGBcblxuPCEtLSBybmItc291cmNlLWVuZCAtLT5cbiJ9 --&gt;
-</code></pre>
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2FkaWFbNzQyNCwgYyhcbiAgXCJzdGRfaGNfMlwiLFxuICBcInN0ZF9oY18zXCIsXG4gIFwic3RkX2hjXzRcIixcbiAgXCJzdGRfaGNfNVwiXG4pXVxuYGBgIn0= -->
-<pre class="r"><code>cadia[7424, c(
-  \std_hc_2\,
-  \std_hc_3\,
-  \std_hc_4\,
-  \std_hc_5\
-)]</code></pre>
-<!-- rnb-source-end -->
-<pre><code>
-
-
-&lt;!-- rnb-output-end --&gt;
-
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZR0JnY2x4dVkyRmthV0ZiTnpReU5Dd2dZeWhjYmlBZ1hGeHpkR1JmYUdOZk1seGNMRnh1SUNCY1hITjBaRjlvWTE4elhGd3NYRzRnSUZ4Y2MzUmtYMmhqWHpSY1hDeGNiaUFnWEZ4emRHUmZhR05mTlZ4Y1hHNHBYVnh1WUdCZ1hHNWdZR0FpZlE9PSAtLT5cblxuYGBgclxuYGBgclxuY2FkaWFbNzQyNCwgYyhcbiAgXFxzdGRfaGNfMlxcLFxuICBcXHN0ZF9oY18zXFwsXG4gIFxcc3RkX2hjXzRcXCxcbiAgXFxzdGRfaGNfNVxcXG4pXVxuYGBgXG5gYGBcblxuPCEtLSBybmItc291cmNlLWVuZCAtLT5cbiJ9 --&gt;
-
-
-&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuY2FkaWFbNzQyNCwgYyhcbiAgXFxzdGRfaGNfMlxcLFxuICBcXHN0ZF9oY18zXFwsXG4gIFxcc3RkX2hjXzRcXCxcbiAgXFxzdGRfaGNfNVxcXG4pXVxuYGBgXG5gYGAifQ== --&gt;
-
-```r
-```r
-cadia[7424, c(
-  \std_hc_2\,
-  \std_hc_3\,
-  \std_hc_4\,
-  \std_hc_5\
-)]
-```
-```
-
-&lt;!-- rnb-source-end --&gt;
-
-
-&lt;!-- rnb-output-end --&gt;
-
-&lt;!-- rnb-chunk-end --&gt;
-
-
-&lt;!-- rnb-text-begin --&gt;
-
-
-### 5.2 K-means Clustering
-
-#### Elbow Plot
-
-
-&lt;!-- rnb-text-end --&gt;
-
-
-&lt;!-- rnb-chunk-begin --&gt;
-
-
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZMkZrYVdGYk56UXlOQ3dnWXloY2JpQWdYQ0p6ZEdSZmFHTmZNbHdpTEZ4dUlDQmNJbk4wWkY5b1kxOHpYQ0lzWEc0Z0lGd2ljM1JrWDJoalh6UmNJaXhjYmlBZ1hDSnpkR1JmYUdOZk5Wd2lYRzRwWFZ4dVlHQmdJbjA9IC0tPlxuXG5gYGByXG5jYWRpYVs3NDI0LCBjKFxuICBcXHN0ZF9oY18yXFwsXG4gIFxcc3RkX2hjXzNcXCxcbiAgXFxzdGRfaGNfNFxcLFxuICBcXHN0ZF9oY181XFxcbildXG5gYGBcblxuPCEtLSBybmItc291cmNlLWVuZCAtLT5cbiJ9 --&gt;
-</code></pre>
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2FkaWFbNzQyNCwgYyhcbiAgXCJzdGRfaGNfMlwiLFxuICBcInN0ZF9oY18zXCIsXG4gIFwic3RkX2hjXzRcIixcbiAgXCJzdGRfaGNfNVwiXG4pXVxuYGBgIn0= -->
-<pre class="r"><code>cadia[7424, c(
-  \std_hc_2\,
-  \std_hc_3\,
-  \std_hc_4\,
-  \std_hc_5\
-)]</code></pre>
-<!-- rnb-source-end -->
-<p>````</p>
 <!-- rnb-output-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVZR0JnY2x4dVkyRmthV0ZiTnpReU5Dd2dZeWhjYmlBZ1hGeHpkR1JmYUdOZk1seGNMRnh1SUNCY1hITjBaRjlvWTE4elhGd3NYRzRnSUZ4Y2MzUmtYMmhqWHpSY1hDeGNiaUFnWEZ4emRHUmZhR05mTlZ4Y1hHNHBYVnh1WUdCZ1hHNWdZR0FpZlE9PSAtLT5cblxuYGBgclxuYGBgclxuY2FkaWFbNzQyNCwgYyhcbiAgXFxzdGRfaGNfMlxcLFxuICBcXHN0ZF9oY18zXFwsXG4gIFxcc3RkX2hjXzRcXCxcbiAgXFxzdGRfaGNfNVxcXG4pXVxuYGBgXG5gYGBcblxuPCEtLSBybmItc291cmNlLWVuZCAtLT5cbiJ9 -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuY2FkaWFbNzQyNCwgYyhcbiAgXFxzdGRfaGNfMlxcLFxuICBcXHN0ZF9oY18zXFwsXG4gIFxcc3RkX2hjXzRcXCxcbiAgXFxzdGRfaGNfNVxcXG4pXVxuYGBgXG5gYGAifQ== -->
-<pre class="r"><code>```r
-cadia[7424, c(
-  \std_hc_2\,
-  \std_hc_3\,
-  \std_hc_4\,
-  \std_hc_5\
-)]</code></pre>
-<pre><code>
-&lt;!-- rnb-source-end --&gt;
-
-
-&lt;!-- rnb-output-end --&gt;
-
-&lt;!-- rnb-chunk-end --&gt;
-
-
-&lt;!-- rnb-text-begin --&gt;
-
-
-
-&lt;!-- rnb-text-end --&gt;
-
-
-&lt;!-- rnb-chunk-begin --&gt;
-
-
-&lt;!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVjRjlqWVdScFlWOWxiR0p2ZDE5emRHUWdQQzBnWm5acGVsOXVZbU5zZFhOMEtGeHVJQ0JqWVdScFlWOXpkR1FzWEc0Z0lHdHRaV0Z1Y3l4Y2JpQWdiV1YwYUc5a0lEMGdYQ0ozYzNOY0lseHVLU0FyWEc0Z0lHZG5kR2wwYkdVb1hDSkRZV1JwWVRvZ1UzUmhibVJoY21ScGMyVmtYQ0lwWEc1Z1lHQWlmUT09IC0tPlxuXG5gYGByXG5wX2NhZGlhX2VsYm93X3N0ZCA8LSBmdml6X25iY2x1c3QoXG4gIGNhZGlhX3N0ZCxcbiAga21lYW5zLFxuICBtZXRob2QgPSBcIndzc1wiXG4pICtcbiAgZ2d0aXRsZShcIkNhZGlhOiBTdGFuZGFyZGlzZWRcIilcbmBgYFxuXG48IS0tIHJuYi1zb3VyY2UtZW5kIC0tPlxuIn0= --&gt;
-
-
-&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucF9jYWRpYV9lbGJvd19zdGQgPC0gZnZpel9uYmNsdXN0KFxuICBjYWRpYV9zdGQsXG4gIGttZWFucyxcbiAgbWV0aG9kID0gXCJ3c3NcIlxuKSArXG4gIGdndGl0bGUoXCJDYWRpYTogU3RhbmRhcmRpc2VkXCIpXG5gYGAifQ== --&gt;
-
-```r
-p_cadia_elbow_std &lt;- fviz_nbclust(
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVkR0ZpYkdVb1kyRmthV0VrYzNSa1gyaGpYeklzSUhWelpVNUJJRDBnWENKcFptRnVlVndpS1Z4dVlHQmdJbjA9IC0tPlxuXG5gYGByXG50YWJsZShjYWRpYSRzdGRfaGNfMiwgdXNlTkEgPSBcImlmYW55XCIpXG5gYGBcblxuPCEtLSBybmItc291cmNlLWVuZCAtLT5cbiJ9 -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudGFibGUoY2FkaWEkc3RkX2hjXzIsIHVzZU5BID0gXCJpZmFueVwiKVxuYGBgIn0= -->
+<pre class="r"><code>table(cadia$std_hc_2, useNA = &quot;ifany&quot;)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVkM0pwZEdVdVkzTjJLRnh1SUNCallXUnBZU3hjYmlBZ1hDSmpZV1JwWVY5emRHUmZhR011WTNOMlhDSXNYRzRnSUhKdmR5NXVZVzFsY3lBOUlFWkJURk5GWEc0cFhHNWdZR0FpZlE9PSAtLT5cblxuYGBgclxud3JpdGUuY3N2KFxuICBjYWRpYSxcbiAgXCJjYWRpYV9zdGRfaGMuY3N2XCIsXG4gIHJvdy5uYW1lcyA9IEZBTFNFXG4pXG5gYGBcblxuPCEtLSBybmItc291cmNlLWVuZCAtLT5cbiJ9 -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxud3JpdGUuY3N2KFxuICBjYWRpYSxcbiAgXCJjYWRpYV9zdGRfaGMuY3N2XCIsXG4gIHJvdy5uYW1lcyA9IEZBTFNFXG4pXG5gYGAifQ== -->
+<pre class="r"><code>write.csv(
+  cadia,
+  &quot;cadia_std_hc.csv&quot;,
+  row.names = FALSE
+)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
+</div>
+<div id="k-means-clustering" class="section level3">
+<h3>5.2 K-means Clustering</h3>
+<div id="elbow-plot" class="section level4">
+<h4>Elbow Plot</h4>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVjRjlqWVdScFlWOWxiR0p2ZDE5emRHUWdQQzBnWm5acGVsOXVZbU5zZFhOMEtGeHVJQ0JqWVdScFlWOXpkR1FzWEc0Z0lHdHRaV0Z1Y3l4Y2JpQWdiV1YwYUc5a0lEMGdYQ0ozYzNOY0lseHVLU0FyWEc0Z0lHZG5kR2wwYkdVb1hDSkRZV1JwWVRvZ1UzUmhibVJoY21ScGMyVmtYQ0lwWEc1Z1lHQWlmUT09IC0tPlxuXG5gYGByXG5wX2NhZGlhX2VsYm93X3N0ZCA8LSBmdml6X25iY2x1c3QoXG4gIGNhZGlhX3N0ZCxcbiAga21lYW5zLFxuICBtZXRob2QgPSBcIndzc1wiXG4pICtcbiAgZ2d0aXRsZShcIkNhZGlhOiBTdGFuZGFyZGlzZWRcIilcbmBgYFxuXG48IS0tIHJuYi1zb3VyY2UtZW5kIC0tPlxuIn0= -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucF9jYWRpYV9lbGJvd19zdGQgPC0gZnZpel9uYmNsdXN0KFxuICBjYWRpYV9zdGQsXG4gIGttZWFucyxcbiAgbWV0aG9kID0gXCJ3c3NcIlxuKSArXG4gIGdndGl0bGUoXCJDYWRpYTogU3RhbmRhcmRpc2VkXCIpXG5gYGAifQ== -->
+<pre class="r"><code>p_cadia_elbow_std &lt;- fviz_nbclust(
   cadia_std,
   kmeans,
   method = &quot;wss&quot;

@@ -5,7 +5,7 @@ output: html_notebook
 
 # Evaluating Modelling Techniques to Detect Precursors to Landslides from InSAR-Based Data
 
-**2026 Honours Project - Lucy Caluya**
+**2026 Honours Project -**
 
 ```{r}
 # Load packages

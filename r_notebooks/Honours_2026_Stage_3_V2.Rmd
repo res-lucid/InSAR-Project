@@ -141,6 +141,7 @@ dim(peru_D_F)
 dim(peru_D_U)
 ```
 
+
 ## 2. Subsetting the data
 
 ### 2.1 TSF Only Selection
@@ -6865,14 +6866,748 @@ length(iter_dates_filtered)
 head(iter_dates_filtered)
 tail(iter_dates_filtered)
 ```
+## 10. Cadia Non-Failure Dam Comparison
+
+We extracted points from the Southern TSF (Cadia), which did not fail, using ArcGIS.
+
+```{r}
+cadia_south_tsf_nonfailure <- read.csv("../data/cadia_nonfailure_tsf_only.csv")
+
+head(cadia_south_tsf_nonfailure)
+dim(cadia_south_tsf_nonfailure)
+```
+Total 3411 points prior to coherence filtering.
+
+```{r}
+library(ggplot2)
+
+ggplot(cadia, aes(x = lon, y = lat)) +
+  geom_point(size = 0.5) +
+  coord_fixed() +
+  labs(
+    title = "Cadia InSAR points",
+    x = "Longitude",
+    y = "Latitude"
+  )
+
+ggplot(cadia_tsf_only, aes(x = lon, y = lat)) +
+  geom_point(size = 0.5) +
+  coord_fixed() +
+  labs(
+    title = "Cadia TSF InSAR points",
+    x = "Longitude",
+    y = "Latitude"
+  )
+
+ggplot(cadia_south_tsf_nonfailure, aes(x = lon, y = lat)) +
+  geom_point(size = 0.5) +
+  coord_fixed() +
+  labs(
+    title = "Cadia TSF InSAR points",
+    x = "Longitude",
+    y = "Latitude"
+  )
+
+```
+### 10.1 Setup and Coherence Filtering
+
+```{r}
+coherence_thresholds <- c(0.55, 0.60, 0.70)
+
+for (t in coherence_thresholds) {
+  
+  n_keep <- sum(cadia_south_tsf_nonfailure$coherence >= t)
+  pct_keep <- mean(cadia_south_tsf_nonfailure$coherence >= t) * 100
+  
+  cat(
+    "Threshold:", t,
+    "- Points:", n_keep,
+    "- Percent:", round(pct_keep, 1), "%\n"
+  )
+}
+```
+
+- Testing the coherence filtering values, choosing the same value (0.7) as the other Cadia dataset.
+- The dataset retains 24.7% of points, which is lower than the Northern TSF dataset, which retains 32.4% of points.
+- It is also important to note that the InSAR data did not include the whole Southern TSF area, only the small west side of the dam that connects to the Northern TSF where the failure occurred and spilled over.
+
+```{r}
+cadia_coherence_threshold <- 0.70
+
+cadia_south_nonfailure_co_filtered <- cadia_south_tsf_nonfailure %>%
+  filter(coherence >= cadia_coherence_threshold)
+
+nrow(cadia_south_nonfailure_co_filtered)
+```
+
+```{r}
+# extract displacement cols
+
+d_cols_filtered <- grep(
+  "^D_",
+  names(cadia_south_nonfailure_co_filtered),
+  value = TRUE
+)
+
+cadia_south_D_filtered <- cadia_south_nonfailure_co_filtered[, d_cols_filtered]
+
+cadia_south_D_filtered <- as.matrix(cadia_south_D_filtered)
+```
+
+```{r}
+# remove 0 var dates
+cadia_south_D_filtered_0 <- remove_zero_var(cadia_south_D_filtered)
+```
+
+## 3. Sliding Window Temporal Clustering Workflow
+
+Window size 3:
+
+### 3.1 Median Cumulative Displacement Version
+
+```{r}
+# filtered cadia dataset including 0 baseline
+cadia_south_D_filtered_sliding <- cadia_south_D_filtered
+```
+
+```{r}
+dim(cadia_south_D_filtered_sliding)
+head(cadia)
+```
+
+```{r}
+# setup
+set.seed(1234)
+
+k <- 2
+window_size <- 3
+threshold <- -3
+
+n_pts_south <- nrow(cadia_south_D_filtered_sliding)
+n_dates_south <- ncol(cadia_south_D_filtered_sliding)
+
+n_iters_south <- n_dates_south - window_size + 1
+
+iter_dates_south <- colnames(cadia_south_D_filtered_sliding)[
+  window_size:n_dates_south
+]
+```
+
+```{r}
+# matrices
+# raw K-means membership
+cluster_membership_south_disp_k2_w3 <- matrix(
+  NA,
+  nrow = n_pts_south,
+  ncol = n_iters_south
+)
+
+colnames(cluster_membership_south_disp_k2_w3) <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates_south)
+)
+
+
+# threshold-based status
+cluster_status_south_disp_k2_w3 <- matrix(
+  NA,
+  nrow = n_pts_south,
+  ncol = n_iters_south
+)
+
+colnames(cluster_status_south_disp_k2_w3) <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates_south)
+)
+
+
+# cluster medians
+cluster_medians_south_disp_k2_w3 <- matrix(
+  NA,
+  nrow = n_iters_south,
+  ncol = k
+)
+
+colnames(cluster_medians_south_disp_k2_w3) <- c(
+  "Lower median",
+  "Higher median"
+)
+
+
+# silhouette
+silhouette_south_disp_k2_w3 <- numeric(n_iters_south)
+```
+
+```{r}
+# temporal clustering loop
+set.seed(1234)
+
+for (i in window_size:n_dates_south) {
+  
+  start_idx <- i - window_size + 1
+  
+  # current 3-date window
+  x <- cadia_south_D_filtered_sliding[
+    , start_idx:i,
+    drop = FALSE
+  ]
+  
+  # re-baseline each point to zero at start of window
+  x <- sweep(
+    x,
+    1,
+    x[, 1],
+    FUN = "-"
+  )
+  
+  # K-means
+  km <- kmeans(
+    x,
+    centers = k,
+    nstart = 20
+  )
+  
+  iter <- i - window_size + 1
+  
+  # raw cluster membership
+  cluster_membership_south_disp_k2_w3[
+    , iter
+  ] <- km$cluster
+  
+  
+  # displacement at final acquisition in window
+  latest_disp <- x[, ncol(x)]
+  
+  # median displacement of each K-means cluster
+  cluster_medians <- tapply(
+    latest_disp,
+    km$cluster,
+    median
+  )
+  
+  # ordered medians for interpretation
+  cluster_medians_south_disp_k2_w3[
+    iter,
+  ] <- sort(cluster_medians)
+  
+  
+  # same -3 mm threshold as failed Cadia
+  cluster_status <- ifelse(
+    cluster_medians <= threshold,
+    1,
+    0
+  )
+  
+  # points inherit status of their K-means cluster
+  pt_status <- cluster_status[
+    as.character(km$cluster)
+  ]
+  
+  cluster_status_south_disp_k2_w3[
+    , iter
+  ] <- pt_status
+  
+  
+  # silhouette
+  sil <- cluster::silhouette(
+    km$cluster,
+    dist(x)
+  )
+  
+  silhouette_south_disp_k2_w3[iter] <- mean(
+    sil[, "sil_width"]
+  )
+}
+```
+
+```{r}
+head(cluster_medians_south_disp_k2_w3)
+tail(cluster_medians_south_disp_k2_w3)
+
+summary(cluster_medians_south_disp_k2_w3)
+summary(silhouette_south_disp_k2_w3)
+
+mean(silhouette_south_disp_k2_w3)
+```
+
+```{r}
+cadia_south_dates_w3 <- as.Date(
+  sub("^D_", "", iter_dates_south),
+  format = "%Y%m%d"
+)
+
+cadia_south_disp_w3_k2_pct <-
+  colMeans(cluster_status_south_disp_k2_w3 == 1) * 100
+```
+
+```{r}
+png(
+  "../outputs/cadia_nonfailure_km2_disp_w3_threshold_pts.png",
+  width = 2400,
+  height = 1600,
+  res = 300
+)
+
+plot(
+  cadia_south_dates_w3,
+  cadia_south_disp_w3_k2_pct,
+  type = "l",
+  ylim = c(0, 100),
+  xlab = "Date",
+  ylab = "Points in threshold-exceeding cluster (%)",
+  main = "Cadia Southern TSF - W3 Displacement K-means",
+  xaxt = "n"
+)
+
+axis.Date(
+  1,
+  at = seq(
+    min(cadia_south_dates_w3),
+    max(cadia_south_dates_w3),
+    by = "3 months"
+  ),
+  format = "%Y-%m"
+)
+
+dev.off()
+```
+Exporting:
+```{r}
+# add PointID
+cadia_south_nonfailure_co_filtered <- cadia_south_nonfailure_co_filtered %>%
+  mutate(PointID = row_number())
+
+cadia_south_info_sliding <- cadia_south_nonfailure_co_filtered %>%
+  select(
+    PointID,
+    lon,
+    lat,
+    coherence
+  )
+```
+
+```{r}
+# convert clusters and status
+# Raw clusters
+cadia_south_clusters_df <- as.data.frame(
+  cluster_membership_south_disp_k2_w3
+)
+
+cadia_south_clusters_df$PointID <-
+  cadia_south_info_sliding$PointID
+
+cadia_south_clusters_long <- cadia_south_clusters_df %>%
+  pivot_longer(
+    cols = -PointID,
+    names_to = "Date",
+    values_to = "RawCluster"
+  )
+
+
+# Threshold status
+cadia_south_status_df <- as.data.frame(
+  cluster_status_south_disp_k2_w3
+)
+
+cadia_south_status_df$PointID <-
+  cadia_south_info_sliding$PointID
+
+cadia_south_status_long <- cadia_south_status_df %>%
+  pivot_longer(
+    cols = -PointID,
+    names_to = "Date",
+    values_to = "Status"
+  )
+```
+
+```{r}
+# join
+cadia_south_sliding_results <- cadia_south_clusters_long %>%
+  left_join(
+    cadia_south_status_long,
+    by = c("PointID", "Date")
+  ) %>%
+  mutate(
+    Date = sub("^cluster_", "", Date),
+    Date = as.Date(Date, format = "%Y%m%d")
+  ) %>%
+  left_join(
+    cadia_south_info_sliding,
+    by = "PointID"
+  )
+```
+
+```{r}
+head(cadia_south_sliding_results)
+names(cadia_south_sliding_results)
+table(cadia_south_sliding_results$Status)
+range(cadia_south_sliding_results$Date)
+```
+
+```{r}
+View(cadia_south_sliding_results)
+```
+
+```{r}
+write.csv(
+  cadia_south_sliding_results,
+  "../outputs/cadia_nonfailure_disp_k2_w3_threshold3.csv",
+  row.names = FALSE
+)
+```
+
+### 3.2 Median Velocity
+
+```{r}
+set.seed(1234)
+
+k <- 2
+window_size <- 3
+velocity_threshold <- -30
+
+n_pts_south <- nrow(cadia_south_D_filtered_sliding)
+n_dates_south <- ncol(cadia_south_D_filtered_sliding)
+
+n_iters_south <-
+  n_dates_south - window_size + 1
+
+iter_dates_south <-
+  colnames(cadia_south_D_filtered_sliding)[
+    window_size:n_dates_south
+  ]
+
+cadia_south_all_dates <- as.Date(
+  sub("^D_", "", colnames(cadia_south_D_filtered_sliding)),
+  format = "%Y%m%d"
+)
+```
+
+```{r}
+head(cadia_south_all_dates)
+tail(cadia_south_all_dates)
+length(cadia_south_all_dates)
+```
+
+```{r}
+# matrices
+cluster_membership_south_vel_k2_w3 <- matrix(
+  NA,
+  nrow = n_pts_south,
+  ncol = n_iters_south
+)
+
+cluster_velocity_south_vel_k2_w3 <- matrix(
+  NA,
+  nrow = n_iters_south,
+  ncol = k
+)
+
+silhouette_south_vel_k2_w3 <- numeric(
+  n_iters_south
+)
+
+colnames(cluster_velocity_south_vel_k2_w3) <- c(
+  "Lower_Cluster",
+  "Higher_Cluster"
+)
+
+date_names_south <- paste0(
+  "cluster_",
+  sub("^D_", "", iter_dates_south)
+)
+
+colnames(cluster_membership_south_vel_k2_w3) <-
+  date_names_south
+```
+
+```{r}
+status_south_vel_k2_w3 <- matrix(
+  NA,
+  nrow = n_pts_south,
+  ncol = n_iters_south
+)
+
+colnames(status_south_vel_k2_w3) <-
+  date_names_south
+```
 
 
 ```{r}
-cadia_disp_w3_k2_pct <- plot_flagged_pct(
-  cluster_status_mat_sliding_k2,
-  cadia_w3_dates,
-  "Cadia W3 Displacement K-means (k = 2)"
+set.seed(1234)
+
+for (i in window_size:n_dates_south) {
+  
+  start_idx <- i - window_size + 1
+  iter <- i - window_size + 1
+  
+  # Current W3 displacement observations
+  x <- cadia_south_D_filtered_sliding[
+    , start_idx:i,
+    drop = FALSE
+  ]
+  
+  # Reset each point to 0 at start of window
+  x <- sweep(
+    x,
+    1,
+    x[, 1],
+    FUN = "-"
+  )
+  
+  # Actual acquisition dates
+  window_dates <- cadia_south_all_dates[
+    start_idx:i
+  ]
+  
+  # Time relative to first acquisition
+  time_days <- as.numeric(
+    window_dates - window_dates[1]
+  )
+  
+  # One regression velocity per point
+  point_velocity <- apply(
+    x,
+    1,
+    function(y) {
+      coef(lm(y ~ time_days))[2]
+    }
+  )
+  
+  # Convert mm/day -> mm/year
+  point_velocity <- point_velocity * 365.25
+  
+  # Matrix for K-means
+  x_vel <- matrix(
+    point_velocity,
+    ncol = 1
+  )
+  
+  # K-means directly on regression velocity
+  km <- kmeans(
+    x_vel,
+    centers = k,
+    nstart = 20
+  )
+  
+  # Store raw K-means membership
+  cluster_membership_south_vel_k2_w3[
+    , iter
+  ] <- km$cluster
+  
+  # Median velocity of each raw K-means cluster
+  cluster_velocity <- tapply(
+    point_velocity,
+    km$cluster,
+    median
+  )
+  
+  # Fixed -30 mm/year threshold
+  cluster_status <- ifelse(
+    cluster_velocity <= velocity_threshold,
+    1,
+    0
+  )
+  
+  # Every point inherits the status of its raw cluster
+  status_south_vel_k2_w3[
+    , iter
+  ] <- cluster_status[km$cluster]
+  
+  # Store ordered medians for interpretation
+  cluster_velocity_south_vel_k2_w3[
+    iter,
+  ] <- sort(cluster_velocity)
+  
+  # Silhouette based on velocity
+  sil <- cluster::silhouette(
+    km$cluster,
+    dist(x_vel)
+  )
+  
+  silhouette_south_vel_k2_w3[iter] <-
+    mean(sil[, "sil_width"])
+}
+```
+
+```{r}
+head(cluster_velocity_south_vel_k2_w3)
+tail(cluster_velocity_south_vel_k2_w3)
+summary(cluster_velocity_south_vel_k2_w3)
+
+summary(silhouette_south_vel_k2_w3)
+mean(silhouette_south_vel_k2_w3)
+
+table(
+  status_south_vel_k2_w3,
+  useNA = "ifany"
 )
 ```
+
+```{r}
+lower_vel_south <-
+  cluster_velocity_south_vel_k2_w3[, "Lower_Cluster"]
+
+thresholds <- c(
+  -20, -25, -30, -35, -40, -50
+)
+
+threshold_check_south_vel <- data.frame(
+  Threshold = thresholds,
+  WindowsFlagged = sapply(
+    thresholds,
+    function(th) {
+      sum(lower_vel_south <= th, na.rm = TRUE)
+    }
+  )
+)
+
+threshold_check_south_vel
+```
+
+```{r}
+cadia_south_dates_w3 <- as.Date(
+  sub("^D_", "", iter_dates_south),
+  format = "%Y%m%d"
+)
+
+flagged_south_vel_k2_w3_pct <- colMeans(
+  status_south_vel_k2_w3 == 1
+) * 100
+```
+
+```{r}
+png(
+  "../outputs/cadia_nonfailure_km2_vel_w3_threshold_pts.png",
+  width = 2400,
+  height = 1600,
+  res = 300
+)
+
+plot(
+  cadia_south_dates_w3,
+  flagged_south_vel_k2_w3_pct,
+  type = "l",
+  ylim = c(0, 100),
+  xaxt = "n",
+  xlab = "Date",
+  ylab = "Points in velocity threshold-exceeding cluster (%)",
+  main = "Cadia Southern TSF - W3 Velocity K-means"
+)
+
+axis.Date(
+  1,
+  at = seq(
+    min(cadia_south_dates_w3),
+    max(cadia_south_dates_w3),
+    by = "3 months"
+  ),
+  format = "%Y-%m"
+)
+
+dev.off()
+```
+
+```{r}
+data.frame(
+  Date = cadia_south_dates_w3,
+  LowerMedianVelocity =
+    cluster_velocity_south_vel_k2_w3[, "Lower_Cluster"],
+  PercentFlagged =
+    flagged_south_vel_k2_w3_pct
+)
+```
+
+```{r}
+cadia_south_nonfailure_co_filtered <- 
+  cadia_south_nonfailure_co_filtered %>%
+  mutate(PointID = row_number())
+
+cadia_south_info_sliding <-
+  cadia_south_nonfailure_co_filtered %>%
+  select(
+    PointID,
+    lon,
+    lat,
+    coherence
+  )
+```
+
+```{r}
+cluster_south_vel_df_k2_w3 <- as.data.frame(
+  cluster_membership_south_vel_k2_w3
+)
+
+cluster_south_vel_df_k2_w3$PointID <-
+  cadia_south_info_sliding$PointID
+
+cluster_south_vel_long_k2_w3 <-
+  cluster_south_vel_df_k2_w3 %>%
+  pivot_longer(
+    cols = -PointID,
+    names_to = "Date",
+    values_to = "RawCluster"
+  )
+```
+
+```{r}
+status_south_vel_df_k2_w3 <- as.data.frame(
+  status_south_vel_k2_w3
+)
+
+status_south_vel_df_k2_w3$PointID <-
+  cadia_south_info_sliding$PointID
+
+status_south_vel_long_k2_w3 <-
+  status_south_vel_df_k2_w3 %>%
+  pivot_longer(
+    cols = -PointID,
+    names_to = "Date",
+    values_to = "Status"
+  )
+```
+
+```{r}
+cadia_south_velcluster_k2_w3 <-
+  cluster_south_vel_long_k2_w3 %>%
+  left_join(
+    status_south_vel_long_k2_w3,
+    by = c("PointID", "Date")
+  ) %>%
+  mutate(
+    Date = sub("^cluster_", "", Date),
+    Date = as.Date(Date, format = "%Y%m%d"),
+    WindowSize = 3,
+    K = 2,
+    VelocityThreshold = -30
+  ) %>%
+  left_join(
+    cadia_south_info_sliding,
+    by = "PointID"
+  )
+```
+
+```{r}
+head(cadia_south_velcluster_k2_w3)
+
+table(cadia_south_velcluster_k2_w3$RawCluster)
+table(cadia_south_velcluster_k2_w3$Status)
+
+length(unique(cadia_south_velcluster_k2_w3$PointID))
+length(unique(cadia_south_velcluster_k2_w3$Date))
+
+sum(is.na(cadia_south_velcluster_k2_w3$lon))
+sum(is.na(cadia_south_velcluster_k2_w3$lat))
+```
+```{r}
+write.csv(
+  cadia_south_velcluster_k2_w3,
+  "../outputs/cadia_nonfailure_vel_w3_k2_threshold30.csv",
+  row.names = FALSE
+)
+```
+
+
+
+
 
 

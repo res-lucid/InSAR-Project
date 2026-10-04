@@ -1968,7 +1968,7 @@ cadia_D_filtered <- as.matrix(cadia_D_filtered)
 
 ```{r}
 # remove 0 var dates
-cadia_D_filtered <- remove_zero_var(cadia_D_filtered)
+cadia_D_filtered_no0 <- remove_zero_var(cadia_D_filtered)
 ```
 
 ```{r}
@@ -5125,3 +5125,849 @@ write.csv(
   row.names = FALSE
 )
 ```
+
+## Altered Hierarchical Clustering Implementation
+
+```{r}
+start_window <- 10
+k <- 2
+
+n_dates <- ncol(cadia_D)
+n_pts   <- nrow(cadia_D)
+n_iters <- n_dates - start_window + 1
+
+hc_membership <- matrix(
+  NA,
+  nrow = n_pts,
+  ncol = n_iters
+)
+
+for (i in start_window:n_dates) {
+
+  # 1. Expanding time-series matrix
+  x <- cadia_D[, 1:i, drop = FALSE]
+
+  # 2. Normal hierarchical clustering
+  d <- dist(x, method = "euclidean")
+  hc <- hclust(d, method = "ward.D2")
+  current <- cutree(hc, k = k)
+
+  iter <- i - start_window + 1
+
+  if (iter == 1) {
+
+    # First result: just keep HC labels
+    hc_membership[, iter] <- current
+
+  } else {
+
+    previous <- hc_membership[, iter - 1]
+
+    # 3. Check which labelling best corresponds
+    #    to the previous partition
+    keep <- sum(current == previous)
+
+    swapped <- ifelse(current == 1, 2, 1)
+    swap <- sum(swapped == previous)
+
+    # Only change the NAMES 1/2 if necessary
+    if (swap > keep) {
+      current <- swapped
+    }
+
+    hc_membership[, iter] <- current
+  }
+}
+```
+
+```{r}
+# calculate changes
+change_mat_hc <- matrix(
+  0,
+  nrow = n_pts,
+  ncol = n_iters
+)
+
+change_mat_hc[, 2:n_iters] <-
+  hc_membership[, 2:n_iters] !=
+  hc_membership[, 1:(n_iters - 1)]
+
+change_mat_hc <- change_mat_hc * 1
+
+changes_per_iter_hc <- colSums(change_mat_hc)
+
+changes_pct_hc <- changes_per_iter_hc / n_pts * 100
+```
+
+```{r}
+changes_pct_hc
+```
+```{r}
+library(mclust)
+
+ari_hc <- numeric(n_iters - 1)
+
+for (j in 2:n_iters) {
+
+  ari_hc[j - 1] <- adjustedRandIndex(
+    hc_membership[, j - 1],
+    hc_membership[, j]
+  )
+}
+```
+
+```{r}
+# Date corresponding to the final acquisition in each expanding window
+hc_dates <- colnames(cadia_D)[start_window:n_dates]
+
+# Remove D_ prefix
+hc_dates <- sub("^D_", "", hc_dates)
+
+# Convert to Date
+hc_dates <- as.Date(hc_dates, format = "%Y%m%d")
+```
+
+```{r}
+length(hc_dates)
+length(changes_pct_hc)
+
+length(hc_dates[-1])
+length(ari_hc)
+```
+
+
+```{r}
+plot(
+  hc_dates[-1],
+  ari_hc,
+  type = "b",
+  pch = 16,
+  ylim = c(0, 1),
+  xlab = "Date",
+  ylab = "Adjusted Rand Index",
+  main = "HC Stability Between Consecutive Expanding Windows"
+)
+
+abline(h = 1, lty = 2)
+```
+
+```{r}
+plot(
+  hc_dates,
+  changes_pct_hc,
+  type = "b",
+  pch = 16,
+  xlab = "Date",
+  ylab = "Points changing cluster (%)",
+  main = "HC Cluster Membership Changes"
+)
+```
+
+```{r}
+hc_check <- data.frame(
+  Date = hc_dates[-1],
+  Percent_Changed = changes_pct_hc[-1],
+  ARI = ari_hc
+)
+
+hc_check
+hc_check[order(-hc_check$Percent_Changed), ]
+```
+
+```{r}
+start_window <- 10
+k <- 2
+
+n_dates <- ncol(cadia_D)
+n_pts   <- nrow(cadia_D)
+n_iters <- n_dates - start_window + 1
+
+hc_membership_avg <- matrix(
+  NA,
+  nrow = n_pts,
+  ncol = n_iters
+)
+
+for (i in start_window:n_dates) {
+
+  # Expanding time-series matrix
+  x <- cadia_D[, 1:i, drop = FALSE]
+
+  # Hierarchical clustering - AVERAGE LINKAGE
+  d <- dist(x, method = "euclidean")
+  hc <- hclust(d, method = "average")
+  current <- cutree(hc, k = k)
+
+  iter <- i - start_window + 1
+
+  if (iter == 1) {
+
+    hc_membership_avg[, iter] <- current
+
+  } else {
+
+    previous <- hc_membership_avg[, iter - 1]
+
+    # Check whether labels should be swapped
+    keep <- sum(current == previous)
+
+    swapped <- ifelse(current == 1, 2, 1)
+    swap <- sum(swapped == previous)
+
+    # Only swap cluster labels, not membership
+    if (swap > keep) {
+      current <- swapped
+    }
+
+    hc_membership_avg[, iter] <- current
+  }
+}
+```
+
+```{r}
+change_mat_hc_avg <- matrix(
+  0,
+  nrow = n_pts,
+  ncol = n_iters
+)
+
+change_mat_hc_avg[, 2:n_iters] <-
+  hc_membership_avg[, 2:n_iters] !=
+  hc_membership_avg[, 1:(n_iters - 1)]
+
+change_mat_hc_avg <- change_mat_hc_avg * 1
+
+changes_per_iter_hc_avg <- colSums(change_mat_hc_avg)
+
+changes_pct_hc_avg <-
+  changes_per_iter_hc_avg / n_pts * 100
+```
+
+```{r}
+ari_hc_avg <- numeric(n_iters - 1)
+
+for (j in 2:n_iters) {
+
+  ari_hc_avg[j - 1] <- adjustedRandIndex(
+    hc_membership_avg[, j - 1],
+    hc_membership_avg[, j]
+  )
+}
+```
+
+```{r}
+plot(
+  hc_dates,
+  changes_pct_hc,
+  type = "l",
+  ylim = range(c(changes_pct_hc, changes_pct_hc_avg)),
+  xlab = "Date",
+  ylab = "Points changing cluster (%)",
+  main = "HC Linkage Comparison"
+)
+
+lines(
+  hc_dates,
+  changes_pct_hc_avg,
+  lty = 2
+)
+
+legend(
+  "topright",
+  c("Ward.D2", "Average"),
+  lty = c(1, 2)
+)
+```
+```{r}
+plot(
+  hc_dates[-1],
+  ari_hc_avg,
+  type = "b",
+  pch = 16,
+  ylim = c(0, 1),
+  xlab = "Date",
+  ylab = "Adjusted Rand Index",
+  main = "Average-Linkage HC Stability"
+)
+
+abline(h = 1, lty = 2)
+```
+```{r}
+summary(ari_hc_avg)
+summary(changes_pct_hc_avg)
+```
+```{r}
+cluster_sizes_avg <- data.frame(
+  Date = hc_dates,
+  Cluster1 = colSums(hc_membership_avg == 1),
+  Cluster2 = colSums(hc_membership_avg == 2)
+)
+
+cluster_sizes_avg
+```
+
+```{r}
+cluster_sizes_avg$Cluster1_pct <-
+  cluster_sizes_avg$Cluster1 / n_pts * 100
+
+cluster_sizes_avg$Cluster2_pct <-
+  cluster_sizes_avg$Cluster2 / n_pts * 100
+
+cluster_sizes_avg
+```
+
+```{r}
+plot(
+  hc_dates,
+  cluster_sizes_avg$Cluster1_pct,
+  type = "l",
+  ylim = c(0, 100),
+  xlab = "Date",
+  ylab = "Points in cluster (%)",
+  main = "Average-Linkage HC Cluster Sizes"
+)
+
+lines(
+  hc_dates,
+  cluster_sizes_avg$Cluster2_pct,
+  lty = 2
+)
+
+legend(
+  "right",
+  c("Cluster 1", "Cluster 2"),
+  lty = c(1, 2)
+)
+```
+
+```{r}
+data.frame(
+  Date = as.Date(
+    sub("^D_", "", iter_dates),
+    format = "%Y%m%d"
+  ),
+  Cluster1_Median = cluster_medians[, 1],
+  Cluster2_Median = cluster_medians[, 2],
+  Percent_Status1 = percent_flagged
+)
+```
+
+Complete Linkage:
+
+```{r}
+start_window <- 10
+k <- 2
+
+n_dates <- ncol(cadia_D)
+n_pts   <- nrow(cadia_D)
+n_iters <- n_dates - start_window + 1
+
+hc_membership_complete <- matrix(
+  NA,
+  nrow = n_pts,
+  ncol = n_iters
+)
+
+for (i in start_window:n_dates) {
+
+  x <- cadia_D[, 1:i, drop = FALSE]
+
+  d <- dist(x, method = "euclidean")
+  hc <- hclust(d, method = "complete")
+  current <- cutree(hc, k = k)
+
+  iter <- i - start_window + 1
+
+  if (iter == 1) {
+
+    hc_membership_complete[, iter] <- current
+
+  } else {
+
+    previous <- hc_membership_complete[, iter - 1]
+
+    keep <- sum(current == previous)
+
+    swapped <- ifelse(current == 1, 2, 1)
+    swap <- sum(swapped == previous)
+
+    if (swap > keep) {
+      current <- swapped
+    }
+
+    hc_membership_complete[, iter] <- current
+  }
+}
+```
+
+```{r}
+cluster_sizes_complete <- data.frame(
+  Date = hc_dates,
+  Cluster1 = colSums(hc_membership_complete == 1),
+  Cluster2 = colSums(hc_membership_complete == 2)
+)
+
+cluster_sizes_complete$Cluster1_pct <-
+  cluster_sizes_complete$Cluster1 / n_pts * 100
+
+cluster_sizes_complete$Cluster2_pct <-
+  cluster_sizes_complete$Cluster2 / n_pts * 100
+
+cluster_sizes_complete
+```
+
+## HC V3:
+
+Perform HC independently on every expanding time-series and use cluster overlap only to establish temporal cluster identity.
+
+```{r}
+cadia_D_hc <- cadia_D_filtered
+```
+
+```{r}
+nrow(cadia_D_hc)
+```
+
+
+```{r}
+start_window <- 10
+k <- 2
+
+n_dates <- ncol(cadia_D_hc)
+n_pts   <- nrow(cadia_D_hc)
+n_iters <- n_dates - start_window + 1
+
+hc_membership_jaccard <- matrix(
+  NA,
+  nrow = n_pts,
+  ncol = n_iters
+)
+
+for (i in start_window:n_dates) {
+
+  # Expanding time-series matrix
+  x <- cadia_D_hc[, 1:i, drop = FALSE]
+
+  # Normal hierarchical clustering
+  d <- dist(x, method = "euclidean")
+  hc <- hclust(d, method = "ward.D2")
+  current <- cutree(hc, k = k)
+
+  iter <- i - start_window + 1
+
+  # First window: no previous clustering to match against
+  if (iter == 1) {
+
+    hc_membership_jaccard[, iter] <- current
+
+  } else {
+
+    previous <- hc_membership_jaccard[, iter - 1]
+
+    # Jaccard similarities
+    j11 <- sum(previous == 1 & current == 1) /
+      sum(previous == 1 | current == 1)
+
+    j12 <- sum(previous == 1 & current == 2) /
+      sum(previous == 1 | current == 2)
+
+    j21 <- sum(previous == 2 & current == 1) /
+      sum(previous == 2 | current == 1)
+
+    j22 <- sum(previous == 2 & current == 2) /
+      sum(previous == 2 | current == 2)
+
+    # Keep current labels vs swap them
+    keep_score <- j11 + j22
+    swap_score <- j12 + j21
+
+    if (swap_score > keep_score) {
+      current <- ifelse(current == 1, 2, 1)
+    }
+
+    hc_membership_jaccard[, iter] <- current
+  }
+}
+```
+
+```{r}
+# calculate changes
+change_mat_hc_jaccard <- matrix(
+  0,
+  nrow = n_pts,
+  ncol = n_iters
+)
+
+change_mat_hc_jaccard[, 2:n_iters] <-
+  hc_membership_jaccard[, 2:n_iters] !=
+  hc_membership_jaccard[, 1:(n_iters - 1)]
+
+change_mat_hc_jaccard <- change_mat_hc_jaccard * 1
+
+changes_per_iter_hc_jaccard <-
+  colSums(change_mat_hc_jaccard)
+
+changes_pct_hc_jaccard <-
+  changes_per_iter_hc_jaccard / n_pts * 100
+```
+
+```{r}
+plot(
+  hc_dates,
+  changes_pct_hc_jaccard,
+  type = "b",
+  pch = 16,
+  xlab = "Date",
+  ylab = "Points changing cluster (%)",
+  main = "HC Membership Changes"
+)
+```
+
+```{r}
+table(
+  Previous = hc_membership_jaccard[, j - 1],
+  Current  = hc_membership_jaccard[, j]
+)
+```
+```{r}
+j <- which.max(changes_pct_hc_jaccard)
+
+hc_dates[j]
+changes_pct_hc_jaccard[j]
+
+table(
+  Previous = hc_membership_jaccard[, j - 1],
+  Current  = hc_membership_jaccard[, j]
+)
+```
+Average linkage:
+
+```{r}
+# Average-linkage HC + Jaccard temporal matching
+
+start_window <- 10
+k <- 2
+
+n_dates <- ncol(cadia_D_hc)
+n_pts   <- nrow(cadia_D_hc)
+n_iters <- n_dates - start_window + 1
+
+hc_membership_avg_jaccard <- matrix(
+  NA,
+  nrow = n_pts,
+  ncol = n_iters
+)
+
+for (i in start_window:n_dates) {
+
+  # Expanding time-series matrix
+  x <- cadia_D_hc[, 1:i, drop = FALSE]
+
+  # Hierarchical clustering - AVERAGE LINKAGE
+  d <- dist(x, method = "euclidean")
+  hc <- hclust(d, method = "average")
+  current <- cutree(hc, k = k)
+
+  iter <- i - start_window + 1
+
+  # First window: no previous clustering to match against
+  if (iter == 1) {
+
+    hc_membership_avg_jaccard[, iter] <- current
+
+  } else {
+
+    previous <- hc_membership_avg_jaccard[, iter - 1]
+
+    # Jaccard similarities
+    j11 <- sum(previous == 1 & current == 1) /
+      sum(previous == 1 | current == 1)
+
+    j12 <- sum(previous == 1 & current == 2) /
+      sum(previous == 1 | current == 2)
+
+    j21 <- sum(previous == 2 & current == 1) /
+      sum(previous == 2 | current == 1)
+
+    j22 <- sum(previous == 2 & current == 2) /
+      sum(previous == 2 | current == 2)
+
+    # Compare keeping labels with swapping labels
+    keep_score <- j11 + j22
+    swap_score <- j12 + j21
+
+    # Only rename clusters if reversed correspondence is stronger
+    if (swap_score > keep_score) {
+      current <- ifelse(current == 1, 2, 1)
+    }
+
+    hc_membership_avg_jaccard[, iter] <- current
+  }
+}
+```
+
+```{r}
+# calculate changes
+change_mat_hc_avg_jaccard <- matrix(
+  0,
+  nrow = n_pts,
+  ncol = n_iters
+)
+
+change_mat_hc_avg_jaccard[, 2:n_iters] <-
+  hc_membership_avg_jaccard[, 2:n_iters] !=
+  hc_membership_avg_jaccard[, 1:(n_iters - 1)]
+
+change_mat_hc_avg_jaccard <- change_mat_hc_avg_jaccard * 1
+
+changes_per_iter_hc_avg_jaccard <-
+  colSums(change_mat_hc_avg_jaccard)
+
+changes_pct_hc_avg_jaccard <-
+  changes_per_iter_hc_avg_jaccard / n_pts * 100
+```
+
+```{r}
+plot(
+  hc_dates,
+  changes_pct_hc_avg_jaccard,
+  type = "b",
+  pch = 16,
+  xlab = "Date",
+  ylab = "Points changing cluster (%)",
+  main = "Average-Linkage HC Membership Changes"
+)
+```
+
+```{r}
+cluster_sizes_avg_jaccard <- data.frame(
+  Date = hc_dates,
+  Cluster1 = colSums(hc_membership_avg_jaccard == 1),
+  Cluster2 = colSums(hc_membership_avg_jaccard == 2)
+)
+
+cluster_sizes_avg_jaccard$Cluster1_pct <-
+  cluster_sizes_avg_jaccard$Cluster1 / n_pts * 100
+
+cluster_sizes_avg_jaccard$Cluster2_pct <-
+  cluster_sizes_avg_jaccard$Cluster2 / n_pts * 100
+
+cluster_sizes_avg_jaccard
+```
+
+## HC V4:
+
+Subsetted Cadia dataset again:
+
+```{r}
+start_window <- 10
+k <- 2
+
+n_dates <- ncol(cadia_D_hc)
+n_pts   <- nrow(cadia_D_hc)
+n_iters <- n_dates - start_window + 1
+
+hc_membership_raw <- matrix(
+  NA,
+  nrow = n_pts,
+  ncol = n_iters
+)
+
+for (i in start_window:n_dates) {
+
+  # All data available up to current acquisition
+  x <- cadia_D_hc[, 1:i, drop = FALSE]
+
+  # Normal HC
+  d <- dist(x, method = "euclidean")
+  hc <- hclust(d, method = "ward.D2")
+
+  # Cut dendrogram into 2 clusters
+  current <- cutree(hc, k = k)
+
+  iter <- i - start_window + 1
+
+  # Store exactly what HC returns
+  hc_membership_raw[, iter] <- current
+}
+```
+
+```{r}
+change_mat_hc_raw <- matrix(
+  0,
+  nrow = n_pts,
+  ncol = n_iters
+)
+
+change_mat_hc_raw[, 2:n_iters] <-
+  hc_membership_raw[, 2:n_iters] !=
+  hc_membership_raw[, 1:(n_iters - 1)]
+
+changes_pct_hc_raw <-
+  colSums(change_mat_hc_raw) / n_pts * 100
+```
+
+```{r}
+plot(
+  hc_dates,
+  changes_pct_hc_raw,
+  type = "b",
+  pch = 16,
+  xlab = "Date",
+  ylab = "Points changing cluster (%)",
+  main = "Raw Expanding-Window HC"
+)
+```
+
+```{r}
+plot(
+  hc_dates,
+  changes_pct_hc_raw,
+  type = "l",
+  ylim = range(c(
+    changes_pct_hc_raw,
+    changes_pct_hc_jaccard
+  )),
+  xlab = "Date",
+  ylab = "Points changing cluster (%)",
+  main = "Raw vs Jaccard-Aligned Ward HC"
+)
+
+lines(
+  hc_dates,
+  changes_pct_hc_jaccard,
+  lty = 2
+)
+
+legend(
+  "topright",
+  c("Raw HC labels", "Jaccard-aligned"),
+  lty = c(1, 2)
+)
+```
+
+Average linkage:
+
+```{r}
+start_window <- 10
+k <- 2
+
+n_dates <- ncol(cadia_D_hc)
+n_pts   <- nrow(cadia_D_hc)
+n_iters <- n_dates - start_window + 1
+
+hc_membership_avg_raw <- matrix(
+  NA,
+  nrow = n_pts,
+  ncol = n_iters
+)
+
+for (i in start_window:n_dates) {
+
+  x <- cadia_D_hc[, 1:i, drop = FALSE]
+
+  d <- dist(x, method = "euclidean")
+  hc <- hclust(d, method = "average")
+
+  current <- cutree(hc, k = k)
+
+  iter <- i - start_window + 1
+  hc_membership_avg_raw[, iter] <- current
+}
+```
+
+
+```{r}
+# calculate changes
+
+change_mat_avg_raw <- matrix(
+  0,
+  nrow = n_pts,
+  ncol = n_iters
+)
+
+change_mat_avg_raw[, 2:n_iters] <-
+  hc_membership_avg_raw[, 2:n_iters] !=
+  hc_membership_avg_raw[, 1:(n_iters - 1)]
+
+changes_pct_avg_raw <-
+  colSums(change_mat_avg_raw) / n_pts * 100
+
+plot(
+  hc_dates,
+  changes_pct_avg_raw,
+  type = "b",
+  pch = 16,
+  xlab = "Date",
+  ylab = "Points changing cluster (%)",
+  main = "Raw Average-Linkage HC"
+)
+```
+
+```{r}
+cluster_sizes_avg_raw <- data.frame(
+  Date = hc_dates,
+  Cluster1 = colSums(hc_membership_avg_raw == 1),
+  Cluster2 = colSums(hc_membership_avg_raw == 2)
+)
+
+cluster_sizes_avg_raw$Cluster1_pct <-
+  cluster_sizes_avg_raw$Cluster1 / n_pts * 100
+
+cluster_sizes_avg_raw$Cluster2_pct <-
+  cluster_sizes_avg_raw$Cluster2 / n_pts * 100
+
+cluster_sizes_avg_raw
+```
+
+```{r}
+ari_ward <- numeric(n_iters - 1)
+ari_average <- numeric(n_iters - 1)
+
+for (j in 2:n_iters) {
+
+  ari_ward[j - 1] <- adjustedRandIndex(
+    hc_membership_raw[, j - 1],
+    hc_membership_raw[, j]
+  )
+
+  ari_average[j - 1] <- adjustedRandIndex(
+    hc_membership_avg_raw[, j - 1],
+    hc_membership_avg_raw[, j]
+  )
+}
+```
+
+```{r}
+plot(
+  hc_dates[-1],
+  ari_ward,
+  type = "l",
+  ylim = c(-0.1, 1),
+  xlab = "Date",
+  ylab = "Adjusted Rand Index",
+  main = "Temporal Stability of HC"
+)
+
+lines(
+  hc_dates[-1],
+  ari_average,
+  lty = 2
+)
+
+legend(
+  "bottomright",
+  c("Ward.D2", "Average"),
+  lty = c(1, 2)
+)
+```
+
+```{r}
+summary(ari_ward)
+summary(ari_average)
+```
+- Average linkage in all approaches lead to extremely unbalanced cluster sizes, with one cluster consisting of almost all the points and another with sometimes only 1.
+- Ward linkage produces a better mean/median ARI.
+
+
+
