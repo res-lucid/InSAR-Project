@@ -95,7 +95,6 @@ names(peru_failed)
 head(peru_failed)
 ```
 
-
 ### 1.1 Subsetting the TSF areas
 
 ```{r}
@@ -633,7 +632,6 @@ sapply(
 )
 ```
 
-
 ```{r}
 # Check dimensions
 dim(membership)
@@ -652,8 +650,7 @@ apply(
 )
 ```
 
-Threshold note:
-- This version does not include much backing for our threshold value.
+Threshold note: - This version does not include much backing for our threshold value.
 - It was chosen fairly subjectively as the first run of the algorithm to test if it works, based on visual inspection using both the graph of displacement from forensic investigation and looking at the calculated medians.
 
 ```{r}
@@ -664,7 +661,6 @@ colnames(cadia_D_filtered)[1:10]
 # Confirm first acquisition is zero
 unique(cadia_D_filtered[, 1])
 ```
-
 
 ```{r}
 # status 1 thru time
@@ -813,7 +809,6 @@ We add a form of validation using a grid of thresholds to show how the data woul
 - From a grid of displacement thresholds, we recalculate "Status" through time, and for each we ask "At this threshold, what percentage of InSAR points would be classified Status 1 (over the threshold)?"
 - We can then plot these values over time together.
 - For the first implementation, -10mm was used as the threshold.
-
 
 ```{r}
 # Threshold range
@@ -1134,6 +1129,7 @@ summary(silhouette_values_south)
 
 range(cluster_medians_south, na.rm = TRUE)
 ```
+
 ```{r}
 # ARI
 
@@ -1243,7 +1239,6 @@ ggplot(
   theme_minimal()
 ```
 
-
 ```{r}
 # Heatmap
 ggplot(
@@ -1264,15 +1259,15 @@ ggplot(
   theme_minimal()
 ```
 
-Comparing the threshold sensitivity test with both Cadia sites:
-- Initial -10mm threshold was selected empirically during preliminary testing, using previous literature/visual examples (Rana et al.) and inspection of the Cadia forensic displacement behaviour + our calculated cluster medians.
+Comparing the threshold sensitivity test with both Cadia sites: - Initial -10mm threshold was selected empirically during preliminary testing, using previous literature/visual examples (Rana et al.) and inspection of the Cadia forensic displacement behaviour + our calculated cluster medians.
 - The sensitivity analysis was used the evaluate how this subjective choice compares to others.
 - For the failed site, progressively more negative thresholds classify the deformation-related cluster progressively later.
-- For the nonfailed site, the cluster median reached approx. -8.9mm and stopped.
+- For the nonfailed site, the cluster median reached approx.
+-8.9mm and stopped.
 - Therefore, -10mm shows the difference in site deformation behaviour.
 - However, it should not be interpreted as a global physical failure threshold.
-  - Appropriate thresholds are ALWAYS site-dependent and should incorporate site-specific deformation behaviour, engineering knowledge, and other monitoring information.
-  
+- Appropriate thresholds are ALWAYS site-dependent and should incorporate site-specific deformation behaviour, engineering knowledge, and other monitoring information.
+
 Exporting:
 
 ```{r}
@@ -1307,7 +1302,6 @@ write.csv(
   row.names = FALSE
 )
 ```
-
 
 ### 3.3 Peru Failed Site
 
@@ -1494,13 +1488,11 @@ apply(
 )
 ```
 
-
 ### 3.4 Peru Unfailed Site
 
 ```{r}
 dim(peru_U)
 ```
-
 
 ```{r}
 # Setup
@@ -1673,6 +1665,7 @@ range(
 tail(cluster_medians_peru_F)
 tail(cluster_medians_peru_U)
 ```
+
 #### 3.4.1 Threshold Sensitivity Test
 
 Same threshold for both sites.
@@ -1994,13 +1987,13 @@ ggplot(
   theme_minimal()
 ```
 
-Threshold sensitivity test notes:
-- Very different to Cadia, cumulative displacement magnitude did not provide clear separation between the failed and unfailed Peru cases.
-- Exploratory -4mm threshold: The failed site's deformation-related cluster initially fluctated above and below the threshold until remaining below it from approx. mid-2018.
+Threshold sensitivity test notes: - Very different to Cadia, cumulative displacement magnitude did not provide clear separation between the failed and unfailed Peru cases.
+- Exploratory -4mm threshold: The failed site's deformation-related cluster initially fluctated above and below the threshold until remaining below it from approx.
+mid-2018.
 - Unfailed site's more negative cluster was generally below -4mm throughout the period AND reached a greater negative cumulative displacement than the failed site.
 - Therefore, increasing the threshold does not necessarily improve the comparison between site behaviour.
 - For exporting, we select a slightly lower threshold of -5mm.
-  - This was informed by the above analysis, and we note that no individual threshold clearly separated the failed and unfailed cases.
+- This was informed by the above analysis, and we note that no individual threshold clearly separated the failed and unfailed cases.
 
 ```{r}
 # New threshold status
@@ -2061,6 +2054,7 @@ percent_U_final <- colMeans(
 ```{r}
 percent_U_final
 ```
+
 Exporting both sites:
 
 ```{r}
@@ -2127,6 +2121,7 @@ nrow(cadia_export) ==
   length(unique(cadia_export$PointID)) *
   length(unique(cadia_export$Date))
 ```
+
 Exporting regular Peru CSVs for cumulative displacement animations:
 
 ```{r}
@@ -2162,7 +2157,6 @@ write.csv(
 )
 ```
 
-
 ```{r}
 peru_unfailed_disp_long <- peru_unfailed %>%
   select(FID, lon, lat, all_of(d_cols_peru_U)) %>%
@@ -2195,6 +2189,7 @@ write.csv(
   row.names = FALSE
 )
 ```
+
 ## 4. New Sliding Window Implementation
 
 This time, we define a sliding window function as there are many versions we want to test.
@@ -2256,8 +2251,7 @@ run_sliding_kmeans <- function(data, window_size, k = 2) {
       FUN = "-"
     )
     
-    
-    # FIRST WINDOW
+    # First window
     if (iter == 1) {
       
       km <- kmeans(
@@ -2266,8 +2260,7 @@ run_sliding_kmeans <- function(data, window_size, k = 2) {
         nstart = 20
       )
       
-      
-    # SUBSEQUENT WINDOWS
+    # Subsequent
     } else {
       
       km <- kmeans(
@@ -2276,14 +2269,11 @@ run_sliding_kmeans <- function(data, window_size, k = 2) {
       )
     }
     
-    
     # Store raw memberships
     membership[, iter] <- km$cluster
     
-    
     # Final displacement within current window
     latest_disp <- x[, ncol(x)]
-    
     
     # Median final displacement of each cluster
     current_medians <- sapply(
@@ -2299,8 +2289,6 @@ run_sliding_kmeans <- function(data, window_size, k = 2) {
     cluster_medians[iter, ] <-
       current_medians
     
-    
-    # Silhouette
     sil <- cluster::silhouette(
       km$cluster,
       dist(x)
@@ -2309,12 +2297,10 @@ run_sliding_kmeans <- function(data, window_size, k = 2) {
     silhouette_values[iter] <-
       mean(sil[, "sil_width"])
     
-    
     # Carry fitted centroids into next window
     prev_centers <- km$centers
   }
-  
-  
+
   # Return everything
   list(
     membership = membership,
@@ -2326,16 +2312,24 @@ run_sliding_kmeans <- function(data, window_size, k = 2) {
 }
 ```
 
-Explanation:
-1. A fixed length window of 3, 5 or 10 acquisitions was extracted.
-2. Each point was re-baselined to 0 at the first acquisition of the window.
-3. K-means was applied to the first window using 20 random starts.
-4. The resulting centroids were stored/noted/retained.
-5. The window was moved forward by one acquisition and re-baselined.
-6. K-means for the new window was initialised using the centroids stored from the previous window.
-7. The median displacement at the final acquisition was calculated for each resulting cluster.
-8. Threshold sensitivity is to be assessed using different displacement thresholds.
-9. Process repeated for each window size / site.
+Explanation: 1.
+A fixed length window of 3, 5 or 10 acquisitions was extracted.
+2.
+Each point was re-baselined to 0 at the first acquisition of the window.
+3.
+K-means was applied to the first window using 20 random starts.
+4.
+The resulting centroids were stored/noted/retained.
+5.
+The window was moved forward by one acquisition and re-baselined.
+6.
+K-means for the new window was initialised using the centroids stored from the previous window.
+7.
+The median displacement at the final acquisition was calculated for each resulting cluster.
+8.
+Threshold sensitivity is to be assessed using different displacement thresholds.
+9.
+Process repeated for each window size / site.
 
 ### 4.1 Cadia Failed Site
 
@@ -2371,6 +2365,7 @@ summary(cadia_F_w3$silhouette)
 summary(cadia_F_w5$silhouette)
 summary(cadia_F_w10$silhouette)
 ```
+
 ### 4.2 Cadia Unfailed Site
 
 ```{r}
@@ -2389,7 +2384,6 @@ cadia_S_w10 <- run_sliding_kmeans(
   window_size = 10
 )
 ```
-
 
 ### 4.3 Peru Failed Site
 
@@ -2448,6 +2442,7 @@ range(peru_U_w3$cluster_medians)
 range(peru_U_w5$cluster_medians)
 range(peru_U_w10$cluster_medians)
 ```
+
 ### 4.5 Threshold Sensitivity Test
 
 ```{r}
@@ -2565,11 +2560,11 @@ peru_U_w10_thresh <- run_threshold_sensitivity(
 )
 ```
 
-
 ```{r}
 head(cadia_F_w3_thresh)
 head(peru_F_w3_thresh)
 ```
+
 - Thresholds were selected for testing across -1 to -7mm.
 
 #### Plots
@@ -2693,6 +2688,7 @@ plot_threshold_sensitivity(
   "Peru Unfailed - W10 Threshold Sensitivity"
 #)
 ```
+
 #### Ex: -3mm Test
 
 ```{r}
@@ -2767,6 +2763,7 @@ compare_sites(
   title_text = "Cadia Failed vs Unfailed - W10"
 )
 ```
+
 ```{r}
 # Peru
 
@@ -2791,6 +2788,7 @@ compare_sites(
   title_text = "Peru Failed vs Unfailed - W10"
 )
 ```
+
 #### Numerical summary:
 
 ```{r}
@@ -2845,8 +2843,7 @@ summarise_thresholds(peru_U_w10_thresh)
 Comments:
 
 - The sliding windows are re-baselined at the first acquisition of each window.
-  - Therefore, the displacement values represent local change over the window rather than cumulative displacement from the original reference.
-  _ Smaller sized thresholds are therefore required.
+  - Therefore, the displacement values represent local change over the window rather than cumulative displacement from the original reference. \_ Smaller sized thresholds are therefore required.
 - Less-negative thresholds classify clusters as deformation more frequently, while increasingly negative thresholds are more selective and may only be reached in a small number of windows.
 - Window size: W3 is more responsive to short-term displacement changes but produces more frequent changes in classification, while the larger W5 and W10 windows represent deformation over progressively longer periods.
 - Therefore, the same numerical threshold does not necessarily have an equivalent meaning across W3, W5 and W10, because the final displacement represents change accumulated over different temporal lengths.
@@ -2856,8 +2853,8 @@ Comments:
 - Therefore, we choose to test different thresholds for each window size.
 - Progressively more negative thresholds were used for larger windows to account for the greater displacement accumulated over longer window durations.
 
-Cadia:
-- For the version where we choose different thresholds per window size, we test W3 = -3mm, W5 = -4mm, W10 = -5mm. This is based on the sensitivity plots above.
+Cadia: - For the version where we choose different thresholds per window size, we test W3 = -3mm, W5 = -4mm, W10 = -5mm.
+This is based on the sensitivity plots above.
 
 #### Status plots
 
@@ -2978,6 +2975,26 @@ plot_status_comparison(
 )
 ```
 
+```{r}
+# Create plot
+p_cadia_w3 <- plot_status_comparison(
+  cadia_F_w3,
+  cadia_S_w3,
+  cadia_F_w3_status,
+  cadia_S_w3_status,
+  "Cadia Sliding K-means - W3 (-3 mm)"
+)
+
+# Export
+ggsave(
+  "../outputs/sliding_window_plots/cadia_displacement_status_w3.png",
+  plot = p_cadia_w3,
+  width = 10,
+  height = 7,
+  dpi = 300,
+  bg = "white"
+)
+```
 
 ```{r}
 plot_status_comparison(
@@ -3502,11 +3519,9 @@ run_sliding_velocity <- function(
 }
 ```
 
-Process:
-- A linear regression is fitted separately to each point within each sliding window using the actual acquisition dates.
+Process: - A linear regression is fitted separately to each point within each sliding window using the actual acquisition dates.
 - The regression slope represents the average deformation rate within that window and is converted to mm/year.
-- Re-baselining is retained for consistency with the displacement implementation
-- K-means clusters the resulting point-level velocities (slopes) rather than the original displacement measurements.
+- Re-baselining is retained for consistency with the displacement implementation - K-means clusters the resulting point-level velocities (slopes) rather than the original displacement measurements.
 - As with displacement, the first window uses nstart = 20, while subsequent windows are initialised using the previous window's centroids.
 - Cluster medians represent the typical velocity of each cluster and are used only for subsequent physical interpretation.
 - A common threshold range is tested across W3, W5 and W10 because all regression slopes have the same units of mm/year.
@@ -3516,10 +3531,8 @@ Process:
 - Increasing the window size reduces this variability and produces a more stable estimate of deformation rate.
 - For Peru, failed and unfailed cases remain substantially overlapping; changing the threshold further simply to create separation would risk retrospective threshold fitting.
 
-However, the main note is:
-- The regression approach assumes that deformation within each individual window can be reasonably represented by an average linear trend.
+However, the main note is: - The regression approach assumes that deformation within each individual window can be reasonably represented by an average linear trend.
 - Larger windows may therefore smooth short-term acceleration immediately preceding failure, while smaller windows are more sensitive to both short-term changes and noise.
-
 
 Test w/ Cadia (F):
 
@@ -3562,6 +3575,7 @@ head(cadia_F_vel_w3$cluster_medians)
 tail(cadia_F_vel_w3$cluster_medians)
 
 ```
+
 Continue with other cases:
 
 ```{r}
@@ -3624,8 +3638,7 @@ range(peru_U_vel_w5$cluster_medians, na.rm = TRUE)
 range(peru_U_vel_w10$cluster_medians, na.rm = TRUE)
 ```
 
-From a first look:
-- W3 has larger slope fluctuations, W5 moderates them, and W10 is substantially smoother.
+From a first look: - W3 has larger slope fluctuations, W5 moderates them, and W10 is substantially smoother.
 
 ### 5.1 Threshold Sensitivity Test
 
@@ -3864,6 +3877,7 @@ plot_velocity_threshold_sensitivity(
   "Peru Unfailed - W10 Velocity Threshold Sensitivity"
 )
 ```
+
 ```{r}
 # Correct labels for velocity threshold results
 
@@ -3946,7 +3960,7 @@ compare_velocity_sites <- function(
     theme_minimal()
 }
 ```
- 
+
 ```{r}
 compare_velocity_sites(
   cadia_F_vel_w3,
@@ -4010,6 +4024,7 @@ compare_velocity_sites(
     "Cadia Regression Velocity - W10 (-25 mm/year)"
 )
 ```
+
 #### Status plots
 
 ```{r}
@@ -4076,6 +4091,7 @@ plot_status_comparison(
   "Peru Regression Velocity - W10 (-20 mm/year)"
 )
 ```
+
 Final status thresholds:
 
 ```{r}
@@ -4338,6 +4354,1160 @@ write.csv(
 
 Overall K=2 observations:
 
-- Sliding-window results are sensitive to both window size and the deformation representation used. 
+- Sliding-window results are sensitive to both window size and the deformation representation used.
 - Larger windows generally produced more stable temporal classifications, with clearer failed/non-failed differentiation observed for Cadia than Peru.
 - Threshold sensitivity also demonstrates that no single displacement or velocity magnitude consistently distinguishes failure-related behaviour across all case studies.
+
+```{r}
+# plots exporting
+dir.create(
+  "../outputs/sliding_window_plots",
+  showWarnings = FALSE,
+  recursive = TRUE
+)
+
+plot_width <- 1800
+plot_height <- 1200
+plot_res <- 180
+```
+
+Displacement version:
+
+```{r}
+# Displacement threshold-sensitivity plots
+
+# W3
+png(
+  "../outputs/sliding_window_plots/cadia_disp_threshold_sensitivity_w3.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_threshold_sensitivity(
+    cadia_F_w3,
+    cadia_F_w3_thresh,
+    "Cadia (F) - W3 Displacement Threshold Sensitivity"
+  )
+)
+
+dev.off()
+
+
+# W5
+png(
+  "../outputs/sliding_window_plots/cadia_disp_threshold_sensitivity_w5.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_threshold_sensitivity(
+    cadia_F_w5,
+    cadia_F_w5_thresh,
+    "Cadia (F) - W5 Displacement Threshold Sensitivity"
+  )
+)
+
+dev.off()
+
+
+# W10
+png(
+  "../outputs/sliding_window_plots/cadia_disp_threshold_sensitivity_w10.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_threshold_sensitivity(
+    cadia_F_w10,
+    cadia_F_w10_thresh,
+    "Cadia (F) - W10 Displacement Threshold Sensitivity"
+  )
+)
+
+dev.off()
+```
+
+```{r}
+# W3
+png(
+  "../outputs/sliding_window_plots/cadia_unfailed_disp_threshold_sensitivity_w3.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_threshold_sensitivity(
+    cadia_S_w3,
+    cadia_S_w3_thresh,
+    "Cadia (U) - W3 Displacement Threshold Sensitivity"
+  )
+)
+
+dev.off()
+
+
+# W5
+png(
+  "../outputs/sliding_window_plots/cadia_unfailed_disp_threshold_sensitivity_w5.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_threshold_sensitivity(
+    cadia_S_w5,
+    cadia_S_w5_thresh,
+    "Cadia (U) - W5 Displacement Threshold Sensitivity"
+  )
+)
+
+dev.off()
+
+
+# W10
+png(
+  "../outputs/sliding_window_plots/cadia_unfailed_disp_threshold_sensitivity_w10.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_threshold_sensitivity(
+    cadia_S_w10,
+    cadia_S_w10_thresh,
+    "Cadia (U) - W10 Displacement Threshold Sensitivity"
+  )
+)
+
+dev.off()
+```
+
+```{r}
+# -------------------------
+# PERU FAILED
+# -------------------------
+
+png(
+  "../outputs/sliding_window_plots/peru_failed_disp_threshold_sensitivity_w3.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_threshold_sensitivity(
+    peru_F_w3,
+    peru_F_w3_thresh,
+    "Peru (F) - W3 Displacement Threshold Sensitivity"
+  )
+)
+
+dev.off()
+
+
+png(
+  "../outputs/sliding_window_plots/peru_failed_disp_threshold_sensitivity_w5.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_threshold_sensitivity(
+    peru_F_w5,
+    peru_F_w5_thresh,
+    "Peru (F) - W5 Displacement Threshold Sensitivity"
+  )
+)
+
+dev.off()
+
+
+png(
+  "../outputs/sliding_window_plots/peru_failed_disp_threshold_sensitivity_w10.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_threshold_sensitivity(
+    peru_F_w10,
+    peru_F_w10_thresh,
+    "Peru (F) - W10 Displacement Threshold Sensitivity"
+  )
+)
+
+dev.off()
+
+
+# -------------------------
+# PERU UNFAILED
+# -------------------------
+
+png(
+  "../outputs/sliding_window_plots/peru_unfailed_disp_threshold_sensitivity_w3.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_threshold_sensitivity(
+    peru_U_w3,
+    peru_U_w3_thresh,
+    "Peru (U) - W3 Displacement Threshold Sensitivity"
+  )
+)
+
+dev.off()
+
+
+png(
+  "../outputs/sliding_window_plots/peru_unfailed_disp_threshold_sensitivity_w5.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_threshold_sensitivity(
+    peru_U_w5,
+    peru_U_w5_thresh,
+    "Peru (U) - W5 Displacement Threshold Sensitivity"
+  )
+)
+
+dev.off()
+
+
+png(
+  "../outputs/sliding_window_plots/peru_unfailed_disp_threshold_sensitivity_w10.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_threshold_sensitivity(
+    peru_U_w10,
+    peru_U_w10_thresh,
+    "Peru (U) - W10 Displacement Threshold Sensitivity"
+  )
+)
+
+dev.off()
+```
+
+Regression velocity version:
+
+```{r}
+# Threshold sensitivity plots
+
+# Cadia (F)
+
+png(
+  "../outputs/sliding_window_plots/cadia_vel_threshold_sensitivity_w3.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_velocity_threshold_sensitivity(
+    cadia_F_vel_w3,
+    cadia_F_vel_w3_thresh,
+    "Cadia (F) - W3 Velocity Threshold Sensitivity"
+  )
+)
+
+dev.off()
+
+
+png(
+  "../outputs/sliding_window_plots/cadia_vel_threshold_sensitivity_w5.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_velocity_threshold_sensitivity(
+    cadia_F_vel_w5,
+    cadia_F_vel_w5_thresh,
+    "Cadia (F) - W5 Velocity Threshold Sensitivity"
+  )
+)
+
+dev.off()
+
+
+png(
+  "../outputs/sliding_window_plots/cadia_vel_threshold_sensitivity_w10.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_velocity_threshold_sensitivity(
+    cadia_F_vel_w10,
+    cadia_F_vel_w10_thresh,
+    "Cadia (F) - W10 Velocity Threshold Sensitivity"
+  )
+)
+
+dev.off()
+```
+
+```{r}
+# Cadia (U)
+
+png(
+  "../outputs/sliding_window_plots/cadia_unfailed_vel_threshold_sensitivity_w3.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_velocity_threshold_sensitivity(
+    cadia_S_vel_w3,
+    cadia_S_vel_w3_thresh,
+    "Cadia (U) - W3 Velocity Threshold Sensitivity"
+  )
+)
+
+dev.off()
+
+
+png(
+  "../outputs/sliding_window_plots/cadia_unfailed_vel_threshold_sensitivity_w5.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_velocity_threshold_sensitivity(
+    cadia_S_vel_w5,
+    cadia_S_vel_w5_thresh,
+    "Cadia (U) - W5 Velocity Threshold Sensitivity"
+  )
+)
+
+dev.off()
+
+
+png(
+  "../outputs/sliding_window_plots/cadia_unfailed_vel_threshold_sensitivity_w10.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_velocity_threshold_sensitivity(
+    cadia_S_vel_w10,
+    cadia_S_vel_w10_thresh,
+    "Cadia (U) - W10 Velocity Threshold Sensitivity"
+  )
+)
+
+dev.off()
+```
+
+```{r}
+# Peru (both)
+
+# -------------------------
+# PERU FAILED
+# -------------------------
+
+png(
+  "../outputs/sliding_window_plots/peru_failed_vel_threshold_sensitivity_w3.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_velocity_threshold_sensitivity(
+    peru_F_vel_w3,
+    peru_F_vel_w3_thresh,
+    "Peru (F) - W3 Velocity Threshold Sensitivity"
+  )
+)
+
+dev.off()
+
+
+png(
+  "../outputs/sliding_window_plots/peru_failed_vel_threshold_sensitivity_w5.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_velocity_threshold_sensitivity(
+    peru_F_vel_w5,
+    peru_F_vel_w5_thresh,
+    "Peru (F) - W5 Velocity Threshold Sensitivity"
+  )
+)
+
+dev.off()
+
+
+png(
+  "../outputs/sliding_window_plots/peru_failed_vel_threshold_sensitivity_w10.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_velocity_threshold_sensitivity(
+    peru_F_vel_w10,
+    peru_F_vel_w10_thresh,
+    "Peru (F) - W10 Velocity Threshold Sensitivity"
+  )
+)
+
+dev.off()
+
+
+# -------------------------
+# PERU UNFAILED
+# -------------------------
+
+png(
+  "../outputs/sliding_window_plots/peru_unfailed_vel_threshold_sensitivity_w3.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_velocity_threshold_sensitivity(
+    peru_U_vel_w3,
+    peru_U_vel_w3_thresh,
+    "Peru (U) - W3 Velocity Threshold Sensitivity"
+  )
+)
+
+dev.off()
+
+
+png(
+  "../outputs/sliding_window_plots/peru_unfailed_vel_threshold_sensitivity_w5.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_velocity_threshold_sensitivity(
+    peru_U_vel_w5,
+    peru_U_vel_w5_thresh,
+    "Peru (U) - W5 Velocity Threshold Sensitivity"
+  )
+)
+
+dev.off()
+
+
+png(
+  "../outputs/sliding_window_plots/peru_unfailed_vel_threshold_sensitivity_w10.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_velocity_threshold_sensitivity(
+    peru_U_vel_w10,
+    peru_U_vel_w10_thresh,
+    "Peru (U) - W10 Velocity Threshold Sensitivity"
+  )
+)
+
+dev.off()
+```
+
+Status plots:
+
+```{r}
+# -------------------------
+# CADIA FINAL STATUS PLOTS
+# threshold = -20 mm/year
+# -------------------------
+
+png(
+  "../outputs/sliding_window_plots/cadia_velocity_status_w3.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_status_comparison(
+    cadia_F_vel_w3,
+    cadia_S_vel_w3,
+    cadia_F_vel_w3_status,
+    cadia_S_vel_w3_status,
+    "Cadia Regression Velocity - W3 (-20 mm/year)"
+  )
+)
+
+dev.off()
+
+
+png(
+  "../outputs/sliding_window_plots/cadia_velocity_status_w5.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_status_comparison(
+    cadia_F_vel_w5,
+    cadia_S_vel_w5,
+    cadia_F_vel_w5_status,
+    cadia_S_vel_w5_status,
+    "Cadia Regression Velocity - W5 (-20 mm/year)"
+  )
+)
+
+dev.off()
+
+
+png(
+  "../outputs/sliding_window_plots/cadia_velocity_status_w10.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_status_comparison(
+    cadia_F_vel_w10,
+    cadia_S_vel_w10,
+    cadia_F_vel_w10_status,
+    cadia_S_vel_w10_status,
+    "Cadia Regression Velocity - W10 (-20 mm/year)"
+  )
+)
+
+dev.off()
+```
+
+```{r}
+# Peru
+
+# -------------------------
+# PERU FINAL STATUS PLOTS
+# threshold = -15 mm/year
+# -------------------------
+
+png(
+  "../outputs/sliding_window_plots/peru_velocity_status_w3.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_status_comparison(
+    peru_F_vel_w3,
+    peru_U_vel_w3,
+    peru_F_vel_w3_status,
+    peru_U_vel_w3_status,
+    "Peru Regression Velocity - W3 (-15 mm/year)"
+  )
+)
+
+dev.off()
+
+
+png(
+  "../outputs/sliding_window_plots/peru_velocity_status_w5.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_status_comparison(
+    peru_F_vel_w5,
+    peru_U_vel_w5,
+    peru_F_vel_w5_status,
+    peru_U_vel_w5_status,
+    "Peru Regression Velocity - W5 (-15 mm/year)"
+  )
+)
+
+dev.off()
+
+
+png(
+  "../outputs/sliding_window_plots/peru_velocity_status_w10.png",
+  width = plot_width,
+  height = plot_height,
+  res = plot_res
+)
+
+print(
+  plot_status_comparison(
+    peru_F_vel_w10,
+    peru_U_vel_w10,
+    peru_F_vel_w10_status,
+    peru_U_vel_w10_status,
+    "Peru Regression Velocity - W10 (-15 mm/year)"
+  )
+)
+
+dev.off()
+```
+
+## 6. K = 3 Sliding Window
+
+```{r}
+# Cadia displacement: W3, W5 and W10
+
+cadia_F_w3_k3 <- run_sliding_kmeans(
+  cadia_D_filtered,
+  window_size = 3,
+  k = 3
+)
+
+cadia_F_w5_k3 <- run_sliding_kmeans(
+  cadia_D_filtered,
+  window_size = 5,
+  k = 3
+)
+
+cadia_F_w10_k3 <- run_sliding_kmeans(
+  cadia_D_filtered,
+  window_size = 10,
+  k = 3
+)
+
+cadia_S_w3_k3 <- run_sliding_kmeans(
+  cadia_south_D_filtered,
+  window_size = 3,
+  k = 3
+)
+
+cadia_S_w5_k3 <- run_sliding_kmeans(
+  cadia_south_D_filtered,
+  window_size = 5,
+  k = 3
+)
+
+cadia_S_w10_k3 <- run_sliding_kmeans(
+  cadia_south_D_filtered,
+  window_size = 10,
+  k = 3
+)
+```
+
+```{r}
+# Cluster median ranges
+range(cadia_F_w3_k3$cluster_medians, na.rm = TRUE)
+range(cadia_F_w5_k3$cluster_medians, na.rm = TRUE)
+range(cadia_F_w10_k3$cluster_medians, na.rm = TRUE)
+
+range(cadia_S_w3_k3$cluster_medians, na.rm = TRUE)
+range(cadia_S_w5_k3$cluster_medians, na.rm = TRUE)
+range(cadia_S_w10_k3$cluster_medians, na.rm = TRUE)
+
+# Silhouette summaries
+summary(cadia_F_w5_k3$silhouette)
+summary(cadia_F_w10_k3$silhouette)
+
+summary(cadia_S_w5_k3$silhouette)
+summary(cadia_S_w10_k3$silhouette)
+```
+```{r}
+order_k3_medians <- function(result) {
+  
+  ordered <- t(apply(
+    result$cluster_medians,
+    1,
+    sort
+  ))
+  
+  colnames(ordered) <- c(
+    "Higher",
+    "Moderate",
+    "Lower"
+  )
+  
+  ordered
+}
+```
+
+```{r}
+F_w3_medians <- order_k3_medians(cadia_F_w3_k3)
+F_w5_medians <- order_k3_medians(cadia_F_w5_k3)
+F_w10_medians <- order_k3_medians(cadia_F_w10_k3)
+```
+```{r}
+F_w3_med <- order_k3_medians(cadia_F_w3_k3)
+F_w5_med <- order_k3_medians(cadia_F_w5_k3)
+F_w10_med <- order_k3_medians(cadia_F_w10_k3)
+
+S_w3_med <- order_k3_medians(cadia_S_w3_k3)
+S_w5_med <- order_k3_medians(cadia_S_w5_k3)
+S_w10_med <- order_k3_medians(cadia_S_w10_k3)
+```
+
+
+```{r}
+# Failed
+summary(F_w3_med)
+summary(F_w5_med)
+summary(F_w10_med)
+
+# Unfailed
+summary(S_w3_med)
+summary(S_w5_med)
+summary(S_w10_med)
+```
+
+```{r}
+# Failed
+apply(F_w3_med, 2, range, na.rm = TRUE)
+apply(F_w5_med, 2, range, na.rm = TRUE)
+apply(F_w10_med, 2, range, na.rm = TRUE)
+
+# Unfailed
+apply(S_w3_med, 2, range, na.rm = TRUE)
+apply(S_w5_med, 2, range, na.rm = TRUE)
+apply(S_w10_med, 2, range, na.rm = TRUE)
+```
+##### Status
+
+```{r}
+get_k3_status <- function(result, moderate_threshold, higher_threshold) {
+  
+  status <- matrix(
+    NA,
+    nrow = nrow(result$membership),
+    ncol = ncol(result$membership)
+  )
+  
+  for (iter in 1:ncol(result$membership)) {
+    
+    medians <- result$cluster_medians[iter, ]
+    
+    cluster_status <- ifelse(
+      medians <= higher_threshold, 3,
+      ifelse(medians <= moderate_threshold, 2, 1)
+    )
+    
+    status[, iter] <- cluster_status[
+      result$membership[, iter]
+    ]
+  }
+  
+  return(status)
+}
+```
+
+```{r}
+# W3
+cadia_F_w3_k3_status <- get_k3_status(
+  cadia_F_w3_k3, -2, -4
+)
+
+cadia_S_w3_k3_status <- get_k3_status(
+  cadia_S_w3_k3, -2, -4
+)
+
+# W5
+cadia_F_w5_k3_status <- get_k3_status(
+  cadia_F_w5_k3, -2, -5
+)
+
+cadia_S_w5_k3_status <- get_k3_status(
+  cadia_S_w5_k3, -2, -5
+)
+
+# W10
+cadia_F_w10_k3_status <- get_k3_status(
+  cadia_F_w10_k3, -3, -6
+)
+
+cadia_S_w10_k3_status <- get_k3_status(
+  cadia_S_w10_k3, -3, -6
+)
+```
+
+##### Plots
+
+```{r}
+plot_k3_status <- function(result, status, title_text) {
+  
+  # Percentage of points in each status at each window
+  pct_lower <- colMeans(status == 1) * 100
+  pct_moderate <- colMeans(status == 2) * 100
+  pct_higher <- colMeans(status == 3) * 100
+  
+  dates <- as.Date(
+    sub("^D_", "", result$iter_dates),
+    "%Y%m%d"
+  )
+  
+  plot_df <- data.frame(
+    Date = rep(dates, 3),
+    Percentage = c(
+      pct_lower,
+      pct_moderate,
+      pct_higher
+    ),
+    Status = rep(
+      c(
+        "Lower deformation",
+        "Moderate deformation",
+        "Higher deformation"
+      ),
+      each = length(dates)
+    )
+  )
+  
+  ggplot(
+    plot_df,
+    aes(x = Date, y = Percentage, colour = Status)
+  ) +
+    geom_line(linewidth = 1) +
+    labs(
+      x = "Date",
+      y = "Points (%)",
+      colour = "Status",
+      title = title_text
+    ) +
+    ylim(0, 100) +
+    theme_minimal()
+}
+```
+
+```{r}
+plot_k3_status(
+  cadia_F_w3_k3,
+  cadia_F_w3_k3_status,
+  "Cadia Failed - K=3 W3 (-2, -4 mm)"
+)
+
+plot_k3_status(
+  cadia_F_w5_k3,
+  cadia_F_w5_k3_status,
+  "Cadia Failed - K=3 W5 (-2, -5 mm)"
+)
+
+plot_k3_status(
+  cadia_F_w10_k3,
+  cadia_F_w10_k3_status,
+  "Cadia Failed - K=3 W10 (-3, -6 mm)"
+)
+```
+
+```{r}
+plot_k3_status(
+  cadia_S_w3_k3,
+  cadia_S_w3_k3_status,
+  "Cadia Unfailed - K=3 W3 (-2, -4 mm)"
+)
+
+plot_k3_status(
+  cadia_S_w5_k3,
+  cadia_S_w5_k3_status,
+  "Cadia Unfailed - K=3 W5 (-2, -5 mm)"
+)
+
+plot_k3_status(
+  cadia_S_w10_k3,
+  cadia_S_w10_k3_status,
+  "Cadia Unfailed - K=3 W10 (-3, -6 mm)"
+)
+```
+##### Exporting
+
+```{r}
+make_k3_export <- function(result, status, metadata) {
+  
+  export <- data.frame(
+    PointID = rep(metadata$PointID, times = ncol(status)),
+    lon = rep(metadata$lon, times = ncol(status)),
+    lat = rep(metadata$lat, times = ncol(status)),
+    Date = rep(result$iter_dates, each = nrow(status)),
+    Status = as.vector(status)
+  )
+  
+  return(export)
+}
+```
+
+```{r}
+# convert
+
+# Cadia Failed K=3
+
+cadia_F_w3_k3_export <- make_sliding_export(
+  cadia_F_w3_k3,
+  cadia_F_w3_k3_status,
+  cadia_info
+)
+
+cadia_F_w5_k3_export <- make_sliding_export(
+  cadia_F_w5_k3,
+  cadia_F_w5_k3_status,
+  cadia_info
+)
+
+cadia_F_w10_k3_export <- make_sliding_export(
+  cadia_F_w10_k3,
+  cadia_F_w10_k3_status,
+  cadia_info
+)
+
+
+# Cadia Unfailed K=3
+
+cadia_S_w3_k3_export <- make_sliding_export(
+  cadia_S_w3_k3,
+  cadia_S_w3_k3_status,
+  cadia_south_info
+)
+
+cadia_S_w5_k3_export <- make_sliding_export(
+  cadia_S_w5_k3,
+  cadia_S_w5_k3_status,
+  cadia_south_info
+)
+
+cadia_S_w10_k3_export <- make_sliding_export(
+  cadia_S_w10_k3,
+  cadia_S_w10_k3_status,
+  cadia_south_info
+)
+```
+
+```{r}
+head(cadia_F_w5_k3_export)
+table(cadia_F_w5_k3_export$Status)
+
+head(cadia_S_w5_k3_export)
+table(cadia_S_w5_k3_export$Status)
+```
+
+```{r}
+write.csv(
+  cadia_F_w3_k3_export,
+  "../outputs/clustering_csvs/cadia_F_k3_w3.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  cadia_F_w5_k3_export,
+  "../outputs/clustering_csvs/cadia_F_k3_w5.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  cadia_F_w10_k3_export,
+  "../outputs/clustering_csvs/cadia_F_k3_w10.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  cadia_S_w3_k3_export,
+  "../outputs/clustering_csvs/cadia_S_k3_w3.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  cadia_S_w5_k3_export,
+  "../outputs/clustering_csvs/cadia_S_k3_w5.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  cadia_S_w10_k3_export,
+  "../outputs/clustering_csvs/cadia_S_k3_w10.csv",
+  row.names = FALSE
+)
+```
+
+Export plots:
+
+```{r}
+# Failed
+
+p_F_w3_k3 <- plot_k3_status(
+  cadia_F_w3_k3,
+  cadia_F_w3_k3_status,
+  "Cadia Failed - K=3 W3 (-2, -4 mm)"
+)
+
+p_F_w5_k3 <- plot_k3_status(
+  cadia_F_w5_k3,
+  cadia_F_w5_k3_status,
+  "Cadia Failed - K=3 W5 (-2, -5 mm)"
+)
+
+p_F_w10_k3 <- plot_k3_status(
+  cadia_F_w10_k3,
+  cadia_F_w10_k3_status,
+  "Cadia Failed - K=3 W10 (-3, -6 mm)"
+)
+
+
+# Unfailed
+
+p_S_w3_k3 <- plot_k3_status(
+  cadia_S_w3_k3,
+  cadia_S_w3_k3_status,
+  "Cadia Unfailed - K=3 W3 (-2, -4 mm)"
+)
+
+p_S_w5_k3 <- plot_k3_status(
+  cadia_S_w5_k3,
+  cadia_S_w5_k3_status,
+  "Cadia Unfailed - K=3 W5 (-2, -5 mm)"
+)
+
+p_S_w10_k3 <- plot_k3_status(
+  cadia_S_w10_k3,
+  cadia_S_w10_k3_status,
+  "Cadia Unfailed - K=3 W10 (-3, -6 mm)"
+)
+```
+
+```{r}
+dir.create(
+  "../outputs/sliding_window_plots/k3",
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+
+ggsave("../outputs/sliding_window_plots/k3/cadia_F_k3_w3.png",
+       p_F_w3_k3, width = 10, height = 7, dpi = 300, bg = "white")
+
+ggsave("../outputs/sliding_window_plots/k3/cadia_F_k3_w5.png",
+       p_F_w5_k3, width = 10, height = 7, dpi = 300, bg = "white")
+
+ggsave("../outputs/sliding_window_plots/k3/cadia_F_k3_w10.png",
+       p_F_w10_k3, width = 10, height = 7, dpi = 300, bg = "white")
+
+ggsave("../outputs/sliding_window_plots/k3/cadia_S_k3_w3.png",
+       p_S_w3_k3, width = 10, height = 7, dpi = 300, bg = "white")
+
+ggsave("../outputs/sliding_window_plots/k3/cadia_S_k3_w5.png",
+       p_S_w5_k3, width = 10, height = 7, dpi = 300, bg = "white")
+
+ggsave("../outputs/sliding_window_plots/k3/cadia_S_k3_w10.png",
+       p_S_w10_k3, width = 10, height = 7, dpi = 300, bg = "white")
+```
+
+## 7. Silhouette Scores
+
+Expanding Window Approach:
+
+```{r}
+expanding_silhouette_table <- data.frame(
+  Site = c("Cadia", "Cadia", "Peru", "Peru"),
+  Outcome = c("Failed", "Unfailed", "Failed", "Unfailed"),
+  Mean_Silhouette = c(
+    mean(silhouette_values, na.rm = TRUE),
+    mean(silhouette_values_south, na.rm = TRUE),
+    mean(silhouette_peru_F, na.rm = TRUE),
+    mean(silhouette_peru_U, na.rm = TRUE)
+  )
+)
+
+expanding_silhouette_table$Mean_Silhouette <-
+  round(expanding_silhouette_table$Mean_Silhouette, 3)
+
+expanding_silhouette_table
+```
+
+Sliding Window Approach:
+
+```{r}
+silhouette_table_k2 <- data.frame(
+  Site = c("Cadia", "Cadia", "Peru", "Peru"),
+  Outcome = c("Failed", "Unfailed", "Failed", "Unfailed"),
+
+  W3 = c(
+    mean(cadia_F_w3$silhouette, na.rm = TRUE),
+    mean(cadia_S_w3$silhouette, na.rm = TRUE),
+    mean(peru_F_w3$silhouette, na.rm = TRUE),
+    mean(peru_U_w3$silhouette, na.rm = TRUE)
+  ),
+
+  W5 = c(
+    mean(cadia_F_w5$silhouette, na.rm = TRUE),
+    mean(cadia_S_w5$silhouette, na.rm = TRUE),
+    mean(peru_F_w5$silhouette, na.rm = TRUE),
+    mean(peru_U_w5$silhouette, na.rm = TRUE)
+  ),
+
+  W10 = c(
+    mean(cadia_F_w10$silhouette, na.rm = TRUE),
+    mean(cadia_S_w10$silhouette, na.rm = TRUE),
+    mean(peru_F_w10$silhouette, na.rm = TRUE),
+    mean(peru_U_w10$silhouette, na.rm = TRUE)
+  )
+)
+
+silhouette_table_k2[, 3:5] <- round(
+  silhouette_table_k2[, 3:5], 3
+)
+
+silhouette_table_k2
+```
+K = 3 comparison:
+
+```{r}
+silhouette_table_k3 <- data.frame(
+  Outcome = c("Failed", "Unfailed"),
+
+  W3 = c(
+    mean(cadia_F_w3_k3$silhouette, na.rm = TRUE),
+    mean(cadia_S_w3_k3$silhouette, na.rm = TRUE)
+  ),
+
+  W5 = c(
+    mean(cadia_F_w5_k3$silhouette, na.rm = TRUE),
+    mean(cadia_S_w5_k3$silhouette, na.rm = TRUE)
+  ),
+
+  W10 = c(
+    mean(cadia_F_w10_k3$silhouette, na.rm = TRUE),
+    mean(cadia_S_w10_k3$silhouette, na.rm = TRUE)
+  )
+)
+
+silhouette_table_k3[, 2:4] <- round(
+  silhouette_table_k3[, 2:4], 3
+)
+
+silhouette_table_k3
+```
+
+
+
+
