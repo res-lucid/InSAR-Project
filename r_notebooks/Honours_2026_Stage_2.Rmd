@@ -638,36 +638,6 @@ peru_U_MA3_hc_sil <- avg_sil_score(
   peru_U_MA3_hc,
   peru_U_MA3_dist
 )
-
-# ------ Feijao (T53)
-feijao_53_hc_sil <- avg_sil_score(feijao_53_hc, feijao_53_dist)
-
-# MA(2)
-feijao_53_MA2_hc_sil <- avg_sil_score(
-  feijao_53_MA2_hc,
-  feijao_53_MA2_dist
-)
-
-# MA(3)
-feijao_53_MA3_hc_sil <- avg_sil_score(
-  feijao_53_MA3_hc,
-  feijao_53_MA3_dist
-)
-
-# ------ Feijao (T155)
-feijao_155_hc_sil <- avg_sil_score(feijao_155_hc, feijao_155_dist)
-
-# MA(2)
-feijao_155_MA2_hc_sil <- avg_sil_score(
-  feijao_155_MA2_hc,
-  feijao_155_MA2_dist
-)
-
-# MA(3)
-feijao_155_MA3_hc_sil <- avg_sil_score(
-  feijao_155_MA3_hc,
-  feijao_155_MA3_dist
-)
 ```
 
 ```{r}
@@ -795,6 +765,52 @@ peru_F_MA3_hc_5 <- cutree(peru_F_MA3_hc, k=5)
 table(peru_F_MA3_hc_4)
 peru_failed$MA3_hc_5 <- peru_F_MA3_hc_4
 ```
+```{r}
+# Peru (U) - MA(2)
+# k = 2
+peru_U_MA2_hc_2 <- cutree(peru_U_MA2_hc, k=2)
+table(peru_U_MA2_hc_2)
+peru_unfailed$MA2_hc_2 <- peru_U_MA2_hc_2
+
+# k = 3
+peru_U_MA2_hc_3 <- cutree(peru_U_MA2_hc, k=3)
+table(peru_U_MA2_hc_3)
+peru_unfailed$MA2_hc_3 <- peru_U_MA2_hc_3
+
+# k = 4
+peru_U_MA2_hc_4 <- cutree(peru_U_MA2_hc, k=4)
+table(peru_U_MA2_hc_4)
+peru_unfailed$MA2_hc_4 <- peru_U_MA2_hc_4
+
+# k = 5
+peru_U_MA2_hc_5 <- cutree(peru_U_MA2_hc, k=5)
+table(peru_U_MA2_hc_5)
+peru_unfailed$MA2_hc_5 <- peru_U_MA2_hc_5
+```
+
+```{r}
+# Peru (U) - MA(3)
+# k = 2
+peru_U_MA3_hc_2 <- cutree(peru_U_MA3_hc, k=2)
+table(peru_U_MA3_hc_2)
+peru_unfailed$MA3_hc_2 <- peru_U_MA3_hc_2
+
+# k = 3
+peru_U_MA3_hc_3 <- cutree(peru_U_MA3_hc, k=3)
+table(peru_U_MA3_hc_3)
+peru_unfailed$MA3_hc_3 <- peru_U_MA3_hc_3
+
+# k = 4
+peru_U_MA3_hc_4 <- cutree(peru_U_MA3_hc, k=4)
+table(peru_U_MA3_hc_4)
+peru_unfailed$MA3_hc_4 <- peru_U_MA3_hc_4
+
+# k = 5
+peru_U_MA3_hc_5 <- cutree(peru_U_MA3_hc, k=5)
+table(peru_U_MA3_hc_5)
+peru_unfailed$MA3_hc_5 <- peru_U_MA3_hc_5
+```
+
 
 ```{r}
 # Feijao (T53) - MA(2)
@@ -1446,50 +1462,6 @@ peru_U_MA3_km_4 <- kmeans(peru_U_MA3, centers = 4, nstart = 20)
 peru_U_MA3_km_5 <- kmeans(peru_U_MA3, centers = 5, nstart = 20)
 ```
 
-```{r}
-set.seed(1234)
-
-# Raw
-feijao_53_km_2 <- kmeans(feijao_D_53, centers = 2, nstart = 20)
-feijao_53_km_3 <- kmeans(feijao_D_53, centers = 3, nstart = 20)
-feijao_53_km_4 <- kmeans(feijao_D_53, centers = 4, nstart = 20)
-feijao_53_km_5 <- kmeans(feijao_D_53, centers = 5, nstart = 20)
-
-# MA(2)
-feijao_53_MA2_km_2 <- kmeans(feijao_53_MA2, centers = 2, nstart = 20)
-feijao_53_MA2_km_3 <- kmeans(feijao_53_MA2, centers = 3, nstart = 20)
-feijao_53_MA2_km_4 <- kmeans(feijao_53_MA2, centers = 4, nstart = 20)
-feijao_53_MA2_km_5 <- kmeans(feijao_53_MA2, centers = 5, nstart = 20)
-
-# MA(3)
-feijao_53_MA3_km_2 <- kmeans(feijao_53_MA3, centers = 2, nstart = 20)
-feijao_53_MA3_km_3 <- kmeans(feijao_53_MA3, centers = 3, nstart = 20)
-feijao_53_MA3_km_4 <- kmeans(feijao_53_MA3, centers = 4, nstart = 20)
-feijao_53_MA3_km_5 <- kmeans(feijao_53_MA3, centers = 5, nstart = 20)
-```
-
-```{r}
-set.seed(1234)
-
-# Raw
-feijao_155_km_2 <- kmeans(feijao_D_155, centers = 2, nstart = 20)
-feijao_155_km_3 <- kmeans(feijao_D_155, centers = 3, nstart = 20)
-feijao_155_km_4 <- kmeans(feijao_D_155, centers = 4, nstart = 20)
-feijao_155_km_5 <- kmeans(feijao_D_155, centers = 5, nstart = 20)
-
-# MA(2)
-feijao_155_MA2_km_2 <- kmeans(feijao_155_MA2, centers = 2, nstart = 20)
-feijao_155_MA2_km_3 <- kmeans(feijao_155_MA2, centers = 3, nstart = 20)
-feijao_155_MA2_km_4 <- kmeans(feijao_155_MA2, centers = 4, nstart = 20)
-feijao_155_MA2_km_5 <- kmeans(feijao_155_MA2, centers = 5, nstart = 20)
-
-# MA(3)
-feijao_155_MA3_km_2 <- kmeans(feijao_155_MA3, centers = 2, nstart = 20)
-feijao_155_MA3_km_3 <- kmeans(feijao_155_MA3, centers = 3, nstart = 20)
-feijao_155_MA3_km_4 <- kmeans(feijao_155_MA3, centers = 4, nstart = 20)
-feijao_155_MA3_km_5 <- kmeans(feijao_155_MA3, centers = 5, nstart = 20)
-```
-
 #### Silhouette Score
 
 ```{r}
@@ -1543,6 +1515,7 @@ cadia_MA3_km_sil <- avg_sil_score_km(
 )
 ```
 
+
 ```{r}
 peru_F_km_sil <- avg_sil_score_km(
   list(peru_F_km_2,
@@ -1595,57 +1568,6 @@ peru_U_MA3_km_sil <- avg_sil_score_km(
 )
 ```
 
-```{r}
-feijao_53_km_sil <- avg_sil_score_km(
-  list(feijao_53_km_2,
-       feijao_53_km_3,
-       feijao_53_km_4,
-       feijao_53_km_5),
-  feijao_53_dist
-)
-
-feijao_53_MA2_km_sil <- avg_sil_score_km(
-  list(feijao_53_MA2_km_2,
-       feijao_53_MA2_km_3,
-       feijao_53_MA2_km_4,
-       feijao_53_MA2_km_5),
-  feijao_53_MA2_dist
-)
-
-feijao_53_MA3_km_sil <- avg_sil_score_km(
-  list(feijao_53_MA3_km_2,
-       feijao_53_MA3_km_3,
-       feijao_53_MA3_km_4,
-       feijao_53_MA3_km_5),
-  feijao_53_MA3_dist
-)
-```
-
-```{r}
-feijao_155_km_sil <- avg_sil_score_km(
-  list(feijao_155_km_2,
-       feijao_155_km_3,
-       feijao_155_km_4,
-       feijao_155_km_5),
-  feijao_155_dist
-)
-
-feijao_155_MA2_km_sil <- avg_sil_score_km(
-  list(feijao_155_MA2_km_2,
-       feijao_155_MA2_km_3,
-       feijao_155_MA2_km_4,
-       feijao_155_MA2_km_5),
-  feijao_155_MA2_dist
-)
-
-feijao_155_MA3_km_sil <- avg_sil_score_km(
-  list(feijao_155_MA3_km_2,
-       feijao_155_MA3_km_3,
-       feijao_155_MA3_km_4,
-       feijao_155_MA3_km_5),
-  feijao_155_MA3_dist
-)
-```
 
 **Average Silhouette Score Results**
 
@@ -1667,17 +1589,6 @@ peru_U_MA2_km_sil
 peru_U_MA3_km_sil
 ```
 
-```{r}
-feijao_53_km_sil
-feijao_53_MA2_km_sil
-feijao_53_MA3_km_sil
-```
-
-```{r}
-feijao_155_km_sil
-feijao_155_MA2_km_sil
-feijao_155_MA3_km_sil
-```
 
 #### Davies-Bouldin Index
 
@@ -1779,57 +1690,6 @@ peru_U_MA3_km_db <- dbi_km(
 )
 ```
 
-```{r}
-feijao_53_km_db <- dbi_km(
-  feijao_D_53,
-  list(feijao_53_km_2,
-       feijao_53_km_3,
-       feijao_53_km_4,
-       feijao_53_km_5)
-)
-
-feijao_53_MA2_km_db <- dbi_km(
-  feijao_53_MA2,
-  list(feijao_53_MA2_km_2,
-       feijao_53_MA2_km_3,
-       feijao_53_MA2_km_4,
-       feijao_53_MA2_km_5)
-)
-
-feijao_53_MA3_km_db <- dbi_km(
-  feijao_53_MA3,
-  list(feijao_53_MA3_km_2,
-       feijao_53_MA3_km_3,
-       feijao_53_MA3_km_4,
-       feijao_53_MA3_km_5)
-)
-```
-
-```{r}
-feijao_155_km_db <- dbi_km(
-  feijao_D_155,
-  list(feijao_155_km_2,
-       feijao_155_km_3,
-       feijao_155_km_4,
-       feijao_155_km_5)
-)
-
-feijao_155_MA2_km_db <- dbi_km(
-  feijao_155_MA2,
-  list(feijao_155_MA2_km_2,
-       feijao_155_MA2_km_3,
-       feijao_155_MA2_km_4,
-       feijao_155_MA2_km_5)
-)
-
-feijao_155_MA3_km_db <- dbi_km(
-  feijao_155_MA3,
-  list(feijao_155_MA3_km_2,
-       feijao_155_MA3_km_3,
-       feijao_155_MA3_km_4,
-       feijao_155_MA3_km_5)
-)
-```
 
 ```{r}
 cadia_km_db
@@ -1847,18 +1707,6 @@ peru_F_MA3_km_db
 peru_U_km_db
 peru_U_MA2_km_db
 peru_U_MA3_km_db
-```
-
-```{r}
-feijao_53_km_db
-feijao_53_MA2_km_db
-feijao_53_MA3_km_db
-```
-
-```{r}
-feijao_155_km_db
-feijao_155_MA2_km_db
-feijao_155_MA3_km_db
 ```
 
 ```{r}
@@ -2389,7 +2237,10 @@ We'll use the data represented in matrices that still include the baseline date 
 
 ```{r}
 dim(cadia_D_mat)
+dim(peru_D_F_mat)
+dim(peru_D_U_mat)
 ```
+
 
 ```{r}
 # Extracting actual date names
@@ -2419,6 +2270,21 @@ cadia_time
 ```{r}
 diff(cadia_dates)
 ```
+```{r}
+# Peru F
+peru_F_dates <- as.Date(
+  sub("D_", "", colnames(peru_D_F_mat)),
+  format = "%Y%m%d"
+)
+
+peru_F_time <- as.numeric(
+  peru_F_dates - peru_F_dates[1]
+)
+
+diff(peru_F_dates)
+```
+
+- All of Peru (failed) dates are separated by 12 days.
 
 We choose fixed knots, initially testing 60-day intervals (and the satellite capturing measurements in 12-day intervals).
 
@@ -2429,6 +2295,16 @@ cadia_knots <- seq(60, max(cadia_time) - 60, by = 60)
 
 cadia_knots
 ```
+```{r}
+# peru F
+peru_F_knots <- seq(
+  60,
+  max(peru_F_time) - 60,
+  by = 60
+)
+```
+
+
 
 ```{r}
 # Apply spline regression
@@ -2445,6 +2321,8 @@ cadia_model_data <- cbind(data.frame(displacement = y), X)
 
 cadia_test_fit <- lm(displacement ~ ., data = cadia_model_data)
 ```
+
+
 
 ```{r}
 png(
@@ -2544,6 +2422,22 @@ test_slopes
 ```
 
 ```{r}
+peru_F_piecewise <- t(
+  apply(
+    peru_D_F_mat,
+    1,
+    extract_piecewise_slopes,
+    time = peru_F_time,
+    knots = peru_F_knots
+  )
+)
+
+dim(peru_F_piecewise)
+anyNA(peru_F_piecewise)
+```
+
+
+```{r}
 cadia_test_slopes
 ```
 
@@ -2562,6 +2456,36 @@ anyNA(cadia_piecewise)
 ```
 
 We've converted the original data from 12502 x 45 displacement values to 12502 x \~9 slope values.
+
+```{r}
+peru_U_dates <- as.Date(
+  sub("D_", "", colnames(peru_D_U_mat)),
+  format = "%Y%m%d"
+)
+
+peru_U_time <- as.numeric(
+  peru_U_dates - peru_U_dates[1]
+)
+
+peru_U_knots <- seq(
+  60,
+  max(peru_U_time) - 60,
+  by = 60
+)
+
+peru_U_piecewise <- t(
+  apply(
+    peru_D_U_mat,
+    1,
+    extract_piecewise_slopes,
+    time = peru_U_time,
+    knots = peru_U_knots
+  )
+)
+
+anyNA(peru_U_piecewise)
+```
+
 
 ### 3.1 Hierarchical Clustering
 
@@ -2598,6 +2522,55 @@ plot(
 
 dev.off()
 ```
+##### Peru
+```{r}
+peru_F_piecewise_dist <- dist(
+  peru_F_piecewise,
+  method = "euclidean"
+)
+
+peru_F_piecewise_hc <- hclust(
+  peru_F_piecewise_dist,
+  method = "ward.D2"
+)
+
+peru_F_piecewise_hc_sil <- avg_sil_score(
+  peru_F_piecewise_hc,
+  peru_F_piecewise_dist
+)
+
+peru_F_piecewise_hc_sil
+```
+```{r}
+# memberships
+peru_failed$piecewise_hc_2 <- cutree(peru_F_piecewise_hc, k = 2)
+peru_failed$piecewise_hc_3 <- cutree(peru_F_piecewise_hc, k = 3)
+peru_failed$piecewise_hc_4 <- cutree(peru_F_piecewise_hc, k = 4)
+peru_failed$piecewise_hc_5 <- cutree(peru_F_piecewise_hc, k = 5)
+```
+
+```{r}
+# Peru unfailed
+peru_U_piecewise_dist <- dist(peru_U_piecewise)
+
+peru_U_piecewise_hc <- hclust(
+  peru_U_piecewise_dist,
+  method = "ward.D2"
+)
+
+peru_U_piecewise_hc_sil <- avg_sil_score(
+  peru_U_piecewise_hc,
+  peru_U_piecewise_dist
+)
+
+peru_U_piecewise_hc_sil
+
+peru_unfailed$piecewise_hc_2 <- cutree(peru_U_piecewise_hc, k = 2)
+peru_unfailed$piecewise_hc_3 <- cutree(peru_U_piecewise_hc, k = 3)
+peru_unfailed$piecewise_hc_4 <- cutree(peru_U_piecewise_hc, k = 4)
+peru_unfailed$piecewise_hc_5 <- cutree(peru_U_piecewise_hc, k = 5)
+```
+
 
 #### Silhouette Score
 
@@ -2726,6 +2699,48 @@ cadia_piecewise_km_5 <- kmeans(
 )
 ```
 
+```{r}
+set.seed(1234)
+
+peru_F_piecewise_km_2 <- kmeans(peru_F_piecewise, centers = 2, nstart = 20)
+peru_F_piecewise_km_3 <- kmeans(peru_F_piecewise, centers = 3, nstart = 20)
+peru_F_piecewise_km_4 <- kmeans(peru_F_piecewise, centers = 4, nstart = 20)
+peru_F_piecewise_km_5 <- kmeans(peru_F_piecewise, centers = 5, nstart = 20)
+```
+
+```{r}
+set.seed(1234)
+
+peru_U_piecewise_km_2 <- kmeans(peru_U_piecewise, 2, nstart = 20)
+peru_U_piecewise_km_3 <- kmeans(peru_U_piecewise, 3, nstart = 20)
+peru_U_piecewise_km_4 <- kmeans(peru_U_piecewise, 4, nstart = 20)
+peru_U_piecewise_km_5 <- kmeans(peru_U_piecewise, 5, nstart = 20)
+
+peru_U_piecewise_km_sil <- avg_sil_score_km(
+  list(
+    peru_U_piecewise_km_2,
+    peru_U_piecewise_km_3,
+    peru_U_piecewise_km_4,
+    peru_U_piecewise_km_5
+  ),
+  peru_U_piecewise_dist
+)
+
+peru_U_piecewise_km_db <- dbi_km(
+  peru_U_piecewise,
+  list(
+    peru_U_piecewise_km_2,
+    peru_U_piecewise_km_3,
+    peru_U_piecewise_km_4,
+    peru_U_piecewise_km_5
+  )
+)
+
+peru_U_piecewise_km_sil
+peru_U_piecewise_km_db
+```
+
+
 #### Silhouette Score
 
 ```{r}
@@ -2737,6 +2752,20 @@ cadia_piecewise_km_sil <- avg_sil_score_km(
   cadia_piecewise_dist
 )
 ```
+```{r}
+peru_F_piecewise_km_sil <- avg_sil_score_km(
+  list(
+    peru_F_piecewise_km_2,
+    peru_F_piecewise_km_3,
+    peru_F_piecewise_km_4,
+    peru_F_piecewise_km_5
+  ),
+  peru_F_piecewise_dist
+)
+
+peru_F_piecewise_km_sil
+```
+
 
 ```{r}
 #cadia_km_sil
@@ -2754,6 +2783,26 @@ cadia_piecewise_km_db <- dbi_km(
        cadia_piecewise_km_5)
 )
 ```
+```{r}
+peru_F_piecewise_km_db <- dbi_km(
+  peru_F_piecewise,
+  list(
+    peru_F_piecewise_km_2,
+    peru_F_piecewise_km_3,
+    peru_F_piecewise_km_4,
+    peru_F_piecewise_km_5
+  )
+)
+
+peru_F_piecewise_km_db
+```
+```{r}
+peru_failed$piecewise_km_2 <- peru_F_piecewise_km_2$cluster
+peru_failed$piecewise_km_3 <- peru_F_piecewise_km_3$cluster
+peru_failed$piecewise_km_4 <- peru_F_piecewise_km_4$cluster
+peru_failed$piecewise_km_5 <- peru_F_piecewise_km_5$cluster
+```
+
 
 ```{r}
 cadia_piecewise_km_db
@@ -2907,6 +2956,105 @@ plot(
 
 dev.off()
 ```
+##### Peru
+
+```{r}
+peru_F_time_diff <- as.numeric(diff(peru_F_dates))
+
+peru_F_disp_diff <- t(
+  apply(peru_D_F_mat, 1, diff)
+)
+
+peru_F_vel <- sweep(
+  peru_F_disp_diff,
+  2,
+  peru_F_time_diff,
+  FUN = "/"
+)
+
+colnames(peru_F_vel) <- paste0(
+  "V_",
+  format(peru_F_dates[-1], "%Y%m%d")
+)
+
+dim(peru_F_vel)
+anyNA(peru_F_vel)
+```
+
+```{r}
+# unfailed
+peru_U_time_diff <- as.numeric(diff(peru_U_dates))
+
+peru_U_disp_diff <- t(
+  apply(peru_D_U_mat, 1, diff)
+)
+
+peru_U_vel <- sweep(
+  peru_U_disp_diff,
+  2,
+  peru_U_time_diff,
+  FUN = "/"
+)
+
+colnames(peru_U_vel) <- paste0(
+  "V_",
+  format(peru_U_dates[-1], "%Y%m%d")
+)
+
+peru_U_vel_dist <- dist(peru_U_vel)
+
+peru_U_vel_hc <- hclust(
+  peru_U_vel_dist,
+  method = "ward.D2"
+)
+
+peru_U_vel_hc_sil <- avg_sil_score(
+  peru_U_vel_hc,
+  peru_U_vel_dist
+)
+
+peru_unfailed$vel_hc_2 <- cutree(peru_U_vel_hc, 2)
+peru_unfailed$vel_hc_3 <- cutree(peru_U_vel_hc, 3)
+peru_unfailed$vel_hc_4 <- cutree(peru_U_vel_hc, 4)
+peru_unfailed$vel_hc_5 <- cutree(peru_U_vel_hc, 5)
+
+set.seed(1234)
+
+peru_U_vel_km_2 <- kmeans(peru_U_vel, 2, nstart = 20)
+peru_U_vel_km_3 <- kmeans(peru_U_vel, 3, nstart = 20)
+peru_U_vel_km_4 <- kmeans(peru_U_vel, 4, nstart = 20)
+peru_U_vel_km_5 <- kmeans(peru_U_vel, 5, nstart = 20)
+
+peru_U_vel_km_sil <- avg_sil_score_km(
+  list(
+    peru_U_vel_km_2,
+    peru_U_vel_km_3,
+    peru_U_vel_km_4,
+    peru_U_vel_km_5
+  ),
+  peru_U_vel_dist
+)
+
+peru_U_vel_km_db <- dbi_km(
+  peru_U_vel,
+  list(
+    peru_U_vel_km_2,
+    peru_U_vel_km_3,
+    peru_U_vel_km_4,
+    peru_U_vel_km_5
+  )
+)
+
+peru_U_vel_hc_sil
+peru_U_vel_km_sil
+peru_U_vel_km_db
+
+peru_unfailed$vel_km_2 <- peru_U_vel_km_2$cluster
+peru_unfailed$vel_km_3 <- peru_U_vel_km_3$cluster
+peru_unfailed$vel_km_4 <- peru_U_vel_km_4$cluster
+peru_unfailed$vel_km_5 <- peru_U_vel_km_5$cluster
+```
+
 
 ### 4.2 Hierarchical Clustering
 
@@ -2943,6 +3091,27 @@ plot(
 
 dev.off()
 ```
+```{r}
+peru_F_vel_dist <- dist(peru_F_vel)
+
+peru_F_vel_hc <- hclust(
+  peru_F_vel_dist,
+  method = "ward.D2"
+)
+
+peru_F_vel_hc_sil <- avg_sil_score(
+  peru_F_vel_hc,
+  peru_F_vel_dist
+)
+
+peru_F_vel_hc_sil
+
+peru_failed$vel_hc_2 <- cutree(peru_F_vel_hc, 2)
+peru_failed$vel_hc_3 <- cutree(peru_F_vel_hc, 3)
+peru_failed$vel_hc_4 <- cutree(peru_F_vel_hc, 4)
+peru_failed$vel_hc_5 <- cutree(peru_F_vel_hc, 5)
+```
+
 
 #### Silhouette Score
 
@@ -3071,6 +3240,44 @@ cadia_vel_km_5 <- kmeans(
 )
 ```
 
+```{r}
+set.seed(1234)
+
+peru_F_vel_km_2 <- kmeans(peru_F_vel, 2, nstart = 20)
+peru_F_vel_km_3 <- kmeans(peru_F_vel, 3, nstart = 20)
+peru_F_vel_km_4 <- kmeans(peru_F_vel, 4, nstart = 20)
+peru_F_vel_km_5 <- kmeans(peru_F_vel, 5, nstart = 20)
+
+peru_F_vel_km_sil <- avg_sil_score_km(
+  list(
+    peru_F_vel_km_2,
+    peru_F_vel_km_3,
+    peru_F_vel_km_4,
+    peru_F_vel_km_5
+  ),
+  peru_F_vel_dist
+)
+
+peru_F_vel_km_db <- dbi_km(
+  peru_F_vel,
+  list(
+    peru_F_vel_km_2,
+    peru_F_vel_km_3,
+    peru_F_vel_km_4,
+    peru_F_vel_km_5
+  )
+)
+
+peru_F_vel_km_sil
+peru_F_vel_km_db
+
+peru_failed$vel_km_2 <- peru_F_vel_km_2$cluster
+peru_failed$vel_km_3 <- peru_F_vel_km_3$cluster
+peru_failed$vel_km_4 <- peru_F_vel_km_4$cluster
+peru_failed$vel_km_5 <- peru_F_vel_km_5$cluster
+```
+
+
 #### Silhouette Score
 
 ```{r}
@@ -3194,6 +3401,106 @@ dim(cadia_std)
 anyNA(cadia_std)
 ```
 
+##### Peru
+
+```{r}
+standardise_rows <- function(x) {
+
+  row_sd <- apply(x, 1, sd)
+  valid_rows <- row_sd != 0
+
+  x_std <- t(
+    scale(
+      t(x[valid_rows, , drop = FALSE])
+    )
+  )
+
+  list(
+    data = x_std,
+    valid_rows = valid_rows
+  )
+}
+```
+
+```{r}
+peru_F_std_result <- standardise_rows(peru_D_F)
+peru_U_std_result <- standardise_rows(peru_D_U)
+
+peru_F_std <- peru_F_std_result$data
+peru_F_valid_rows <- peru_F_std_result$valid_rows
+
+peru_U_std <- peru_U_std_result$data
+peru_U_valid_rows <- peru_U_std_result$valid_rows
+
+sum(!peru_F_valid_rows)
+sum(!peru_U_valid_rows)
+
+anyNA(peru_F_std)
+anyNA(peru_U_std)
+```
+
+```{r}
+peru_U_std_dist <- dist(peru_U_std)
+
+peru_U_std_hc <- hclust(
+  peru_U_std_dist,
+  method = "ward.D2"
+)
+
+peru_U_std_hc_sil <- avg_sil_score(
+  peru_U_std_hc,
+  peru_U_std_dist
+)
+
+set.seed(1234)
+
+peru_U_std_km_2 <- kmeans(peru_U_std, 2, nstart = 20)
+peru_U_std_km_3 <- kmeans(peru_U_std, 3, nstart = 20)
+peru_U_std_km_4 <- kmeans(peru_U_std, 4, nstart = 20)
+peru_U_std_km_5 <- kmeans(peru_U_std, 5, nstart = 20)
+
+peru_U_std_km_sil <- avg_sil_score_km(
+  list(
+    peru_U_std_km_2,
+    peru_U_std_km_3,
+    peru_U_std_km_4,
+    peru_U_std_km_5
+  ),
+  peru_U_std_dist
+)
+
+peru_U_std_km_db <- dbi_km(
+  peru_U_std,
+  list(
+    peru_U_std_km_2,
+    peru_U_std_km_3,
+    peru_U_std_km_4,
+    peru_U_std_km_5
+  )
+)
+
+peru_U_std_hc_sil
+peru_U_std_km_sil
+peru_U_std_km_db
+```
+
+```{r}
+for(k in 2:5) {
+  peru_unfailed[[paste0("std_hc_", k)]] <- NA_integer_
+  peru_unfailed[[paste0("std_km_", k)]] <- NA_integer_
+}
+
+peru_unfailed$std_hc_2[peru_U_valid_rows] <- cutree(peru_U_std_hc, 2)
+peru_unfailed$std_hc_3[peru_U_valid_rows] <- cutree(peru_U_std_hc, 3)
+peru_unfailed$std_hc_4[peru_U_valid_rows] <- cutree(peru_U_std_hc, 4)
+peru_unfailed$std_hc_5[peru_U_valid_rows] <- cutree(peru_U_std_hc, 5)
+
+peru_unfailed$std_km_2[peru_U_valid_rows] <- peru_U_std_km_2$cluster
+peru_unfailed$std_km_3[peru_U_valid_rows] <- peru_U_std_km_3$cluster
+peru_unfailed$std_km_4[peru_U_valid_rows] <- peru_U_std_km_4$cluster
+peru_unfailed$std_km_5[peru_U_valid_rows] <- peru_U_std_km_5$cluster
+```
+
 ### 5.1 Hierarchical Clustering
 
 #### Dendrograms
@@ -3285,6 +3592,90 @@ write.csv(
   row.names = FALSE
 )
 ```
+
+##### Peru
+
+```{r}
+peru_F_std_dist <- dist(peru_F_std)
+
+peru_F_std_hc <- hclust(
+  peru_F_std_dist,
+  method = "ward.D2"
+)
+
+peru_F_std_hc_sil <- avg_sil_score(
+  peru_F_std_hc,
+  peru_F_std_dist
+)
+
+set.seed(1234)
+
+peru_F_std_km_2 <- kmeans(peru_F_std, 2, nstart = 20)
+peru_F_std_km_3 <- kmeans(peru_F_std, 3, nstart = 20)
+peru_F_std_km_4 <- kmeans(peru_F_std, 4, nstart = 20)
+peru_F_std_km_5 <- kmeans(peru_F_std, 5, nstart = 20)
+
+peru_F_std_km_sil <- avg_sil_score_km(
+  list(
+    peru_F_std_km_2,
+    peru_F_std_km_3,
+    peru_F_std_km_4,
+    peru_F_std_km_5
+  ),
+  peru_F_std_dist
+)
+
+peru_F_std_km_db <- dbi_km(
+  peru_F_std,
+  list(
+    peru_F_std_km_2,
+    peru_F_std_km_3,
+    peru_F_std_km_4,
+    peru_F_std_km_5
+  )
+)
+
+peru_F_std_hc_sil
+peru_F_std_km_sil
+peru_F_std_km_db
+```
+
+```{r}
+for(k in 2:5) {
+  peru_failed[[paste0("std_hc_", k)]] <- NA_integer_
+}
+
+peru_failed$std_hc_2[peru_F_valid_rows] <- cutree(peru_F_std_hc, 2)
+peru_failed$std_hc_3[peru_F_valid_rows] <- cutree(peru_F_std_hc, 3)
+peru_failed$std_hc_4[peru_F_valid_rows] <- cutree(peru_F_std_hc, 4)
+peru_failed$std_hc_5[peru_F_valid_rows] <- cutree(peru_F_std_hc, 5)
+
+for(k in 2:5) {
+  peru_failed[[paste0("std_km_", k)]] <- NA_integer_
+}
+
+peru_failed$std_km_2[peru_F_valid_rows] <- peru_F_std_km_2$cluster
+peru_failed$std_km_3[peru_F_valid_rows] <- peru_F_std_km_3$cluster
+peru_failed$std_km_4[peru_F_valid_rows] <- peru_F_std_km_4$cluster
+peru_failed$std_km_5[peru_F_valid_rows] <- peru_F_std_km_5$cluster
+```
+
+Exporting:
+
+```{r}
+write.csv(
+  peru_failed,
+  "../outputs/peru_failed_stage2_all.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  peru_unfailed,
+  "../outputs/peru_unfailed_stage2_all.csv",
+  row.names = FALSE
+)
+```
+
 
 ### 5.2 K-means Clustering
 
@@ -3463,3 +3854,234 @@ write.csv(
   row.names = FALSE
 )
 ```
+
+##6. Silhouette Score Comparison
+
+```{r}
+cadia_silhouette_table <- data.frame(
+  Site = "Cadia",
+
+  Transformation = rep(
+    c(
+      "Cumulative displacement",
+      "Moving average (MA2)",
+      "Moving average (MA3)",
+      "Piecewise regression",
+      "Internal velocity",
+      "Standardised"
+    ),
+    each = 8
+  ),
+
+  Algorithm = rep(
+    rep(c("HC", "K-means"), each = 4),
+    times = 6
+  ),
+
+  k = rep(2:5, times = 12),
+
+  Silhouette = c(
+    cadia_hc_sil$avg_silhouette_score,
+    cadia_km_sil$avg_silhouette_score,
+
+    cadia_MA2_hc_sil$avg_silhouette_score,
+    cadia_MA2_km_sil$avg_silhouette_score,
+
+    cadia_MA3_hc_sil$avg_silhouette_score,
+    cadia_MA3_km_sil$avg_silhouette_score,
+
+    cadia_piecewise_hc_sil$avg_silhouette_score,
+    cadia_piecewise_km_sil$avg_silhouette_score,
+
+    cadia_vel_hc_sil$avg_silhouette_score,
+    cadia_vel_km_sil$avg_silhouette_score,
+
+    cadia_std_hc_sil$avg_silhouette_score,
+    cadia_std_km_sil$avg_silhouette_score
+  )
+)
+
+cadia_silhouette_table$Silhouette <-
+  round(cadia_silhouette_table$Silhouette, 4)
+
+View(cadia_silhouette_table)
+```
+
+```{r}
+peru_F_silhouette_table <- data.frame(
+  Site = "Peru Failed",
+
+  Transformation = rep(
+    c(
+      "Cumulative displacement",
+      "MA2",
+      "MA3",
+      "Piecewise regression",
+      "Internal velocity",
+      "Standardised"
+    ),
+    each = 8
+  ),
+
+  Algorithm = rep(
+    rep(c("HC", "K-means"), each = 4),
+    times = 6
+  ),
+
+  k = rep(2:5, times = 12),
+
+  Silhouette = c(
+    # Cumulative displacement
+    peru_F_hc_sil$avg_silhouette_score,
+    peru_F_km_sil$avg_silhouette_score,
+
+    # MA2
+    peru_F_MA2_hc_sil$avg_silhouette_score,
+    peru_F_MA2_km_sil$avg_silhouette_score,
+
+    # MA3
+    peru_F_MA3_hc_sil$avg_silhouette_score,
+    peru_F_MA3_km_sil$avg_silhouette_score,
+
+    # Piecewise
+    peru_F_piecewise_hc_sil$avg_silhouette_score,
+    peru_F_piecewise_km_sil$avg_silhouette_score,
+
+    # Internal velocity
+    peru_F_vel_hc_sil$avg_silhouette_score,
+    peru_F_vel_km_sil$avg_silhouette_score,
+
+    # Standardised
+    peru_F_std_hc_sil$avg_silhouette_score,
+    peru_F_std_km_sil$avg_silhouette_score
+  )
+)
+
+peru_F_silhouette_table$Silhouette <-
+  round(peru_F_silhouette_table$Silhouette, 4)
+
+peru_F_silhouette_table
+```
+```{r}
+peru_U_silhouette_table <- data.frame(
+  Site = "Peru Unfailed",
+
+  Transformation = rep(
+    c(
+      "Cumulative displacement",
+      "MA2",
+      "MA3",
+      "Piecewise regression",
+      "Internal velocity",
+      "Standardised"
+    ),
+    each = 8
+  ),
+
+  Algorithm = rep(
+    rep(c("HC", "K-means"), each = 4),
+    times = 6
+  ),
+
+  k = rep(2:5, times = 12),
+
+  Silhouette = c(
+    peru_U_hc_sil$avg_silhouette_score,
+    peru_U_km_sil$avg_silhouette_score,
+
+    peru_U_MA2_hc_sil$avg_silhouette_score,
+    peru_U_MA2_km_sil$avg_silhouette_score,
+
+    peru_U_MA3_hc_sil$avg_silhouette_score,
+    peru_U_MA3_km_sil$avg_silhouette_score,
+
+    peru_U_piecewise_hc_sil$avg_silhouette_score,
+    peru_U_piecewise_km_sil$avg_silhouette_score,
+
+    peru_U_vel_hc_sil$avg_silhouette_score,
+    peru_U_vel_km_sil$avg_silhouette_score,
+
+    peru_U_std_hc_sil$avg_silhouette_score,
+    peru_U_std_km_sil$avg_silhouette_score
+  )
+)
+
+peru_U_silhouette_table$Silhouette <-
+  round(peru_U_silhouette_table$Silhouette, 4)
+
+peru_U_silhouette_table
+```
+```{r}
+all_silhouette_results <- rbind(
+  cadia_silhouette_table,
+  peru_F_silhouette_table,
+  peru_U_silhouette_table
+)
+
+all_silhouette_results$Silhouette <-
+  round(all_silhouette_results$Silhouette, 4)
+
+View(all_silhouette_results)
+
+write.csv(
+  all_silhouette_results,
+  "../outputs/stage2_silhouette_results.csv",
+  row.names = FALSE
+)
+```
+
+```{r}
+library(dplyr)
+library(tidyr)
+
+count_clusters <- function(data, site_name) {
+
+  cluster_cols <- grep(
+    "(hc|km)_[2-5]$",
+    names(data),
+    value = TRUE
+  )
+
+  data %>%
+    select(all_of(cluster_cols)) %>%
+    pivot_longer(
+      cols = everything(),
+      names_to = "Method",
+      values_to = "Cluster"
+    ) %>%
+    filter(!is.na(Cluster)) %>%
+    count(Method, Cluster, name = "Number_of_points") %>%
+    mutate(Site = site_name, .before = 1) %>%
+    arrange(Method, Cluster)
+}
+```
+
+```{r}
+names(cadia)
+names(peru_failed)
+names(peru_unfailed)
+```
+
+
+```{r}
+cadia_cluster_counts <- count_clusters(cadia, "Cadia")
+
+peru_F_cluster_counts <- count_clusters(
+  peru_failed, "Peru Failed"
+)
+
+peru_U_cluster_counts <- count_clusters(
+  peru_unfailed, "Peru Unfailed"
+)
+
+all_cluster_counts <- bind_rows(
+  cadia_cluster_counts,
+  peru_F_cluster_counts,
+  peru_U_cluster_counts
+)
+
+View(all_cluster_counts)
+```
+
+
+

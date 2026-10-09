@@ -1,0 +1,145 @@
+"Site","Transformation","Algorithm","k","Silhouette"
+"Cadia","Cumulative displacement","HC",2,0.3773
+"Cadia","Cumulative displacement","HC",3,0.3026
+"Cadia","Cumulative displacement","HC",4,0.2556
+"Cadia","Cumulative displacement","HC",5,0.2274
+"Cadia","Cumulative displacement","K-means",2,0.3737
+"Cadia","Cumulative displacement","K-means",3,0.3231
+"Cadia","Cumulative displacement","K-means",4,0.2552
+"Cadia","Cumulative displacement","K-means",5,0.2033
+"Cadia","Moving average (MA2)","HC",2,0.4098
+"Cadia","Moving average (MA2)","HC",3,0.3727
+"Cadia","Moving average (MA2)","HC",4,0.3045
+"Cadia","Moving average (MA2)","HC",5,0.2233
+"Cadia","Moving average (MA2)","K-means",2,0.4113
+"Cadia","Moving average (MA2)","K-means",3,0.369
+"Cadia","Moving average (MA2)","K-means",4,0.3048
+"Cadia","Moving average (MA2)","K-means",5,0.2529
+"Cadia","Moving average (MA3)","HC",2,0.4249
+"Cadia","Moving average (MA3)","HC",3,0.343
+"Cadia","Moving average (MA3)","HC",4,0.2947
+"Cadia","Moving average (MA3)","HC",5,0.2727
+"Cadia","Moving average (MA3)","K-means",2,0.429
+"Cadia","Moving average (MA3)","K-means",3,0.3911
+"Cadia","Moving average (MA3)","K-means",4,0.3304
+"Cadia","Moving average (MA3)","K-means",5,0.2799
+"Cadia","Piecewise regression","HC",2,0.117
+"Cadia","Piecewise regression","HC",3,0.0966
+"Cadia","Piecewise regression","HC",4,0.0858
+"Cadia","Piecewise regression","HC",5,0.0681
+"Cadia","Piecewise regression","K-means",2,0.1274
+"Cadia","Piecewise regression","K-means",3,0.1219
+"Cadia","Piecewise regression","K-means",4,0.115
+"Cadia","Piecewise regression","K-means",5,0.11
+"Cadia","Internal velocity","HC",2,0.1306
+"Cadia","Internal velocity","HC",3,0.0538
+"Cadia","Internal velocity","HC",4,0.0517
+"Cadia","Internal velocity","HC",5,0.0319
+"Cadia","Internal velocity","K-means",2,0.0621
+"Cadia","Internal velocity","K-means",3,0.0764
+"Cadia","Internal velocity","K-means",4,0.0247
+"Cadia","Internal velocity","K-means",5,0.0232
+"Cadia","Standardised","HC",2,0.2262
+"Cadia","Standardised","HC",3,0.1736
+"Cadia","Standardised","HC",4,0.0886
+"Cadia","Standardised","HC",5,0.0523
+"Cadia","Standardised","K-means",2,0.252
+"Cadia","Standardised","K-means",3,0.1776
+"Cadia","Standardised","K-means",4,0.1228
+"Cadia","Standardised","K-means",5,0.109
+"Peru Failed","Cumulative displacement","HC",2,0.4363
+"Peru Failed","Cumulative displacement","HC",3,0.3402
+"Peru Failed","Cumulative displacement","HC",4,0.2607
+"Peru Failed","Cumulative displacement","HC",5,0.216
+"Peru Failed","Cumulative displacement","K-means",2,0.4318
+"Peru Failed","Cumulative displacement","K-means",3,0.3573
+"Peru Failed","Cumulative displacement","K-means",4,0.3061
+"Peru Failed","Cumulative displacement","K-means",5,0.255
+"Peru Failed","MA2","HC",2,0.4422
+"Peru Failed","MA2","HC",3,0.3693
+"Peru Failed","MA2","HC",4,0.3307
+"Peru Failed","MA2","HC",5,0.2624
+"Peru Failed","MA2","K-means",2,0.4575
+"Peru Failed","MA2","K-means",3,0.3916
+"Peru Failed","MA2","K-means",4,0.3445
+"Peru Failed","MA2","K-means",5,0.2954
+"Peru Failed","MA3","HC",2,0.4748
+"Peru Failed","MA3","HC",3,0.4012
+"Peru Failed","MA3","HC",4,0.3435
+"Peru Failed","MA3","HC",5,0.2638
+"Peru Failed","MA3","K-means",2,0.4697
+"Peru Failed","MA3","K-means",3,0.4082
+"Peru Failed","MA3","K-means",4,0.364
+"Peru Failed","MA3","K-means",5,0.3154
+"Peru Failed","Piecewise regression","HC",2,0.0959
+"Peru Failed","Piecewise regression","HC",3,0.0535
+"Peru Failed","Piecewise regression","HC",4,0.0312
+"Peru Failed","Piecewise regression","HC",5,0.0276
+"Peru Failed","Piecewise regression","K-means",2,0.0981
+"Peru Failed","Piecewise regression","K-means",3,0.088
+"Peru Failed","Piecewise regression","K-means",4,0.082
+"Peru Failed","Piecewise regression","K-means",5,0.0846
+"Peru Failed","Internal velocity","HC",2,0.0978
+"Peru Failed","Internal velocity","HC",3,0.057
+"Peru Failed","Internal velocity","HC",4,0.0513
+"Peru Failed","Internal velocity","HC",5,0.0427
+"Peru Failed","Internal velocity","K-means",2,0.0357
+"Peru Failed","Internal velocity","K-means",3,0.0205
+"Peru Failed","Internal velocity","K-means",4,0.0123
+"Peru Failed","Internal velocity","K-means",5,0.0127
+"Peru Failed","Standardised","HC",2,0.2965
+"Peru Failed","Standardised","HC",3,0.2321
+"Peru Failed","Standardised","HC",4,0.1961
+"Peru Failed","Standardised","HC",5,0.1247
+"Peru Failed","Standardised","K-means",2,0.3442
+"Peru Failed","Standardised","K-means",3,0.2547
+"Peru Failed","Standardised","K-means",4,0.2387
+"Peru Failed","Standardised","K-means",5,0.1802
+"Peru Unfailed","Cumulative displacement","HC",2,0.4022
+"Peru Unfailed","Cumulative displacement","HC",3,0.3196
+"Peru Unfailed","Cumulative displacement","HC",4,0.2918
+"Peru Unfailed","Cumulative displacement","HC",5,0.2605
+"Peru Unfailed","Cumulative displacement","K-means",2,0.3842
+"Peru Unfailed","Cumulative displacement","K-means",3,0.3498
+"Peru Unfailed","Cumulative displacement","K-means",4,0.2816
+"Peru Unfailed","Cumulative displacement","K-means",5,0.2366
+"Peru Unfailed","MA2","HC",2,0.4303
+"Peru Unfailed","MA2","HC",3,0.3746
+"Peru Unfailed","MA2","HC",4,0.2507
+"Peru Unfailed","MA2","HC",5,0.2547
+"Peru Unfailed","MA2","K-means",2,0.4117
+"Peru Unfailed","MA2","K-means",3,0.3855
+"Peru Unfailed","MA2","K-means",4,0.3214
+"Peru Unfailed","MA2","K-means",5,0.2784
+"Peru Unfailed","MA3","HC",2,0.4156
+"Peru Unfailed","MA3","HC",3,0.3104
+"Peru Unfailed","MA3","HC",4,0.3011
+"Peru Unfailed","MA3","HC",5,0.2941
+"Peru Unfailed","MA3","K-means",2,0.4247
+"Peru Unfailed","MA3","K-means",3,0.4026
+"Peru Unfailed","MA3","K-means",4,0.3433
+"Peru Unfailed","MA3","K-means",5,0.301
+"Peru Unfailed","Piecewise regression","HC",2,0.0647
+"Peru Unfailed","Piecewise regression","HC",3,0.0533
+"Peru Unfailed","Piecewise regression","HC",4,0.0461
+"Peru Unfailed","Piecewise regression","HC",5,0.0473
+"Peru Unfailed","Piecewise regression","K-means",2,0.1034
+"Peru Unfailed","Piecewise regression","K-means",3,0.0937
+"Peru Unfailed","Piecewise regression","K-means",4,0.0874
+"Peru Unfailed","Piecewise regression","K-means",5,0.0812
+"Peru Unfailed","Internal velocity","HC",2,0.0454
+"Peru Unfailed","Internal velocity","HC",3,0.0178
+"Peru Unfailed","Internal velocity","HC",4,0.0138
+"Peru Unfailed","Internal velocity","HC",5,0.0152
+"Peru Unfailed","Internal velocity","K-means",2,0.0383
+"Peru Unfailed","Internal velocity","K-means",3,0.0242
+"Peru Unfailed","Internal velocity","K-means",4,0.0214
+"Peru Unfailed","Internal velocity","K-means",5,0.0184
+"Peru Unfailed","Standardised","HC",2,0.2499
+"Peru Unfailed","Standardised","HC",3,0.1782
+"Peru Unfailed","Standardised","HC",4,0.1104
+"Peru Unfailed","Standardised","HC",5,0.1116
+"Peru Unfailed","Standardised","K-means",2,0.2631
+"Peru Unfailed","Standardised","K-means",3,0.1888
+"Peru Unfailed","Standardised","K-means",4,0.183
+"Peru Unfailed","Standardised","K-means",5,0.1348

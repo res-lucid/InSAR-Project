@@ -495,8 +495,33 @@ Therefore, the dendrograms suggest that Ward's method may best suit the data whe
 We further inspect the dendrograms using Ward's method to identify possible cluster splits:
 
 ```{r}
-plot(hc_ward_cadia, main = "Cadia Dendrogram", labels = FALSE)
-rect.hclust(hc_ward_cadia, k = 3, border = 1:3)
+plot(hc_ward_cadia, main = "Cadia Dendrogram", labels = FALSE, xlab = "", sub = "", ylab = "Height")
+rect.hclust(hc_ward_cadia, k = 2, border = 1:2)
+```
+
+```{r}
+pdf(
+  "../outputs/cadia_hc_dendrogram.pdf",
+  width = 9,
+  height = 6
+)
+
+plot(
+  hc_ward_cadia,
+  main = "Cadia Hierarchical Clustering Dendrogram",
+  labels = FALSE,
+  xlab = "",
+  sub = "",
+  ylab = "Height"
+)
+
+rect.hclust(
+  hc_ward_cadia,
+  k = 2,
+  border = 1:2
+)
+
+dev.off()
 ```
 
 ```{r}
@@ -2196,7 +2221,7 @@ write.csv(peru_unfailed,
 
 ## 3. K-means Clustering
 
-We experiment with another unsupervised clustering algorithm, K-means clustering. It is an iterative process that aims to minimise the sum of distances between the data points anscd their cluster centroids (centres). It partitions a dataset into similar groups based on these distances. The centroid, or cluster centre, is either the mean of median of all the points within the cluster depending on the data.
+We experiment with another unsupervised clustering algorithm, K-means clustering. It is an iterative process that aims to minimise the sum of distances between the data points and their cluster centroids (centres). It partitions a dataset into similar groups based on these distances. The centroid, or cluster centre, is either the mean of median of all the points within the cluster depending on the data.
 
 Like in hierarchical clustering, we can define the similarity using a distance measure. For consistency, we will use Euclidean distance, but this could be a future aspect of comparison. However, unlike our previous method, the number of clusters, k, must be determined before running the algorithm. A larger k value often results in smaller clusters with greater detail, while a lower k value results in larger clusters with less detail.
 
@@ -3031,6 +3056,10 @@ p_knn_cadia <- as.ggplot(
 )
 ```
 
+```{r}
+plot(p_knn_cadia)
+```
+
 - The plot for Cadia suggests a split around distance 40.
 
 ```{r}
@@ -3192,7 +3221,7 @@ dbscan_summary_row <- function(
   data.frame(
     eps = eps,
     minPts = minPts,
-    clusters = max(model$cluster),
+    clusters = max(model$cluster
     noise_points = sum(
       model$cluster == 0
     ),
