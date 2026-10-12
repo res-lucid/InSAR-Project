@@ -2877,6 +2877,7 @@ summarise_thresholds(cadia_S_w10_thresh)
 ```{r}
 # Peru
 summarise_thresholds(peru_F_w3_thresh)
+summarise_thresholds(peru_F_w3_thresh)
 summarise_thresholds(peru_U_w3_thresh)
 
 summarise_thresholds(peru_F_w5_thresh)
@@ -2901,6 +2902,11 @@ Comments:
 
 Cadia: - For the version where we choose different thresholds per window size, we test W3 = -3mm, W5 = -4mm, W10 = -5mm.
 This is based on the sensitivity plots above.
+
+```{r}
+summarise_thresholds(peru_U_w3_thresh)
+```
+
 
 #### Status plots
 
@@ -3061,6 +3067,48 @@ plot_status_comparison(
   "Cadia Sliding K-means - W10 (-5 mm)"
 )
 ```
+```{r}
+# W5 displacement (-4 mm)
+p_cadia_w5 <- plot_status_comparison(
+  cadia_F_w5,
+  cadia_S_w5,
+  cadia_F_w5_status,
+  cadia_S_w5_status,
+  "Cadia Sliding K-means - W5 (-4 mm)"
+)
+
+p_cadia_w5
+
+
+# W10 displacement (-5 mm)
+p_cadia_w10 <- plot_status_comparison(
+  cadia_F_w10,
+  cadia_S_w10,
+  cadia_F_w10_status,
+  cadia_S_w10_status,
+  "Cadia Sliding K-means - W10 (-5 mm)"
+)
+
+p_cadia_w10
+```
+```{r}
+ggsave(
+  "../outputs/cadia_sliding_w5_displacement.png",
+  plot = p_cadia_w5,
+  width = 10,
+  height = 7,
+  dpi = 300
+)
+
+ggsave(
+  "../outputs/cadia_sliding_w10_displacement.png",
+  plot = p_cadia_w10,
+  width = 10,
+  height = 7,
+  dpi = 300
+)
+```
+
 
 ```{r}
 plot_status_comparison(
@@ -4204,6 +4252,30 @@ peru_U_vel_w10_status <- make_status(
   peru_U_vel_w10, peru_vel_threshold
 )
 ```
+
+```{r}
+# W3
+plot_status_comparison(
+  peru_F_vel_w3, peru_U_vel_w3,
+  peru_F_vel_w3_status, peru_U_vel_w3_status,
+  "Peru Regression Velocity - W3 (-15 mm/year)"
+)
+
+# W5
+plot_status_comparison(
+  peru_F_vel_w5, peru_U_vel_w5,
+  peru_F_vel_w5_status, peru_U_vel_w5_status,
+  "Peru Regression Velocity - W5 (-15 mm/year)"
+)
+
+# W10
+plot_status_comparison(
+  peru_F_vel_w10, peru_U_vel_w10,
+  peru_F_vel_w10_status, peru_U_vel_w10_status,
+  "Peru Regression Velocity - W10 (-15 mm/year)"
+)
+```
+
 
 #### Exporting
 
@@ -5554,6 +5626,108 @@ silhouette_table_k3[, 2:4] <- round(
 silhouette_table_k3
 ```
 
+```{r}
+velocity_silhouette_table <- data.frame(
+  Site = rep(c(
+    "Cadia Failed",
+    "Cadia Unfailed",
+    "Peru Failed",
+    "Peru Unfailed"
+  ), each = 3),
+
+  Window = rep(c("W3", "W5", "W10"), times = 4),
+
+  Mean_Silhouette = c(
+    # Cadia Failed
+    mean(cadia_F_vel_w3$silhouette, na.rm = TRUE),
+    mean(cadia_F_vel_w5$silhouette, na.rm = TRUE),
+    mean(cadia_F_vel_w10$silhouette, na.rm = TRUE),
+
+    # Cadia Unfailed (South)
+    mean(cadia_S_vel_w3$silhouette, na.rm = TRUE),
+    mean(cadia_S_vel_w5$silhouette, na.rm = TRUE),
+    mean(cadia_S_vel_w10$silhouette, na.rm = TRUE),
+
+    # Peru Failed
+    mean(peru_F_vel_w3$silhouette, na.rm = TRUE),
+    mean(peru_F_vel_w5$silhouette, na.rm = TRUE),
+    mean(peru_F_vel_w10$silhouette, na.rm = TRUE),
+
+    # Peru Unfailed
+    mean(peru_U_vel_w3$silhouette, na.rm = TRUE),
+    mean(peru_U_vel_w5$silhouette, na.rm = TRUE),
+    mean(peru_U_vel_w10$silhouette, na.rm = TRUE)
+  )
+)
+
+velocity_silhouette_table$Mean_Silhouette <-
+  round(velocity_silhouette_table$Mean_Silhouette, 3)
+
+View(velocity_silhouette_table)
+```
 
 
+```{r}
+# Cadia
+summary(cadia_F_vel_w3$silhouette)
+summary(cadia_F_vel_w5$silhouette)
+summary(cadia_F_vel_w10$silhouette)
+
+summary(cadia_S_vel_w3$silhouette)
+summary(cadia_S_vel_w5$silhouette)
+summary(cadia_S_vel_w10$silhouette)
+
+# Peru
+summary(peru_F_vel_w3$silhouette)
+summary(peru_F_vel_w5$silhouette)
+summary(peru_F_vel_w10$silhouette)
+
+summary(peru_U_vel_w3$silhouette)
+summary(peru_U_vel_w5$silhouette)
+summary(peru_U_vel_w10$silhouette)
+```
+
+```{r}
+# Check consecutive K-means cluster memberships
+for (i in 2:ncol(membership)) {
+  
+  cat("\n--- Iteration", i - 1, "to", i, "---\n")
+  
+  print(table(
+    Previous = membership[, i - 1],
+    Current  = membership[, i]
+  ))
+}
+```
+
+```{r}
+# Check consecutive K-means cluster memberships
+for (i in 2:ncol(cadia_F_w3$membership)) {
+  
+  cat("\n--- Iteration", i - 1, "to", i, "---\n")
+  
+  print(table(
+    Previous = cadia_F_w3$membership[, i - 1],
+    Current  = cadia_F_w3$membership[, i]
+  ))
+}
+```
+
+
+```{r}
+for (i in seq_along(cadia_F_w3$dates)) {
+  
+  cl <- cadia_F_w3$membership[, i]
+  
+  # final displacement in this window
+  x <- cadia_F_w3$windows[[i]][, 3]
+  
+  cat(
+    "\nWindow", i,
+    "\nCluster 1 median:", median(x[cl == 1]),
+    "\nCluster 2 median:", median(x[cl == 2]),
+    "\n"
+  )
+}
+```
 

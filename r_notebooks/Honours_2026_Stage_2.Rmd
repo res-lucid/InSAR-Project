@@ -912,8 +912,6 @@ write.csv(cadia, "cadia_MA_hc.csv", row.names = FALSE)
 ```{r}
 write.csv(peru_failed, "peru_F_MA_hc.csv", row.names = FALSE)
 write.csv(peru_unfailed, "peru_U_MA_hc.csv", row.names = FALSE)
-write.csv(feijao_53, "feijao_53_MA_hc.csv", row.names = FALSE)
-write.csv(feijao_155, "feijao_155_MA_hc.csv", row.names = FALSE)
 ```
 
 **Exporting plots**
@@ -3906,6 +3904,10 @@ cadia_silhouette_table$Silhouette <-
 
 View(cadia_silhouette_table)
 ```
+```{r}
+View(cadia_silhouette_table)
+```
+
 
 ```{r}
 peru_F_silhouette_table <- data.frame(
