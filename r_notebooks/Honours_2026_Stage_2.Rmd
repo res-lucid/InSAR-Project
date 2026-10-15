@@ -33,8 +33,7 @@ We will test a range of transformations on the data before clustering to see if 
 
 1.  Moving average
 2.  Piecewise linear regression / linear spline regression
-3.  Feature selection
-4.  PCA ? - only if time
+3.  Internal velocity
 
 We will also look at filtering the data based on coherence, as done in Rana et al.'s paper. Adding to our stage 1 clustering baseline, we will apply the same clustering, but on the standardised data. Although, our initial hypothesis with using the standardised data is that it may not be as informative as using the raw displacement values. This is due to all acquisitions being in the same scale, and therefore standardising the data may remove the meaningfulness of measurement difference.
 
@@ -43,15 +42,15 @@ We will also look at filtering the data based on coherence, as done in Rana et a
 Taken from the Stage 1 notebook.
 
 ```{r}
-cadia <- read_excel("cadia_2018_ps.xlsx")
+cadia <- read_excel("../data/Cadia_PS_2018.xlsx")
 
-peru_failed <- read_excel("2019_Cobriza_Peru_Failed.xlsx")
+peru_failed <- read_excel("../data/Cobriza_Peru_Failed_2019.xlsx")
 
-peru_unfailed <- read_excel("2019_Cobriza_Peru_Unfailed.xlsx")
+peru_unfailed <- read_excel("../data/Cobriza_Peru_Unfailed_2019.xlsx")
 
-feijao_53 <- read_excel("Feijao_PS_T53.xlsx")
+feijao_53 <- read_excel("../data/Feijao_PS_T53.xlsx")
 
-feijao_155 <- read_excel("Feijao_PS_T155.xlsx")
+feijao_155 <- read_excel("../data/Feijao_PS_T155.xlsx")
 ```
 
 ```{r}
@@ -203,7 +202,7 @@ We will test three values of window size using moving average:
 - 5: 5 acquisitions are averaged out, meaning one window summarises 12 \* 5 = 60 days.
 
 ```{r}
-# ---------- Cadia
+# Cadia
 
 # MA(2)
 cadia_MA2 <- t(apply(cadia_D, 1, function(x) {
@@ -218,6 +217,32 @@ cadia_MA3 <- t(apply(cadia_D, 1, function(x) {
 }))
 
 #cadia_MA3 <- cadia_MA3[, -c(1:2)]
+```
+
+```{r}
+# ---- Peru (failed)
+
+# MA(2)
+peru_F_MA2 <- t(apply(peru_D_F, 1, function(x) {
+  rollmean(x, k = 2, align = "right", fill = NA)
+}))
+
+# MA(3)
+peru_F_MA3 <- t(apply(peru_D_F, 1, function(x) {
+  rollmean(x, k = 3, align = "right", fill = NA)
+}))
+
+# ---- Peru (unfailed)
+
+# MA(2)
+peru_U_MA2 <- t(apply(peru_D_U, 1, function(x) {
+  rollmean(x, k = 2, align = "right", fill = NA)
+}))
+
+# MA(3)
+peru_U_MA3 <- t(apply(peru_D_U, 1, function(x) {
+  rollmean(x, k = 3, align = "right", fill = NA)
+}))
 ```
 
 ```{r}
@@ -240,6 +265,62 @@ lines(
 lines(
   1:ncol(cadia_D),
   cadia_MA3[1, ],
+  lty = 3
+)
+
+legend(
+  "topleft",
+  legend = c("Raw", "MA(2)", "MA(3)"),
+  lty = c(1, 2, 3)
+)
+```
+
+```{r}
+par(mfrow=c(1,2))
+
+plot(
+  as.numeric(peru_D_F[1, ]),
+  type = "l",
+  xlab = "Time",
+  ylab = "Cumulative displacement",
+  main = "Peru (F): Raw vs Moving Average"
+)
+
+lines(
+  1:ncol(peru_D_F),
+  peru_F_MA2[1, ],
+  lty = 2
+)
+
+lines(
+  1:ncol(peru_D_F),
+  peru_F_MA3[1, ],
+  lty = 3
+)
+
+legend(
+  "topleft",
+  legend = c("Raw", "MA(2)", "MA(3)"),
+  lty = c(1, 2, 3)
+)
+
+plot(
+  as.numeric(peru_D_U[1, ]),
+  type = "l",
+  xlab = "Time",
+  ylab = "Cumulative displacement",
+  main = "Peru (U): Raw vs Moving Average"
+)
+
+lines(
+  1:ncol(peru_D_U),
+  peru_U_MA2[1, ],
+  lty = 2
+)
+
+lines(
+  1:ncol(peru_D_U),
+  peru_U_MA3[1, ],
   lty = 3
 )
 
@@ -282,6 +363,12 @@ dev.off()
 # Removing the NA values / columns
 cadia_MA2 <- cadia_MA2[, -1]
 cadia_MA3 <- cadia_MA3[, -c(1:2)]
+
+peru_F_MA2 <- peru_F_MA2[, -1]
+peru_F_MA3 <- peru_F_MA3[, -c(1:2)]
+
+peru_U_MA2 <- peru_U_MA2[, -1]
+peru_U_MA3 <- peru_U_MA3[, -c(1:2)]
 ```
 
 ### 2.1 Hierarchical Clustering
@@ -302,6 +389,34 @@ cadia_MA3_dist <- dist(cadia_MA3, method = "euclidean")
 cadia_MA3_hc <- hclust(cadia_MA3_dist, method = "ward.D2")
 ```
 
+```{r}
+# Raw data - Baseline
+peru_F_dist <- dist(peru_D_F, method = "euclidean")
+peru_F_hc <- hclust(peru_F_dist, method = "ward.D2")
+
+# MA(2)
+peru_F_MA2_dist <- dist(peru_F_MA2, method = "euclidean")
+peru_F_MA2_hc <- hclust(peru_F_MA2_dist, method = "ward.D2")
+
+# MA(3)
+peru_F_MA3_dist <- dist(peru_F_MA3, method = "euclidean")
+peru_F_MA3_hc <- hclust(peru_F_MA3_dist, method = "ward.D2")
+```
+
+```{r}
+# Raw data - Baseline
+peru_U_dist <- dist(peru_D_U, method = "euclidean")
+peru_U_hc <- hclust(peru_U_dist, method = "ward.D2")
+
+# MA(2)
+peru_U_MA2_dist <- dist(peru_U_MA2, method = "euclidean")
+peru_U_MA2_hc <- hclust(peru_U_MA2_dist, method = "ward.D2")
+
+# MA(3)
+peru_U_MA3_dist <- dist(peru_U_MA3, method = "euclidean")
+peru_U_MA3_hc <- hclust(peru_U_MA3_dist, method = "ward.D2")
+```
+
 #### Dendrograms
 
 ```{r}
@@ -311,6 +426,18 @@ plot(cadia_MA3_hc, labels = FALSE)
 ```
 
 - The dendrograms for Cadia reduce the gap between the second branch and the third branching, possibly making it more "suitable" for k = 3, compared to the obvious split of k = 2 in the baseline dendrogram.
+
+```{r}
+plot(peru_F_hc, labels = FALSE)
+plot(peru_F_MA2_hc, labels = FALSE)
+plot(peru_F_MA3_hc, labels = FALSE)
+```
+
+```{r}
+plot(peru_U_hc, labels = FALSE)
+plot(peru_U_MA2_hc, labels = FALSE)
+plot(peru_U_MA3_hc, labels = FALSE)
+```
 
 #### Silhouette Score
 
@@ -355,9 +482,53 @@ cadia_MA3_hc_sil <- avg_sil_score(
 ```
 
 ```{r}
+# ------ Peru (F)
+peru_F_hc_sil <- avg_sil_score(peru_F_hc, peru_F_dist)
+
+# MA(2)
+peru_F_MA2_hc_sil <- avg_sil_score(
+  peru_F_MA2_hc,
+  peru_F_MA2_dist
+)
+
+# MA(3)
+peru_F_MA3_hc_sil <- avg_sil_score(
+  peru_F_MA3_hc,
+  peru_F_MA3_dist
+)
+
+# ------ Peru (U)
+peru_U_hc_sil <- avg_sil_score(peru_U_hc, peru_U_dist)
+
+# MA(2)
+peru_U_MA2_hc_sil <- avg_sil_score(
+  peru_U_MA2_hc,
+  peru_U_MA2_dist
+)
+
+# MA(3)
+peru_U_MA3_hc_sil <- avg_sil_score(
+  peru_U_MA3_hc,
+  peru_U_MA3_dist
+)
+```
+
+```{r}
 cadia_hc_sil
 cadia_MA2_hc_sil
 cadia_MA3_hc_sil
+```
+
+```{r}
+peru_F_hc_sil
+peru_F_MA2_hc_sil
+peru_F_MA3_hc_sil
+```
+
+```{r}
+peru_U_hc_sil
+peru_U_MA2_hc_sil
+peru_U_MA3_hc_sil
 ```
 
 The moving average dataset of the hierarchical clustering using a window size of 3 achieved the highest average silhouette score for k = 2. Both moving average datasets result in the highest silhouette score at k = 2 and as k increases, the silhouette score decreases.
@@ -411,8 +582,104 @@ cadia$MA3_hc_5 <- cadia_MA3_hc_5
 ```
 
 ```{r}
+# Peru (F) - MA(2)
+# k = 2
+peru_F_MA2_hc_2 <- cutree(peru_F_MA2_hc, k=2)
+table(peru_F_MA2_hc_2)
+peru_failed$MA2_hc_2 <- peru_F_MA2_hc_2
+
+# k = 3
+peru_F_MA2_hc_3 <- cutree(peru_F_MA2_hc, k=3)
+table(peru_F_MA2_hc_3)
+peru_failed$MA2_hc_3 <- peru_F_MA2_hc_3
+
+# k = 4
+peru_F_MA2_hc_4 <- cutree(peru_F_MA2_hc, k=4)
+table(peru_F_MA2_hc_4)
+peru_failed$MA2_hc_4 <- peru_F_MA2_hc_4
+
+# k = 5
+peru_F_MA2_hc_5 <- cutree(peru_F_MA2_hc, k=5)
+table(peru_F_MA2_hc_5)
+peru_failed$MA2_hc_5 <- peru_F_MA2_hc_5
+```
+
+```{r}
+# Peru (F) - MA(3)
+# k = 2
+peru_F_MA3_hc_2 <- cutree(peru_F_MA3_hc, k=2)
+table(peru_F_MA3_hc_2)
+peru_failed$MA3_hc_2 <- peru_F_MA3_hc_2
+
+# k = 3
+peru_F_MA3_hc_3 <- cutree(peru_F_MA3_hc, k=3)
+table(peru_F_MA3_hc_3)
+peru_failed$MA3_hc_3 <- peru_F_MA3_hc_3
+
+# k = 4
+peru_F_MA3_hc_4 <- cutree(peru_F_MA3_hc, k=4)
+table(peru_F_MA3_hc_4)
+peru_failed$MA3_hc_4 <- peru_F_MA3_hc_4
+
+# k = 5
+peru_F_MA3_hc_5 <- cutree(peru_F_MA3_hc, k=5)
+table(peru_F_MA3_hc_4)
+peru_failed$MA3_hc_5 <- peru_F_MA3_hc_4
+```
+```{r}
+# Peru (U) - MA(2)
+# k = 2
+peru_U_MA2_hc_2 <- cutree(peru_U_MA2_hc, k=2)
+table(peru_U_MA2_hc_2)
+peru_unfailed$MA2_hc_2 <- peru_U_MA2_hc_2
+
+# k = 3
+peru_U_MA2_hc_3 <- cutree(peru_U_MA2_hc, k=3)
+table(peru_U_MA2_hc_3)
+peru_unfailed$MA2_hc_3 <- peru_U_MA2_hc_3
+
+# k = 4
+peru_U_MA2_hc_4 <- cutree(peru_U_MA2_hc, k=4)
+table(peru_U_MA2_hc_4)
+peru_unfailed$MA2_hc_4 <- peru_U_MA2_hc_4
+
+# k = 5
+peru_U_MA2_hc_5 <- cutree(peru_U_MA2_hc, k=5)
+table(peru_U_MA2_hc_5)
+peru_unfailed$MA2_hc_5 <- peru_U_MA2_hc_5
+```
+
+```{r}
+# Peru (U) - MA(3)
+# k = 2
+peru_U_MA3_hc_2 <- cutree(peru_U_MA3_hc, k=2)
+table(peru_U_MA3_hc_2)
+peru_unfailed$MA3_hc_2 <- peru_U_MA3_hc_2
+
+# k = 3
+peru_U_MA3_hc_3 <- cutree(peru_U_MA3_hc, k=3)
+table(peru_U_MA3_hc_3)
+peru_unfailed$MA3_hc_3 <- peru_U_MA3_hc_3
+
+# k = 4
+peru_U_MA3_hc_4 <- cutree(peru_U_MA3_hc, k=4)
+table(peru_U_MA3_hc_4)
+peru_unfailed$MA3_hc_4 <- peru_U_MA3_hc_4
+
+# k = 5
+peru_U_MA3_hc_5 <- cutree(peru_U_MA3_hc, k=5)
+table(peru_U_MA3_hc_5)
+peru_unfailed$MA3_hc_5 <- peru_U_MA3_hc_5
+```
+
+```{r}
 # Export for each case
 write.csv(cadia, "cadia_MA_hc.csv", row.names = FALSE)
+```
+
+```{r}
+write.csv(peru_failed, "peru_F_MA_hc.csv", row.names = FALSE)
+write.csv(peru_unfailed, "peru_U_MA_hc.csv", row.names = FALSE)
 ```
 
 **Exporting plots**
@@ -523,6 +790,101 @@ ggsave(
 )
 ```
 
+```{r}
+p_peru_F_elbow_raw <- fviz_nbclust(
+  peru_D_F,
+  kmeans,
+  method = "wss"
+) +
+  ggtitle("Peru (F): Raw")
+
+p_peru_F_elbow_MA2 <- fviz_nbclust(
+  peru_F_MA2,
+  kmeans,
+  method = "wss"
+) +
+  ggtitle("Peru (F): MA(2)")
+
+p_peru_F_elbow_MA3 <- fviz_nbclust(
+  peru_F_MA3,
+  kmeans,
+  method = "wss"
+) +
+  ggtitle("Peru (F): MA(3)")
+```
+
+```{r}
+ggsave(
+  "peru_F_elbow_raw.png",
+  p_peru_F_elbow_raw,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+ggsave(
+  "peru_F_elbow_MA2.png",
+  p_peru_F_elbow_MA2,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+ggsave(
+  "peru_F_elbow_MA3.png",
+  p_peru_F_elbow_MA3,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+```{r}
+p_peru_U_elbow_raw <- fviz_nbclust(
+  peru_D_U,
+  kmeans,
+  method = "wss"
+) +
+  ggtitle("Peru (U): Raw")
+
+p_peru_U_elbow_MA2 <- fviz_nbclust(
+  peru_U_MA2,
+  kmeans,
+  method = "wss"
+) +
+  ggtitle("Peru (U): MA(2)")
+
+p_peru_U_elbow_MA3 <- fviz_nbclust(
+  peru_U_MA3,
+  kmeans,
+  method = "wss"
+) +
+  ggtitle("Peru (U): MA(3)")
+```
+
+```{r}
+ggsave(
+  "peru_U_elbow_raw.png",
+  p_peru_U_elbow_raw,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+ggsave(
+  "peru_U_elbow_MA2.png",
+  p_peru_U_elbow_MA2,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+ggsave(
+  "peru_U_elbow_MA3.png",
+  p_peru_U_elbow_MA3,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+
 #### Silhouette Score Plot
 
 ```{r}
@@ -569,6 +931,74 @@ ggsave("cadia_sil_MA3.png",
        p_cadia_sil_MA3, width = 7, height = 5, dpi = 300)
 ```
 
+```{r}
+p_peru_F_sil_raw <- fviz_nbclust(
+  peru_D_F,
+  kmeans,
+  method = "silhouette"
+) +
+  ggtitle("Peru (F): Raw")
+
+p_peru_F_sil_MA2 <- fviz_nbclust(
+  peru_F_MA2,
+  kmeans,
+  method = "silhouette"
+) +
+  ggtitle("Peru (F): MA(2)")
+
+p_peru_F_sil_MA3 <- fviz_nbclust(
+  peru_F_MA3,
+  kmeans,
+  method = "silhouette"
+) +
+  ggtitle("Peru (F): MA(3)")
+```
+
+```{r}
+ggsave("peru_F_sil_raw.png",
+       p_peru_F_sil_raw, width = 7, height = 5, dpi = 300)
+
+ggsave("peru_F_sil_MA2.png",
+       p_peru_F_sil_MA3, width = 7, height = 5, dpi = 300)
+
+ggsave("peru_F_sil_MA3.png",
+       p_peru_F_sil_MA3, width = 7, height = 5, dpi = 300)
+```
+
+```{r}
+p_peru_U_sil_raw <- fviz_nbclust(
+  peru_D_U,
+  kmeans,
+  method = "silhouette"
+) +
+  ggtitle("Peru (U): Raw")
+
+p_peru_U_sil_MA2 <- fviz_nbclust(
+  peru_U_MA2,
+  kmeans,
+  method = "silhouette"
+) +
+  ggtitle("Peru (U): MA(2)")
+
+p_peru_U_sil_MA3 <- fviz_nbclust(
+  peru_U_MA3,
+  kmeans,
+  method = "silhouette"
+) +
+  ggtitle("Peru (U): MA(3)")
+```
+
+```{r}
+ggsave("peru_U_sil_raw.png",
+       p_peru_U_sil_raw, width = 7, height = 5, dpi = 300)
+
+ggsave("peru_U_sil_MA2.png",
+       p_peru_U_sil_MA3, width = 7, height = 5, dpi = 300)
+
+ggsave("peru_U_sil_MA3.png",
+       p_peru_U_sil_MA3, width = 7, height = 5, dpi = 300)
+```
+
 #### Applying K-means clustering
 
 ```{r}
@@ -591,6 +1021,50 @@ cadia_MA3_km_2 <- kmeans(cadia_MA3, centers = 2, nstart = 20)
 cadia_MA3_km_3 <- kmeans(cadia_MA3, centers = 3, nstart = 20)
 cadia_MA3_km_4 <- kmeans(cadia_MA3, centers = 4, nstart = 20)
 cadia_MA3_km_5 <- kmeans(cadia_MA3, centers = 5, nstart = 20)
+```
+
+```{r}
+set.seed(1234)
+
+# Raw
+peru_F_km_2 <- kmeans(peru_D_F, centers = 2, nstart = 20)
+peru_F_km_3 <- kmeans(peru_D_F, centers = 3, nstart = 20)
+peru_F_km_4 <- kmeans(peru_D_F, centers = 4, nstart = 20)
+peru_F_km_5 <- kmeans(peru_D_F, centers = 5, nstart = 20)
+
+# MA(2)
+peru_F_MA2_km_2 <- kmeans(peru_F_MA2, centers = 2, nstart = 20)
+peru_F_MA2_km_3 <- kmeans(peru_F_MA2, centers = 3, nstart = 20)
+peru_F_MA2_km_4 <- kmeans(peru_F_MA2, centers = 4, nstart = 20)
+peru_F_MA2_km_5 <- kmeans(peru_F_MA2, centers = 5, nstart = 20)
+
+# MA(3)
+peru_F_MA3_km_2 <- kmeans(peru_F_MA3, centers = 2, nstart = 20)
+peru_F_MA3_km_3 <- kmeans(peru_F_MA3, centers = 3, nstart = 20)
+peru_F_MA3_km_4 <- kmeans(peru_F_MA3, centers = 4, nstart = 20)
+peru_F_MA3_km_5 <- kmeans(peru_F_MA3, centers = 5, nstart = 20)
+```
+
+```{r}
+set.seed(1234)
+
+# Raw
+peru_U_km_2 <- kmeans(peru_D_U, centers = 2, nstart = 20)
+peru_U_km_3 <- kmeans(peru_D_U, centers = 3, nstart = 20)
+peru_U_km_4 <- kmeans(peru_D_U, centers = 4, nstart = 20)
+peru_U_km_5 <- kmeans(peru_D_U, centers = 5, nstart = 20)
+
+# MA(2)
+peru_U_MA2_km_2 <- kmeans(peru_U_MA2, centers = 2, nstart = 20)
+peru_U_MA2_km_3 <- kmeans(peru_U_MA2, centers = 3, nstart = 20)
+peru_U_MA2_km_4 <- kmeans(peru_U_MA2, centers = 4, nstart = 20)
+peru_U_MA2_km_5 <- kmeans(peru_U_MA2, centers = 5, nstart = 20)
+
+# MA(3)
+peru_U_MA3_km_2 <- kmeans(peru_U_MA3, centers = 2, nstart = 20)
+peru_U_MA3_km_3 <- kmeans(peru_U_MA3, centers = 3, nstart = 20)
+peru_U_MA3_km_4 <- kmeans(peru_U_MA3, centers = 4, nstart = 20)
+peru_U_MA3_km_5 <- kmeans(peru_U_MA3, centers = 5, nstart = 20)
 ```
 
 #### Silhouette Score
@@ -646,11 +1120,80 @@ cadia_MA3_km_sil <- avg_sil_score_km(
 )
 ```
 
+
+```{r}
+peru_F_km_sil <- avg_sil_score_km(
+  list(peru_F_km_2,
+       peru_F_km_3,
+       peru_F_km_4,
+       peru_F_km_5),
+  peru_F_dist
+)
+
+peru_F_MA2_km_sil <- avg_sil_score_km(
+  list(peru_F_MA2_km_2,
+       peru_F_MA2_km_3,
+       peru_F_MA2_km_4,
+       peru_F_MA2_km_5),
+  peru_F_MA2_dist
+)
+
+peru_F_MA3_km_sil <- avg_sil_score_km(
+  list(peru_F_MA3_km_2,
+       peru_F_MA3_km_3,
+       peru_F_MA3_km_4,
+       peru_F_MA3_km_5),
+  peru_F_MA3_dist
+)
+```
+
+```{r}
+peru_U_km_sil <- avg_sil_score_km(
+  list(peru_U_km_2,
+       peru_U_km_3,
+       peru_U_km_4,
+       peru_U_km_5),
+  peru_U_dist
+)
+
+peru_U_MA2_km_sil <- avg_sil_score_km(
+  list(peru_U_MA2_km_2,
+       peru_U_MA2_km_3,
+       peru_U_MA2_km_4,
+       peru_U_MA2_km_5),
+  peru_U_MA2_dist
+)
+
+peru_U_MA3_km_sil <- avg_sil_score_km(
+  list(peru_U_MA3_km_2,
+       peru_U_MA3_km_3,
+       peru_U_MA3_km_4,
+       peru_U_MA3_km_5),
+  peru_U_MA3_dist
+)
+```
+
+
+**Average Silhouette Score Results**
+
 ```{r}
 cadia_km_sil
 cadia_MA2_km_sil
 cadia_MA3_km_sil
 ```
+
+```{r}
+peru_F_km_sil
+peru_F_MA2_km_sil
+peru_F_MA3_km_sil
+```
+
+```{r}
+peru_U_km_sil
+peru_U_MA2_km_sil
+peru_U_MA3_km_sil
+```
+
 
 #### Davies-Bouldin Index
 
@@ -701,12 +1244,75 @@ cadia_MA3_km_db <- dbi_km(
 ```
 
 ```{r}
+peru_F_km_db <- dbi_km(
+  peru_D_F,
+  list(peru_F_km_2,
+       peru_F_km_3,
+       peru_F_km_4,
+       peru_F_km_5)
+)
+
+peru_F_MA2_km_db <- dbi_km(
+  peru_F_MA2,
+  list(peru_F_MA2_km_2,
+       peru_F_MA2_km_3,
+       peru_F_MA2_km_4,
+       peru_F_MA2_km_5)
+)
+
+peru_F_MA3_km_db <- dbi_km(
+  peru_F_MA3,
+  list(peru_F_MA3_km_2,
+       peru_F_MA3_km_3,
+       peru_F_MA3_km_4,
+       peru_F_MA3_km_5)
+)
+```
+
+```{r}
+peru_U_km_db <- dbi_km(
+  peru_D_U,
+  list(peru_U_km_2,
+       peru_U_km_3,
+       peru_U_km_4,
+       peru_U_km_5)
+)
+
+peru_U_MA2_km_db <- dbi_km(
+  peru_U_MA2,
+  list(peru_U_MA2_km_2,
+       peru_U_MA2_km_3,
+       peru_U_MA2_km_4,
+       peru_U_MA2_km_5)
+)
+
+peru_U_MA3_km_db <- dbi_km(
+  peru_U_MA3,
+  list(peru_U_MA3_km_2,
+       peru_U_MA3_km_3,
+       peru_U_MA3_km_4,
+       peru_U_MA3_km_5)
+)
+```
+
+
+```{r}
 cadia_km_db
 cadia_MA2_km_db
 cadia_MA3_km_db
 ```
 
-- Comment
+```{r}
+peru_F_km_db
+peru_F_MA2_km_db
+peru_F_MA3_km_db
+```
+
+```{r}
+peru_U_km_db
+peru_U_MA2_km_db
+peru_U_MA3_km_db
+```
 
 ```{r}
 p_db_cadia <- ggplot(
@@ -791,6 +1397,168 @@ ggsave(
 )
 ```
 
+```{r}
+# Peru (F) -------
+p_db_peru_F <- ggplot(
+  peru_F_km_db,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin Index: Peru - Failed (Raw)",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+
+p_db_peru_F_MA2 <- ggplot(
+  peru_F_MA2_km_db,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin Index: Peru - Failed (MA2)",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+
+p_db_peru_F_MA3 <- ggplot(
+  peru_F_MA3_km_db,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin Index: Peru - Failed (MA3)",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+# Export Peru (F) DBI Plots
+ggsave(
+  "peru_F_dbi_piecewise_raw.png",
+  p_db_peru_F,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+
+ggsave(
+  "peru_F_dbi_piecewise_MA2.png",
+  p_db_peru_F_MA2,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+
+ggsave(
+  "peru_F_dbi_piecewise_MA3.png",
+  p_db_peru_F_MA3,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+```{r}
+# Peru (U) -------
+p_db_peru_U <- ggplot(
+  peru_U_km_db,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin Index: Peru - Unfailed (Raw)",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+
+p_db_peru_U_MA2 <- ggplot(
+  peru_U_MA2_km_db,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin Index: Peru - Unfailed (MA2)",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+
+p_db_peru_U_MA3 <- ggplot(
+  peru_U_MA3_km_db,
+  aes(
+    x = k,
+    y = davies_bouldin
+  )
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = 2:5) +
+  labs(
+    title = "Davies–Bouldin Index: Peru - Unfailed (MA3)",
+    x = "Number of clusters",
+    y = "Davies–Bouldin index"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+# Export Peru (U) DBI Plots
+ggsave(
+  "peru_U_dbi_piecewise_raw.png",
+  p_db_peru_U,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+
+ggsave(
+  "peru_U_dbi_piecewise_MA2.png",
+  p_db_peru_U_MA2,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+
+ggsave(
+  "peru_U_dbi_piecewise_MA3.png",
+  p_db_peru_U_MA3,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
 #### Apply cluster IDs and export
 
 ```{r}
@@ -814,6 +1582,50 @@ write.csv(
 )
 ```
 
+```{r}
+# Peru (F)
+# MA(2) K-means cluster IDs
+peru_failed$MA2_km_2 <- peru_F_MA2_km_2$cluster
+peru_failed$MA2_km_3 <- peru_F_MA2_km_3$cluster
+peru_failed$MA2_km_4 <- peru_F_MA2_km_4$cluster
+peru_failed$MA2_km_5 <- peru_F_MA2_km_5$cluster
+
+# MA(3)
+peru_failed$MA3_km_2 <- peru_F_MA3_km_2$cluster
+peru_failed$MA3_km_3 <- peru_F_MA3_km_3$cluster
+peru_failed$MA3_km_4 <- peru_F_MA3_km_4$cluster
+peru_failed$MA3_km_5 <- peru_F_MA3_km_5$cluster
+
+
+write.csv(
+  peru_failed,
+  "peru_F_MA_km.csv",
+  row.names = FALSE
+)
+```
+
+```{r}
+# Peru (U)
+# MA(2) K-means cluster IDs
+peru_unfailed$MA2_km_2 <- peru_U_MA2_km_2$cluster
+peru_unfailed$MA2_km_3 <- peru_U_MA2_km_3$cluster
+peru_unfailed$MA2_km_4 <- peru_U_MA2_km_4$cluster
+peru_unfailed$MA2_km_5 <- peru_U_MA2_km_5$cluster
+
+# MA(3)
+peru_unfailed$MA3_km_2 <- peru_U_MA3_km_2$cluster
+peru_unfailed$MA3_km_3 <- peru_U_MA3_km_3$cluster
+peru_unfailed$MA3_km_4 <- peru_U_MA3_km_4$cluster
+peru_unfailed$MA3_km_5 <- peru_U_MA3_km_5$cluster
+
+
+write.csv(
+  peru_unfailed,
+  "peru_U_MA_km.csv",
+  row.names = FALSE
+)
+```
+
 ## 3. Piecewise Linear Regression
 
 As clustering can be strongly influenced by displacement magnitude and fluctuations, we continue to test methods that smooth out and work with outliers.
@@ -824,7 +1636,10 @@ We'll use the data represented in matrices that still include the baseline date 
 
 ```{r}
 dim(cadia_D_mat)
+dim(peru_D_F_mat)
+dim(peru_D_U_mat)
 ```
+
 
 ```{r}
 # Extracting actual date names
@@ -854,6 +1669,21 @@ cadia_time
 ```{r}
 diff(cadia_dates)
 ```
+```{r}
+# Peru F
+peru_F_dates <- as.Date(
+  sub("D_", "", colnames(peru_D_F_mat)),
+  format = "%Y%m%d"
+)
+
+peru_F_time <- as.numeric(
+  peru_F_dates - peru_F_dates[1]
+)
+
+diff(peru_F_dates)
+```
+
+- All of Peru (failed) dates are separated by 12 days.
 
 We choose fixed knots, initially testing 60-day intervals (and the satellite capturing measurements in 12-day intervals).
 
@@ -864,6 +1694,16 @@ cadia_knots <- seq(60, max(cadia_time) - 60, by = 60)
 
 cadia_knots
 ```
+```{r}
+# peru F
+peru_F_knots <- seq(
+  60,
+  max(peru_F_time) - 60,
+  by = 60
+)
+```
+
+
 
 ```{r}
 # Apply spline regression
@@ -880,6 +1720,8 @@ cadia_model_data <- cbind(data.frame(displacement = y), X)
 
 cadia_test_fit <- lm(displacement ~ ., data = cadia_model_data)
 ```
+
+
 
 ```{r}
 png(
@@ -979,6 +1821,22 @@ test_slopes
 ```
 
 ```{r}
+peru_F_piecewise <- t(
+  apply(
+    peru_D_F_mat,
+    1,
+    extract_piecewise_slopes,
+    time = peru_F_time,
+    knots = peru_F_knots
+  )
+)
+
+dim(peru_F_piecewise)
+anyNA(peru_F_piecewise)
+```
+
+
+```{r}
 cadia_test_slopes
 ```
 
@@ -997,6 +1855,36 @@ anyNA(cadia_piecewise)
 ```
 
 We've converted the original data from 12502 x 45 displacement values to 12502 x \~9 slope values.
+
+```{r}
+peru_U_dates <- as.Date(
+  sub("D_", "", colnames(peru_D_U_mat)),
+  format = "%Y%m%d"
+)
+
+peru_U_time <- as.numeric(
+  peru_U_dates - peru_U_dates[1]
+)
+
+peru_U_knots <- seq(
+  60,
+  max(peru_U_time) - 60,
+  by = 60
+)
+
+peru_U_piecewise <- t(
+  apply(
+    peru_D_U_mat,
+    1,
+    extract_piecewise_slopes,
+    time = peru_U_time,
+    knots = peru_U_knots
+  )
+)
+
+anyNA(peru_U_piecewise)
+```
+
 
 ### 3.1 Hierarchical Clustering
 
@@ -1033,6 +1921,55 @@ plot(
 
 dev.off()
 ```
+##### Peru
+```{r}
+peru_F_piecewise_dist <- dist(
+  peru_F_piecewise,
+  method = "euclidean"
+)
+
+peru_F_piecewise_hc <- hclust(
+  peru_F_piecewise_dist,
+  method = "ward.D2"
+)
+
+peru_F_piecewise_hc_sil <- avg_sil_score(
+  peru_F_piecewise_hc,
+  peru_F_piecewise_dist
+)
+
+peru_F_piecewise_hc_sil
+```
+```{r}
+# memberships
+peru_failed$piecewise_hc_2 <- cutree(peru_F_piecewise_hc, k = 2)
+peru_failed$piecewise_hc_3 <- cutree(peru_F_piecewise_hc, k = 3)
+peru_failed$piecewise_hc_4 <- cutree(peru_F_piecewise_hc, k = 4)
+peru_failed$piecewise_hc_5 <- cutree(peru_F_piecewise_hc, k = 5)
+```
+
+```{r}
+# Peru unfailed
+peru_U_piecewise_dist <- dist(peru_U_piecewise)
+
+peru_U_piecewise_hc <- hclust(
+  peru_U_piecewise_dist,
+  method = "ward.D2"
+)
+
+peru_U_piecewise_hc_sil <- avg_sil_score(
+  peru_U_piecewise_hc,
+  peru_U_piecewise_dist
+)
+
+peru_U_piecewise_hc_sil
+
+peru_unfailed$piecewise_hc_2 <- cutree(peru_U_piecewise_hc, k = 2)
+peru_unfailed$piecewise_hc_3 <- cutree(peru_U_piecewise_hc, k = 3)
+peru_unfailed$piecewise_hc_4 <- cutree(peru_U_piecewise_hc, k = 4)
+peru_unfailed$piecewise_hc_5 <- cutree(peru_U_piecewise_hc, k = 5)
+```
+
 
 #### Silhouette Score
 
@@ -1161,6 +2098,48 @@ cadia_piecewise_km_5 <- kmeans(
 )
 ```
 
+```{r}
+set.seed(1234)
+
+peru_F_piecewise_km_2 <- kmeans(peru_F_piecewise, centers = 2, nstart = 20)
+peru_F_piecewise_km_3 <- kmeans(peru_F_piecewise, centers = 3, nstart = 20)
+peru_F_piecewise_km_4 <- kmeans(peru_F_piecewise, centers = 4, nstart = 20)
+peru_F_piecewise_km_5 <- kmeans(peru_F_piecewise, centers = 5, nstart = 20)
+```
+
+```{r}
+set.seed(1234)
+
+peru_U_piecewise_km_2 <- kmeans(peru_U_piecewise, 2, nstart = 20)
+peru_U_piecewise_km_3 <- kmeans(peru_U_piecewise, 3, nstart = 20)
+peru_U_piecewise_km_4 <- kmeans(peru_U_piecewise, 4, nstart = 20)
+peru_U_piecewise_km_5 <- kmeans(peru_U_piecewise, 5, nstart = 20)
+
+peru_U_piecewise_km_sil <- avg_sil_score_km(
+  list(
+    peru_U_piecewise_km_2,
+    peru_U_piecewise_km_3,
+    peru_U_piecewise_km_4,
+    peru_U_piecewise_km_5
+  ),
+  peru_U_piecewise_dist
+)
+
+peru_U_piecewise_km_db <- dbi_km(
+  peru_U_piecewise,
+  list(
+    peru_U_piecewise_km_2,
+    peru_U_piecewise_km_3,
+    peru_U_piecewise_km_4,
+    peru_U_piecewise_km_5
+  )
+)
+
+peru_U_piecewise_km_sil
+peru_U_piecewise_km_db
+```
+
+
 #### Silhouette Score
 
 ```{r}
@@ -1172,6 +2151,20 @@ cadia_piecewise_km_sil <- avg_sil_score_km(
   cadia_piecewise_dist
 )
 ```
+```{r}
+peru_F_piecewise_km_sil <- avg_sil_score_km(
+  list(
+    peru_F_piecewise_km_2,
+    peru_F_piecewise_km_3,
+    peru_F_piecewise_km_4,
+    peru_F_piecewise_km_5
+  ),
+  peru_F_piecewise_dist
+)
+
+peru_F_piecewise_km_sil
+```
+
 
 ```{r}
 #cadia_km_sil
@@ -1189,6 +2182,26 @@ cadia_piecewise_km_db <- dbi_km(
        cadia_piecewise_km_5)
 )
 ```
+```{r}
+peru_F_piecewise_km_db <- dbi_km(
+  peru_F_piecewise,
+  list(
+    peru_F_piecewise_km_2,
+    peru_F_piecewise_km_3,
+    peru_F_piecewise_km_4,
+    peru_F_piecewise_km_5
+  )
+)
+
+peru_F_piecewise_km_db
+```
+```{r}
+peru_failed$piecewise_km_2 <- peru_F_piecewise_km_2$cluster
+peru_failed$piecewise_km_3 <- peru_F_piecewise_km_3$cluster
+peru_failed$piecewise_km_4 <- peru_F_piecewise_km_4$cluster
+peru_failed$piecewise_km_5 <- peru_F_piecewise_km_5$cluster
+```
+
 
 ```{r}
 cadia_piecewise_km_db
@@ -1342,6 +2355,105 @@ plot(
 
 dev.off()
 ```
+##### Peru
+
+```{r}
+peru_F_time_diff <- as.numeric(diff(peru_F_dates))
+
+peru_F_disp_diff <- t(
+  apply(peru_D_F_mat, 1, diff)
+)
+
+peru_F_vel <- sweep(
+  peru_F_disp_diff,
+  2,
+  peru_F_time_diff,
+  FUN = "/"
+)
+
+colnames(peru_F_vel) <- paste0(
+  "V_",
+  format(peru_F_dates[-1], "%Y%m%d")
+)
+
+dim(peru_F_vel)
+anyNA(peru_F_vel)
+```
+
+```{r}
+# unfailed
+peru_U_time_diff <- as.numeric(diff(peru_U_dates))
+
+peru_U_disp_diff <- t(
+  apply(peru_D_U_mat, 1, diff)
+)
+
+peru_U_vel <- sweep(
+  peru_U_disp_diff,
+  2,
+  peru_U_time_diff,
+  FUN = "/"
+)
+
+colnames(peru_U_vel) <- paste0(
+  "V_",
+  format(peru_U_dates[-1], "%Y%m%d")
+)
+
+peru_U_vel_dist <- dist(peru_U_vel)
+
+peru_U_vel_hc <- hclust(
+  peru_U_vel_dist,
+  method = "ward.D2"
+)
+
+peru_U_vel_hc_sil <- avg_sil_score(
+  peru_U_vel_hc,
+  peru_U_vel_dist
+)
+
+peru_unfailed$vel_hc_2 <- cutree(peru_U_vel_hc, 2)
+peru_unfailed$vel_hc_3 <- cutree(peru_U_vel_hc, 3)
+peru_unfailed$vel_hc_4 <- cutree(peru_U_vel_hc, 4)
+peru_unfailed$vel_hc_5 <- cutree(peru_U_vel_hc, 5)
+
+set.seed(1234)
+
+peru_U_vel_km_2 <- kmeans(peru_U_vel, 2, nstart = 20)
+peru_U_vel_km_3 <- kmeans(peru_U_vel, 3, nstart = 20)
+peru_U_vel_km_4 <- kmeans(peru_U_vel, 4, nstart = 20)
+peru_U_vel_km_5 <- kmeans(peru_U_vel, 5, nstart = 20)
+
+peru_U_vel_km_sil <- avg_sil_score_km(
+  list(
+    peru_U_vel_km_2,
+    peru_U_vel_km_3,
+    peru_U_vel_km_4,
+    peru_U_vel_km_5
+  ),
+  peru_U_vel_dist
+)
+
+peru_U_vel_km_db <- dbi_km(
+  peru_U_vel,
+  list(
+    peru_U_vel_km_2,
+    peru_U_vel_km_3,
+    peru_U_vel_km_4,
+    peru_U_vel_km_5
+  )
+)
+
+peru_U_vel_hc_sil
+peru_U_vel_km_sil
+peru_U_vel_km_db
+
+peru_unfailed$vel_km_2 <- peru_U_vel_km_2$cluster
+peru_unfailed$vel_km_3 <- peru_U_vel_km_3$cluster
+peru_unfailed$vel_km_4 <- peru_U_vel_km_4$cluster
+peru_unfailed$vel_km_5 <- peru_U_vel_km_5$cluster
+```
+
 
 ### 4.2 Hierarchical Clustering
 
@@ -1378,6 +2490,27 @@ plot(
 
 dev.off()
 ```
+```{r}
+peru_F_vel_dist <- dist(peru_F_vel)
+
+peru_F_vel_hc <- hclust(
+  peru_F_vel_dist,
+  method = "ward.D2"
+)
+
+peru_F_vel_hc_sil <- avg_sil_score(
+  peru_F_vel_hc,
+  peru_F_vel_dist
+)
+
+peru_F_vel_hc_sil
+
+peru_failed$vel_hc_2 <- cutree(peru_F_vel_hc, 2)
+peru_failed$vel_hc_3 <- cutree(peru_F_vel_hc, 3)
+peru_failed$vel_hc_4 <- cutree(peru_F_vel_hc, 4)
+peru_failed$vel_hc_5 <- cutree(peru_F_vel_hc, 5)
+```
+
 
 #### Silhouette Score
 
@@ -1506,6 +2639,44 @@ cadia_vel_km_5 <- kmeans(
 )
 ```
 
+```{r}
+set.seed(1234)
+
+peru_F_vel_km_2 <- kmeans(peru_F_vel, 2, nstart = 20)
+peru_F_vel_km_3 <- kmeans(peru_F_vel, 3, nstart = 20)
+peru_F_vel_km_4 <- kmeans(peru_F_vel, 4, nstart = 20)
+peru_F_vel_km_5 <- kmeans(peru_F_vel, 5, nstart = 20)
+
+peru_F_vel_km_sil <- avg_sil_score_km(
+  list(
+    peru_F_vel_km_2,
+    peru_F_vel_km_3,
+    peru_F_vel_km_4,
+    peru_F_vel_km_5
+  ),
+  peru_F_vel_dist
+)
+
+peru_F_vel_km_db <- dbi_km(
+  peru_F_vel,
+  list(
+    peru_F_vel_km_2,
+    peru_F_vel_km_3,
+    peru_F_vel_km_4,
+    peru_F_vel_km_5
+  )
+)
+
+peru_F_vel_km_sil
+peru_F_vel_km_db
+
+peru_failed$vel_km_2 <- peru_F_vel_km_2$cluster
+peru_failed$vel_km_3 <- peru_F_vel_km_3$cluster
+peru_failed$vel_km_4 <- peru_F_vel_km_4$cluster
+peru_failed$vel_km_5 <- peru_F_vel_km_5$cluster
+```
+
+
 #### Silhouette Score
 
 ```{r}
@@ -1586,315 +2757,4 @@ cadia_vel_km_test <- read.csv("cadia_vel_km.csv")
 
 ```{r}
 dim(cadia_vel_km_test)
-```
-
-## 5. Standardised Data
-
-We standardise each row's displacement values:
-
-```{r}
-# Cadia
-cadia_std <- t(
-  scale(
-    t(cadia_D)
-  )
-)
-
-dim(cadia_std)
-anyNA(cadia_std)
-```
-
-- NA = TRUE. We identify this row(s) and decide whether to change the row values or delete it entirely.
-
-```{r}
-# Standard deviation of each time series
-cadia_row_sd <- apply(cadia_D, 1, sd)
-
-# Rows that can actually be standardised
-cadia_valid_rows <- cadia_row_sd != 0
-
-sum(!cadia_valid_rows)
-```
-
-- As it is only one row, we delete it.
-
-```{r}
-cadia_std <- t(
-  scale(
-    t(cadia_D[cadia_valid_rows, ])
-  )
-)
-
-dim(cadia_std)
-anyNA(cadia_std)
-```
-
-### 5.1 Hierarchical Clustering
-
-#### Dendrograms
-
-```{r}
-# dist matrix
-cadia_std_dist <- dist(
-  cadia_std,
-  method = "euclidean"
-)
-
-# Ward HC
-cadia_std_hc <- hclust(
-  cadia_std_dist,
-  method = "ward.D2"
-)
-
-png(
-  "cadia_std_dendrogram.png",
-  width = 2400,
-  height = 1800,
-  res = 300
-)
-
-# Dendrogram
-plot(
-  cadia_std_hc,
-  labels = FALSE,
-  main = "Cadia: Standardised Raw Data",
-  xlab = "",
-  sub = "",
-  ylab = "Height"
-)
-
-dev.off()
-```
-
-#### Silhouette Score
-
-```{r}
-cadia_std_hc_sil <- avg_sil_score(
-  cadia_std_hc,
-  cadia_std_dist
-)
-
-cadia_std_hc_sil
-```
-
-#### Apply cluster IDs and export
-
-```{r}
-cadia_std_hc_2 <- cutree(cadia_std_hc, k = 2)
-cadia_std_hc_3 <- cutree(cadia_std_hc, k = 3)
-cadia_std_hc_4 <- cutree(cadia_std_hc, k = 4)
-cadia_std_hc_5 <- cutree(cadia_std_hc, k = 5)
-```
-
-```{r}
-# Create empty columns for all 12,502 original points
-cadia$std_hc_2 <- NA_integer_
-cadia$std_hc_3 <- NA_integer_
-cadia$std_hc_4 <- NA_integer_
-cadia$std_hc_5 <- NA_integer_
-
-# Fill memberships only for the 12,501 rows that were standardised
-cadia$std_hc_2[cadia_valid_rows] <- cadia_std_hc_2
-cadia$std_hc_3[cadia_valid_rows] <- cadia_std_hc_3
-cadia$std_hc_4[cadia_valid_rows] <- cadia_std_hc_4
-cadia$std_hc_5[cadia_valid_rows] <- cadia_std_hc_5
-```
-
-```{r}
-cadia[7424, c(
-  "std_hc_2",
-  "std_hc_3",
-  "std_hc_4",
-  "std_hc_5"
-)]
-```
-
-```{r}
-table(cadia$std_hc_2, useNA = "ifany")
-```
-
-```{r}
-write.csv(
-  cadia,
-  "cadia_std_hc.csv",
-  row.names = FALSE
-)
-```
-
-### 5.2 K-means Clustering
-
-#### Elbow Plot
-
-```{r}
-fviz_nbclust(cadia_std, kmeans, method = "wss") + ggtitle("Optimal number of clusters: Cadia Standardised")
-```
-
-```{r}
-p_cadia_elbow_std <- fviz_nbclust(
-  cadia_std,
-  kmeans,
-  method = "wss"
-) +
-  ggtitle("Cadia: Standardised")
-```
-
-```{r}
-ggsave(
-  "cadia_elbow_std.png",
-  p_cadia_elbow_std,
-  width = 7,
-  height = 5,
-  dpi = 300
-)
-```
-
-#### Silhouette Score Plot
-
-```{r}
-fviz_nbclust(
-  cadia_std,
-  kmeans,
-  method = "silhouette"
-) + 
-  ggtitle("Optimal number of clusters: Cadia (Standardised)")
-```
-
-```{r}
-p_cadia_sil_std <- fviz_nbclust(
-  cadia_std,
-  kmeans,
-  method = "silhouette"
-) + 
-  ggtitle("Optimal number of clusters: Cadia (Standardised)")
-```
-
-```{r}
-ggsave("cadia_sil_std.png",
-       p_cadia_sil_std, width = 7, height = 5, dpi = 300)
-```
-
-#### Applying K-means clustering
-
-```{r}
-set.seed(1234)
-
-cadia_std_km_2 <- kmeans(
-  cadia_std,
-  centers = 2,
-  nstart = 20
-)
-
-cadia_std_km_3 <- kmeans(
-  cadia_std,
-  centers = 3,
-  nstart = 20
-)
-
-cadia_std_km_4 <- kmeans(
-  cadia_std,
-  centers = 4,
-  nstart = 20
-)
-
-cadia_std_km_5 <- kmeans(
-  cadia_std,
-  centers = 5,
-  nstart = 20
-)
-```
-
-#### Silhouette Score
-
-```{r}
-cadia_std_km_sil <- avg_sil_score_km(
-  list(cadia_std_km_2,
-       cadia_std_km_3,
-       cadia_std_km_4,
-       cadia_std_km_5),
-  cadia_std_dist
-)
-
-cadia_std_km_sil
-```
-
-#### Davies-Bouldin Index
-
-```{r}
-cadia_std_km_db <- dbi_km(
-  cadia_std,
-  list(cadia_std_km_2,
-       cadia_std_km_3,
-       cadia_std_km_4,
-       cadia_std_km_5)
-)
-
-cadia_std_km_db
-```
-
-```{r}
-p_db_cadia_std <- ggplot(
-  cadia_std_km_db,
-  aes(
-    x = k,
-    y = davies_bouldin
-  )
-) +
-  geom_line() +
-  geom_point(size = 2.5) +
-  scale_x_continuous(breaks = 2:5) +
-  labs(
-    title = "Davies–Bouldin Index: Cadia (Standardised)",
-    x = "Number of clusters",
-    y = "Davies–Bouldin index"
-  ) +
-  theme_minimal()
-```
-
-```{r}
-ggsave(
-  "cadia_dbi_std.png",
-  p_db_cadia_std,
-  width = 7,
-  height = 5,
-  dpi = 300
-)
-```
-
-#### Apply cluster IDs and export
-
-We have to keep in mind that after standardising, one of the rows was deleted as it led to only zero values. So applying the cluster IDs is a different process here.
-
-```{r}
-# Create empty cols
-cadia$std_km_2 <- NA_integer_
-cadia$std_km_3 <- NA_integer_
-cadia$std_km_4 <- NA_integer_
-cadia$std_km_5 <- NA_integer_
-
-# Fill only rows that were included in standardisation
-cadia$std_km_2[cadia_valid_rows] <- cadia_std_km_2$cluster
-cadia$std_km_3[cadia_valid_rows] <- cadia_std_km_3$cluster
-cadia$std_km_4[cadia_valid_rows] <- cadia_std_km_4$cluster
-cadia$std_km_5[cadia_valid_rows] <- cadia_std_km_5$cluster
-```
-
-```{r}
-cadia[7424, c(
-  "std_km_2",
-  "std_km_3",
-  "std_km_4",
-  "std_km_5"
-)]
-```
-
-```{r}
-table(cadia$std_km_2, useNA = "ifany")
-```
-
-```{r}
-write.csv(
-  cadia,
-  "cadia_std_km.csv",
-  row.names = FALSE
-)
 ```

@@ -1,0 +1,78 @@
+---
+title: "Pre-Proposal - Hons"
+output: html_document
+date: "2026-03-02"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### 1. Reading the Data
+
+```{r}
+library(ggplot2)
+library(MASS)
+```
+
+```{r}
+# Convert DBF to XLSX
+
+# From https://stackoverflow.com/questions/41796530/r-converting-dbf-files-to-excel-files-xls
+
+library(rio)
+
+files <- list.files(path = "2019-Cobriza,Peru", pattern = "\\.dbf", full.names = TRUE)
+
+peru.df <- sub("\\.dbf$", ".xlsx", files)
+
+mapply(convert, files, peru.df)
+
+```
+
+```{r}
+# Filter and prep data
+library(readxl)
+
+cadia <- read_excel("ps.xlsx")
+
+str(cadia)
+head(cadia)
+```
+
+```{r}
+# Selecting example data point
+
+pts <- subset(cadia, cadia$velocity == -25)
+
+start_date <- which(names(cadia) == "D_20160927")
+
+example_pt <- pts[4, start_date:ncol(pts)]
+
+example_pt
+```
+
+```{r}
+# Recreating plot of Cumulative LOS displacement time-series
+
+date_full <- names(cadia[start_date:ncol(cadia)])
+
+dates <- as.Date(sub("D_", "", date_full), format = "%Y%m%d")
+
+plot(dates, example_pt, xaxt = 'n', yaxt = 'n', type = "p", pch = 19)
+abline(h = 0)
+haxis(2, at = seq(-60, 60, by = 10), las=2)
+```
+
+```{r}
+library(ggplot2)
+
+disp <- as.numeric(example_pt[1, ])
+
+df_plot <- data.frame(date = dates, disp_mm = disp)
+
+ggplot(df_plot, aes(date, disp_mm)) +
+  geom_hline(yintercept = 0) +
+  geom_point(size = 2) +
+  ylim(-60, 60)
+```

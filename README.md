@@ -2,13 +2,13 @@
 
 ## Project Overview
 
-A study investigating data science techniques (particularly unsupervised clustering) for interpreting InSAR displacement time-series data of tailings storage facility (TSF) failures.
+A study investigating unsupervised clustering techniques for interpreting InSAR displacement time-series data of tailings storage facility (TSF) failures.
 
 ## Repository Structure
 
-- `data/` - InSAR time-series datasets (already processed)
-- `notebooks/` - R Markdown notebooks containing analyses
-- `outputs/` - Generated results and plots
+- `data/` - InSAR time-series datasets as CSV files (already processed).
+- `notebooks/` - R Markdown notebooks containing analyses: Split into 3 stages and also includes early experimenting notebooks.
+- `outputs/` - Generated results: CSV files and plots.
 
 ## R Setup
 
@@ -28,5 +28,7 @@ install.packages(c(
 	"dtwclust",
 	"patchwork",
 	"ggplotify",
-	"zoo"
+	"zoo",
+    "tidyr",
+    "dplyr"
 ))
