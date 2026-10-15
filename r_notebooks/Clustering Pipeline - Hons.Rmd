@@ -1,0 +1,771 @@
+---
+title: "Clustering Pipeline - Hons"
+output: word_document
+date: "2026-04-07"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Honours 2026 - Clustering Pipeline Experimenting
+
+------------------------------------------------------------------------
+
+# Cadia, 2018
+
+## 1. Setup
+
+```{r}
+# Load packages
+
+library(readxl)
+library(ggplot2)
+library(MASS)
+library(factoextra)
+library(gridExtra)
+library(cluster)
+
+set.seed(1234)
+```
+
+## 2. Prepare Data
+
+**Prepare data to compute distance matrix:**
+
+- Read data and extract only displacement columns
+
+- Check for missing fields
+
+- Summary statistics
+
+```{r}
+# Filter and prep data
+
+cadia <- read_excel("cadia_2018_ps.xlsx")
+
+str(cadia)
+head(cadia)
+dim(cadia)
+names(cadia)
+```
+
+```{r}
+# Extract displacement columns
+d_cols <- grep("^D_", names(cadia), value = TRUE)
+length(d_cols)
+head(d_cols)
+
+X <- cadia[, d_cols]
+
+head(X)
+
+dim(X)
+
+# Check for missing vals
+
+sum(is.na(X))
+```
+
+## 2. EDA
+
+- Plot single time series points
+
+- Sample roughly half the points (total 45) and plot them together
+
+- Plot the mean displacement over time
+
+```{r}
+# Plot 3 points
+# example to show how each point may act sporatically or very differently to others
+
+par(mfrow=c(1,2))
+
+plot(as.numeric(X[1, ]),
+     type = "l",
+     xlab = "Time index",
+     ylab = "Displacement",
+     main = "Example time series")
+
+plot(as.numeric(X[2, ]),
+     type = "l",
+     xlab = "Time index",
+     ylab = "Displacement",
+     main = "Example time series")
+
+plot(as.numeric(X[3, ]),
+     type = "l",
+     xlab = "Time index",
+     ylab = "Displacement",
+     main = "Example time series")
+
+plot(as.numeric(X[4, ]),
+     type = "l",
+     xlab = "Time index",
+     ylab = "Displacement",
+     main = "Example time series")
+
+# Make axis same !
+```
+
+```{r}
+# Sample the data to select smaller # of rows
+set.seed(1234)
+sample_rows <- sample(1:nrow(X), 10)
+
+# colours for each line
+cols <- rainbow(length(sample_rows))
+
+plot(as.numeric(X[sample_rows[1], ]), type = "l", xlab = "Time index", ylab = "Displacement",
+     main = "Sample time series",
+     ylim = c(-60, 60),
+     col = cols[1])
+
+for (i in 2:length(sample_rows)) {
+  lines(as.numeric(X[sample_rows[i], ]), col = cols[i])
+}
+
+# heave vs settling
+```
+
+```{r}
+# mean displacement over time
+
+plot(colMeans(X), type = "l", ylab = "Mean displacement", xlab = "Time index", main = "Mean displacement over time")
+```
+
+## 3. Hierarchical Clustering
+
+**Convert data to matrix and remove zero-variance columns**
+
+```{r}
+# Matrix
+
+X <- cadia[, d_cols]
+X_matrix <- as.matrix(X)
+
+sum(is.na(X_matrix))
+
+```
+
+```{r}
+# baseline date = 1st column
+
+col_sd <- apply(X_matrix, 2, sd)
+
+which(col_sd == 0)
+
+```
+
+```{r}
+# Remove first column (0 = baseline date of cumulative displacement)
+
+# Remove zero-variance columns from clustering input
+col_sd <- apply(X_matrix, 2, sd)
+
+zero_cols <- colnames(X_matrix)[col_sd == 0]
+zero_cols
+
+X_matrix_cluster <- X_matrix[, col_sd > 0, drop = FALSE]
+```
+
+- Explanation on why I removed the column:
+
+**Compute distance matrix**
+
+```{r}
+# Distance Matrix
+  # distance measure: for now Euclidean
+      # test against others later
+
+d_mat <- dist(X_matrix_cluster, method = "euclidean")
+```
+
+- distance matrix explanation
+
+**Run cluster analysis**
+
+```{r}
+#### Run the cluster analysis ####
+
+fit <- hclust(d_mat, method="ward.D2")
+```
+
+- Ward linkage method chosen: Minimises the total within-cluster variacne and finds the pair of clusters that leads to minimum increase in total within-cluster variance after merging
+
+```{r}
+# Plot the clusters
+
+plot(fit, labels = FALSE)
+rect.hclust(fit, k=4, border="darkred")
+```
+
+```{r}
+plot(fit, labels = FALSE)
+```
+
+- Dendrogram can be used to help determine the number of clusters:
+  - The y-axis represents the linkage distance at which clusters are merged.
+  - In Ward's method:
+    - A low height means 2 obs/clusters are very similar
+    - A high height means two clusters are quite different
+- A cut corresponding to 4 clusters was selected initially as it occurred before a substantial increase in linkage distance.
+
+### 4.1 Assign Clusters to Data
+
+```{r}
+# Split into k clusters
+cluster_d_4 <- cutree(fit, k=4)
+table(cluster_d_4)
+```
+
+```{r}
+# Assign cluster IDs
+cadia$cluster_id <- cluster_d_4
+```
+
+```{r}
+nrow(cadia)
+length(cluster_d_4)
+
+table(cadia$cluster_id)
+```
+
+### 4.2 Export for ArcGIS
+
+```{r}
+write.csv(cadia, "cadia_cluster_4_unscaled.csv", row.names = FALSE)
+```
+
+------------------------------------------------------------------------
+
+## 5. K-Means Clustering
+
+- Can use the same pre-processing as the hierarchical version for easy portability.
+
+#### Choosing k:
+
+1.  Elbow method
+
+```{r}
+fviz_nbclust(X_matrix_cluster, kmeans, method = "wss")
+```
+
+- Within-cluster sum of squares measures the total variance within a k-means cluster, overall quantifying how close data points within a cluster are to the cluster's centroid.
+
+- The total within-cluster sum of squares is what we aim to minimise by performing k-means clustering. The elbow method examines the relationship between the number of clusters and the within-cluster sum of squares (WCSS).
+
+- The elbow method systematically experiments with different numbers of clusters (k) from 1 to 10, where at each k value, the WCSS is plotted.
+
+- WCSS always decreases as k increases, however, the improvement is only substantial up to a certain point, usually the "elbow" in the curve.
+
+- In our instance, the elbow appears to be around 3 to 4 k clusters.
+
+#### Average Silhouette Method
+
+```{r}
+fviz_nbclust(X_matrix_cluster, kmeans, method = "silhouette")
+```
+
+- Measures how well each point lies within a cluster, in this case it suggests 2 clusters.
+
+- 3 or 4.
+
+- High average silhouette width = good clustering
+
+- Average silhouette method computes the average silhouette of observations for different values of k.
+
+```{r}
+set.seed(1234)
+
+km_fit_3 <- kmeans(X_matrix_cluster_km, centers = 3, nstart = 20)
+km_fit_4 <- kmeans(X_matrix_cluster_km, centers = 4, nstart = 20)
+km_fit_5 <- kmeans(X_matrix_cluster_km, centers = 5, nstart = 20)
+```
+
+- nstart = 20: Chosen over a lower value as a undesirable local optimum may be obtained.
+
+```{r}
+# inspect cluster labels
+table(km_fit_3$cluster)
+table(km_fit_4$cluster)
+table(km_fit_5$cluster)
+```
+
+```{r}
+# inspect cluster centroids
+#km_fit$centers
+```
+
+## 6. Plot clusters
+
+```{r}
+p1 <- fviz_cluster(km_fit_3,
+             data = X_matrix_cluster_km,
+             geom = "point",
+             ellipse.type = "convex",
+             ggtheme = theme_bw()
+             ) + ggtitle("k = 3")
+p2 <- fviz_cluster(km_fit_4,
+                   data = X_matrix_cluster_km,
+                   geom = "point",
+                   ellipse.type = "convex",
+                   ggtheme = theme_bw()
+                   ) + ggtitle("k = 4")
+p3 <- fviz_cluster(km_fit_5,
+                   data = X_matrix_cluster_km,
+                   geom = "point",
+                   ellipse.type = "convex",
+                   ggtheme = theme_bw()
+                   ) + ggtitle("k = 5")
+```
+
+```{r}
+# combine and compare plots of clusters
+
+grid.arrange(p1, p2, p3, nrow = 2)
+
+```
+
+- Plot interpretation:
+
+  - As our data includes more than 2 variables, the function performs principal component analysis (PCA) and plots the data points according to the first 2 principal components that explain majority of the variance.
+
+#### Evaluate the effectiveness of the clustering using Silhouette Score
+
+```{r}
+# Silhouette scores
+sil_3 <- silhouette(km_fit_3$cluster, d_mat)
+sil_4 <- silhouette(km_fit_4$cluster, d_mat)
+sil_5 <- silhouette(km_fit_5$cluster, d_mat)
+  
+# Avg silhouette width
+avg_sil_width_3 <- mean(sil_3[, "sil_width"])
+avg_sil_width_4 <- mean(sil_4[, "sil_width"])
+avg_sil_width_5 <- mean(sil_5[, "sil_width"])
+
+cat("Silhouette Score (k = 3): ", avg_sil_width_3, "\n")
+cat("Silhouette Score (k = 4): ", avg_sil_width_4, "\n")
+cat("Silhouette Score (k = 5): ", avg_sil_width_5)
+```
+
+- A higher average silhouette width is better, as it represents the effectiveness of our clustering
+
+- Silhouette Score (k = 3): 0.3231498
+
+- Silhouette Score (k = 4): 0.2551525
+
+- Silhouette Score (k = 5): 0.2029958
+
+### 6.1 Apply clusters to data
+
+```{r}
+# Assign cluster IDs - KMeans
+cadia$kmeans_id_5 <- km_fit$cluster
+```
+
+```{r}
+names(cadia)
+```
+
+```{r}
+nrow(cadia)
+length(km_fit$cluster)
+
+table(cadia$kmeans_id_5)
+```
+
+### 6.2 Export for ArcGIS
+
+```{r}
+write.csv(cadia, "cadia_kmeans_5.csv", row.names = FALSE)
+```
+
+# Peru, 2019
+
+## **1. Prepare data**
+
+```{r}
+# Prep data
+
+peru_failed <- read_excel("2019_Cobriza_Peru_Failed.xlsx")
+
+str(peru_failed)
+head(peru_failed)
+dim(peru_failed)
+names(peru_failed)
+```
+
+```{r}
+# unfailed
+
+peru_unfailed <- read_excel("2019_Cobriza_Peru_Unfailed.xlsx")
+
+str(peru_unfailed)
+head(peru_unfailed)
+dim(peru_unfailed)
+names(peru_unfailed)
+```
+
+```{r}
+# Extract displacement columns - FAILED
+d_cols_peru_F <- grep("^D_", names(peru_failed), value = TRUE)
+length(d_cols_peru_F)
+head(d_cols_peru_F)
+
+peru_dis_F <- peru_failed[, d_cols_peru_F]
+
+head(peru_dis_F)
+
+dim(peru_dis_F)
+
+# Check for missing vals
+
+sum(is.na(peru_dis_F))
+```
+
+```{r}
+# Extract displacement columns - UNFAILED
+d_cols_peru_U <- grep("^D_", names(peru_unfailed), value = TRUE)
+length(d_cols_peru_U)
+head(d_cols_peru_U)
+
+peru_dis_U <- peru_unfailed[, d_cols_peru_U]
+
+head(peru_dis_U)
+
+dim(peru_dis_U)
+
+# Check for missing vals
+
+sum(is.na(peru_dis_U))
+```
+
+## **2. Convert to matrix**
+
+```{r}
+# Matrix - FAILED
+
+peru_dis_F_matrix <- as.matrix(peru_dis_F)
+
+sum(is.na(peru_dis_F_matrix))
+```
+
+```{r}
+# Matrix - UNFAILED
+
+peru_dis_U_matrix <- as.matrix(peru_dis_U)
+
+sum(is.na(peru_dis_U_matrix))
+```
+
+- Remove baseline date
+
+```{r}
+# baseline date = 1st column
+
+col_sd_p_F <- apply(peru_dis_F_matrix, 2, sd)
+
+which(col_sd_p_F == 0)
+
+col_sd_p_U <- apply(peru_dis_U_matrix, 2, sd)
+
+which(col_sd_p_U == 0)
+```
+
+```{r}
+# Remove first column (0 = baseline date of cumulative displacement)
+
+zero_cols_F <- colnames(peru_dis_F_matrix)[col_sd_p_F == 0]
+zero_cols_F
+
+peru_dis_F_matrix_cluster <- peru_dis_F_matrix[, col_sd_p_F > 0, drop = FALSE]
+```
+
+```{r}
+zero_cols_U <- colnames(peru_dis_U_matrix)[col_sd_p_U == 0]
+zero_cols_U
+
+peru_dis_U_matrix_cluster <- peru_dis_U_matrix[, col_sd_p_U > 0, drop = FALSE]
+```
+
+## **3. Compute distance matrix**
+
+```{r}
+# Distance Matrix
+# distance measure: for now Euclidean
+      # test against others later
+
+d_mat_peru_F <- dist(peru_dis_F_matrix_cluster, method = "euclidean")
+```
+
+```{r}
+# Distance Matrix
+# distance measure: for now Euclidean
+# test against others later
+
+d_mat_peru_U <- dist(peru_dis_U_matrix_cluster, method = "euclidean")
+```
+
+4.  Hierarchical clustering (Ward linkage)
+
+```{r}
+
+hclust_peru_F <- hclust(d_mat_peru_F, method="ward.D2")
+```
+
+```{r}
+
+hclust_peru_U <- hclust(d_mat_peru_U, method="ward.D2")
+```
+
+- Dendrogram
+
+```{r}
+plot(hclust_peru_F, labels = FALSE)
+```
+
+```{r}
+plot(hclust_peru_U, labels = FALSE)
+```
+
+- Based on both dendrograms, splits at k = 3, k = 4, and k = 5 may be tested.
+
+## **4. Assign clusters and Export for ArcGIS**
+
+```{r}
+# Failed
+peru_failed$hc_3 <- cutree(hclust_peru_F, k = 3)
+peru_failed$hc_4 <- cutree(hclust_peru_F, k = 4)
+peru_failed$hc_5 <- cutree(hclust_peru_F, k = 5)
+```
+
+```{r}
+# Unfailed
+peru_unfailed$hc_3 <- cutree(hclust_peru_U, k = 3)
+peru_unfailed$hc_4 <- cutree(hclust_peru_U, k = 4)
+peru_unfailed$hc_5 <- cutree(hclust_peru_U, k = 5)
+```
+
+```{r}
+# check sizes
+nrow(peru_failed)
+length(peru_failed$hc_3)
+
+nrow(peru_unfailed)
+length(peru_unfailed$hc_3)
+```
+
+```{r}
+# inspect cluster sizes
+
+table(peru_failed$hc_3)
+table(peru_failed$hc_4)
+table(peru_failed$hc_5)
+
+table(peru_unfailed$hc_3)
+table(peru_unfailed$hc_4)
+table(peru_unfailed$hc_5)
+```
+
+```{r}
+write.csv(peru_failed, "peru_failed_hierarchical_clusters.csv", row.names = FALSE)
+```
+
+```{r}
+write.csv(peru_unfailed, "peru_unfailed_hierarchical_clusters.csv", row.names = FALSE)
+```
+
+## 5. K-Means Clustering
+
+- Checking optimal clusters: Elbow
+
+```{r}
+fviz_nbclust(peru_dis_F_matrix_cluster, kmeans, method = "wss")
+```
+
+```{r}
+fviz_nbclust(peru_dis_U_matrix_cluster, kmeans, method = "wss")
+```
+
+- Both appear to be somewhere in between 3 and 4 clusters.
+
+Average Silhouette Method
+
+```{r}
+fviz_nbclust(peru_dis_F_matrix_cluster, kmeans, method = "silhouette")
+```
+
+```{r}
+fviz_nbclust(peru_dis_U_matrix_cluster, kmeans, method = "silhouette")
+```
+
+### Apply K-means
+
+```{r}
+set.seed(1234)
+
+# FAILED
+
+km_peru_F_3 <- kmeans(peru_dis_F_matrix_cluster, centers = 3, nstart = 20)
+km_peru_F_4 <- kmeans(peru_dis_F_matrix_cluster, centers = 4, nstart = 20)
+km_peru_F_5 <- kmeans(peru_dis_F_matrix_cluster, centers = 5, nstart = 20)
+```
+
+```{r}
+# UNFAILED
+
+km_peru_U_3 <- kmeans(peru_dis_U_matrix_cluster, centers = 3, nstart = 20)
+km_peru_U_4 <- kmeans(peru_dis_U_matrix_cluster, centers = 4, nstart = 20)
+km_peru_U_5 <- kmeans(peru_dis_U_matrix_cluster, centers = 5, nstart = 20)
+```
+
+```{r}
+# inspect cluster labels- failed
+table(km_peru_F_3$cluster)
+table(km_peru_F_4$cluster)
+table(km_peru_F_5$cluster)
+```
+
+```{r}
+# inspect cluster labels - unfailed
+table(km_peru_U_3$cluster)
+table(km_peru_U_4$cluster)
+table(km_peru_U_5$cluster)
+```
+
+- Plot clusters
+
+```{r}
+# FAILED
+
+F_p1 <- fviz_cluster(km_peru_F_3,
+                   data = peru_dis_F_matrix_cluster,
+                   geom = "point",
+                   ellipse.type = "convex",
+                   ggtheme = theme_bw()
+) + ggtitle("k = 3")
+F_p2 <- fviz_cluster(km_peru_F_4,
+                   data = peru_dis_F_matrix_cluster,
+                   geom = "point",
+                   ellipse.type = "convex",
+                   ggtheme = theme_bw()
+) + ggtitle("k = 4")
+F_p3 <- fviz_cluster(km_peru_F_5,
+                   data = peru_dis_F_matrix_cluster,
+                   geom = "point",
+                   ellipse.type = "convex",
+                   ggtheme = theme_bw()
+) + ggtitle("k = 5")
+```
+
+```{r}
+# UNFAILED
+
+U_p1 <- fviz_cluster(km_peru_U_3,
+                     data = peru_dis_U_matrix_cluster,
+                     geom = "point",
+                     ellipse.type = "convex",
+                     ggtheme = theme_bw()
+) + ggtitle("k = 3")
+U_p2 <- fviz_cluster(km_peru_U_4,
+                     data = peru_dis_U_matrix_cluster,
+                     geom = "point",
+                     ellipse.type = "convex",
+                     ggtheme = theme_bw()
+) + ggtitle("k = 4")
+U_p3 <- fviz_cluster(km_peru_U_5,
+                     data = peru_dis_U_matrix_cluster,
+                     geom = "point",
+                     ellipse.type = "convex",
+                     ggtheme = theme_bw()
+) + ggtitle("k = 5")
+```
+
+```{r}
+grid.arrange(F_p1, F_p2, F_p3, nrow = 2)
+```
+
+```{r}
+grid.arrange(U_p1, U_p2, U_p3, nrow = 2)
+```
+
+- Silhouette scores
+
+```{r}
+# Silhouette scores
+peru_F_sil_3 <- silhouette(km_peru_F_3$cluster, d_mat_peru_F)
+peru_F_sil_4 <- silhouette(km_peru_F_4$cluster, d_mat_peru_F)
+peru_F_sil_5 <- silhouette(km_peru_F_5$cluster, d_mat_peru_F)
+
+# Avg silhouette width
+avg_sil_width_3_peru_F <- mean(peru_F_sil_3[, "sil_width"])
+avg_sil_width_4_peru_F <- mean(peru_F_sil_4[, "sil_width"])
+avg_sil_width_5_peru_F <- mean(peru_F_sil_5[, "sil_width"])
+
+cat("Silhouette Score (k = 3): ", avg_sil_width_3_peru_F, "\n")
+cat("Silhouette Score (k = 4): ", avg_sil_width_4_peru_F, "\n")
+cat("Silhouette Score (k = 5): ", avg_sil_width_5_peru_F)
+```
+
+```{r}
+# Silhouette scores
+peru_U_sil_3 <- silhouette(km_peru_U_3$cluster, d_mat_peru_U)
+peru_U_sil_4 <- silhouette(km_peru_U_4$cluster, d_mat_peru_U)
+peru_U_sil_5 <- silhouette(km_peru_U_5$cluster, d_mat_peru_U)
+
+# Avg silhouette width
+avg_sil_width_3_peru_U <- mean(peru_U_sil_3[, "sil_width"])
+avg_sil_width_4_peru_U <- mean(peru_U_sil_4[, "sil_width"])
+avg_sil_width_5_peru_U <- mean(peru_U_sil_5[, "sil_width"])
+
+cat("Silhouette Score (k = 3): ", avg_sil_width_3_peru_U, "\n")
+cat("Silhouette Score (k = 4): ", avg_sil_width_4_peru_U, "\n")
+cat("Silhouette Score (k = 5): ", avg_sil_width_5_peru_U)
+```
+
+- Export
+
+```{r}
+# FAILED area
+peru_failed$kmeans_3 <- km_peru_F_3$cluster
+peru_failed$kmeans_4 <- km_peru_F_4$cluster
+peru_failed$kmeans_5 <- km_peru_F_5$cluster
+
+# UNFAILED area
+peru_unfailed$kmeans_3 <- km_peru_U_3$cluster
+peru_unfailed$kmeans_4 <- km_peru_U_4$cluster
+peru_unfailed$kmeans_5 <- km_peru_U_5$cluster
+```
+
+```{r}
+nrow(peru_failed)
+length(km_peru_F_3$cluster)
+
+nrow(peru_unfailed)
+length(km_peru_U_3$cluster)
+```
+
+```{r}
+table(peru_failed$kmeans_3)
+table(peru_failed$kmeans_4)
+table(peru_failed$kmeans_5)
+
+table(peru_unfailed$kmeans_3)
+table(peru_unfailed$kmeans_4)
+table(peru_unfailed$kmeans_5)
+```
+
+```{r}
+write.csv(
+  peru_failed,
+  "peru_failed_kmeans_clusters.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  peru_unfailed,
+  "peru_unfailed_kmeans_clusters.csv",
+  row.names = FALSE
+)
+```

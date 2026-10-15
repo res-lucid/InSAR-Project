@@ -2200,6 +2200,74 @@ write.csv(
   row.names = FALSE
 )
 ```
+```{r}
+# Compare Cadia Failed vs Unfailed directly at -10 mm
+
+comparison_cadia <- bind_rows(
+
+  data.frame(
+    Date = as.Date(
+      sub("^D_", "", iter_dates),
+      format = "%Y%m%d"
+    ),
+    Percent_Flagged =
+      threshold_results_cadia_F[, "-10 mm"],
+    Site = "Failed"
+  ),
+
+  data.frame(
+    Date = as.Date(
+      sub("^D_", "", iter_dates_south),
+      format = "%Y%m%d"
+    ),
+    Percent_Flagged =
+      threshold_results_cadia_south[, "-10 mm"],
+    Site = "Unfailed"
+  )
+)
+
+# Plot
+
+p_cadia <- ggplot(
+  comparison_cadia,
+  aes(
+    x = Date,
+    y = Percent_Flagged,
+    colour = Site
+  )
+) +
+  geom_line(linewidth = 1) +
+  scale_colour_manual(
+    values = c(
+      "Failed" = "#F8766D",
+      "Unfailed" = "#00BFC4"
+    )
+  ) +
+  scale_y_continuous(
+    limits = c(0, 100),
+    breaks = seq(0, 100, 25)
+  ) +
+  labs(
+    title = "Cadia Failed vs Unfailed - Threshold = -10 mm",
+    x = "Date",
+    y = "Points classified as deformation (%)",
+    colour = "Site"
+  ) +
+  theme_minimal(base_size = 15)
+
+print(p_cadia)
+
+# Export for PowerPoint
+
+ggsave(
+  "../outputs/cadia_failed_vs_unfailed_threshold10.png",
+  plot = p_cadia,
+  width = 11,
+  height = 7,
+  dpi = 300
+)
+```
+
 
 ## 4. New Sliding Window Implementation
 
@@ -2578,7 +2646,7 @@ head(peru_F_w3_thresh)
 
 - Thresholds were selected for testing across -1 to -7mm.
 
-#### Plots
+#### 4.5.1 Plots
 
 ```{r}
 plot_threshold_sensitivity <- function(
@@ -2700,7 +2768,7 @@ plot_threshold_sensitivity(
 #)
 ```
 
-#### Ex: -3mm Test
+#### 4.5.2 Example: -3mm Test
 
 ```{r}
 compare_sites <- function(
@@ -2835,7 +2903,7 @@ compare_sites(
 )
 ```
 
-#### Numerical summary:
+#### 4.5.3 Numerical summaries
 
 ```{r}
 summarise_thresholds <- function(thresh_results) {
@@ -2908,7 +2976,7 @@ summarise_thresholds(peru_U_w3_thresh)
 ```
 
 
-#### Status plots
+#### 4.5.4 Status plots
 
 ```{r}
 make_status <- function(result, threshold) {
@@ -3140,7 +3208,7 @@ plot_status_comparison(
 )
 ```
 
-#### Exporting
+#### 4.5.5 Exporting
 
 ```{r}
 # Exporting sw function
@@ -3393,9 +3461,19 @@ write.csv(
 )
 ```
 
+```{r}
+write.csv(
+  peru_U_w10_export,
+  "../outputs/peru_unfailed_sw_w10_km2_thresh5.csv",
+  row.names = FALSE
+)
+```
+
+
 ## 5. Sliding Window - Regression Velocity
 
 This is the same as the previous section but using the regression / velocity approach with "updating centroids":
+- Regression velocity here is referring to us applying linear regression to the displacements, therefore they are represented as displacement / time, so "velocity".
 
 ```{r}
 # New approach w/ a function
@@ -3421,10 +3499,7 @@ run_sliding_velocity <- function(
     window_size:n_dates
   ]
   
-  
-  # -------------------------
-  # Storage
-  # -------------------------
+  # Storage --------
   
   membership <- matrix(
     NA,
@@ -3456,9 +3531,7 @@ run_sliding_velocity <- function(
   set.seed(1234)
   
   
-  # -------------------------
-  # Sliding-window loop
-  # -------------------------
+  # Sliding-window loop --------
   
   for (iter in 1:n_iters) {
     
@@ -3525,9 +3598,7 @@ run_sliding_velocity <- function(
     )
     
     
-    # -------------------------
-    # 5. K-means
-    # -------------------------
+    # 5. K-means ---------
     
     if (iter == 1) {
       
@@ -3556,9 +3627,7 @@ run_sliding_velocity <- function(
       km$cluster
     
     
-    # -------------------------
-    # 6. Cluster median velocity
-    # -------------------------
+    # 6. Cluster median velocity -----------
     
     current_medians <- sapply(
       1:k,
@@ -3578,9 +3647,7 @@ run_sliding_velocity <- function(
       current_medians
     
     
-    # -------------------------
-    # 7. Silhouette
-    # -------------------------
+    # 7. Silhouette (stored)
     
     sil <- cluster::silhouette(
       km$cluster,
@@ -3597,10 +3664,8 @@ run_sliding_velocity <- function(
     prev_centers <- km$centers
   }
   
-  
-  # -------------------------
-  # Return results
-  # -------------------------
+
+  # Return results ----------
   
   list(
     membership = membership,
@@ -3844,7 +3909,7 @@ summarise_thresholds(peru_U_vel_w10_thresh)
 
 I thought that each window size would differ in threshold, but as we use the slope for clustering and convert it to mm/year, they all have the same physical interpretation.
 
-#### Plots
+#### 5.1.1 Plots
 
 ```{r}
 # function
@@ -4119,7 +4184,7 @@ compare_velocity_sites(
 )
 ```
 
-#### Status plots
+#### 5.1.2 Status plots
 
 ```{r}
 # Representative velocity threshold
@@ -4277,7 +4342,7 @@ plot_status_comparison(
 ```
 
 
-#### Exporting
+#### 5.1.3 Exporting
 
 ```{r}
 # converting function
@@ -5216,7 +5281,7 @@ apply(S_w3_med, 2, range, na.rm = TRUE)
 apply(S_w5_med, 2, range, na.rm = TRUE)
 apply(S_w10_med, 2, range, na.rm = TRUE)
 ```
-##### Status
+##### 6.1 Status
 
 ```{r}
 get_k3_status <- function(result, moderate_threshold, higher_threshold) {
@@ -5274,7 +5339,7 @@ cadia_S_w10_k3_status <- get_k3_status(
 )
 ```
 
-##### Plots
+###### 6.1.1 Plots
 
 ```{r}
 plot_k3_status <- function(result, status, title_text) {
@@ -5361,7 +5426,7 @@ plot_k3_status(
   "Cadia Unfailed - K=3 W10 (-3, -6 mm)"
 )
 ```
-##### Exporting
+##### 6.2 Exporting
 
 ```{r}
 make_k3_export <- function(result, status, metadata) {
@@ -5687,47 +5752,4 @@ summary(peru_U_vel_w5$silhouette)
 summary(peru_U_vel_w10$silhouette)
 ```
 
-```{r}
-# Check consecutive K-means cluster memberships
-for (i in 2:ncol(membership)) {
-  
-  cat("\n--- Iteration", i - 1, "to", i, "---\n")
-  
-  print(table(
-    Previous = membership[, i - 1],
-    Current  = membership[, i]
-  ))
-}
-```
-
-```{r}
-# Check consecutive K-means cluster memberships
-for (i in 2:ncol(cadia_F_w3$membership)) {
-  
-  cat("\n--- Iteration", i - 1, "to", i, "---\n")
-  
-  print(table(
-    Previous = cadia_F_w3$membership[, i - 1],
-    Current  = cadia_F_w3$membership[, i]
-  ))
-}
-```
-
-
-```{r}
-for (i in seq_along(cadia_F_w3$dates)) {
-  
-  cl <- cadia_F_w3$membership[, i]
-  
-  # final displacement in this window
-  x <- cadia_F_w3$windows[[i]][, 3]
-  
-  cat(
-    "\nWindow", i,
-    "\nCluster 1 median:", median(x[cl == 1]),
-    "\nCluster 2 median:", median(x[cl == 2]),
-    "\n"
-  )
-}
-```
 
