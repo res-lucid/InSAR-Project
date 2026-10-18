@@ -2,13 +2,14 @@
 
 ## Project Overview
 
-A study investigating unsupervised clustering techniques for interpreting InSAR displacement time-series data of tailings storage facility (TSF) failures.
+A study investigating unsupervised clustering techniques for interpreting InSAR displacement time-series of historical tailings storage facility (TSF) failures.
 
 ## Repository Structure
 
-- `data/` - InSAR time-series datasets as CSV files (already processed).
+- `data/` - Source of CSV files provided.
 - `notebooks/` - R Markdown notebooks containing analyses: Split into 3 stages and also includes early experimenting notebooks.
-- `outputs/` - Generated results: CSV files and plots.
+- `outputs/` - Generated results: CSV files, plots, ArcGIS statis maps and animations.
+- `archive/` - CSV files and plots from older experiments.
 
 ## R Setup
 
