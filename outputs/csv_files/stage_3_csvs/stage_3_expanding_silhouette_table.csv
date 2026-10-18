@@ -1,0 +1,5 @@
+"Site","Outcome","Mean_Silhouette"
+"Cadia","Failed",0.353
+"Cadia","Unfailed",0.323
+"Peru","Failed",0.365
+"Peru","Unfailed",0.354

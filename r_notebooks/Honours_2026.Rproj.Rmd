@@ -3810,3 +3810,86 @@ write.csv(peru_unfailed,
           "peru_U_kmed_dtw.csv",
           row.names = FALSE)
 ```
+
+##6. Silhouette Scores
+
+```{r}
+
+library(dplyr)
+
+# Combine existing silhouette score data frames
+stage1_silhouette <- bind_rows(
+  lapply(
+    list(
+      "Cadia" = list(cadia_sil_hc_ward, cadia_sil_hc_avg,
+                     cadia_sil_hc_comp, cadia_sil_km),
+      "Peru Failed" = list(peru_F_sil_hc_ward, peru_F_sil_hc_avg,
+                          peru_F_sil_hc_comp, peru_F_sil_km),
+      "Peru Unfailed" = list(peru_U_sil_hc_ward, peru_U_sil_hc_avg,
+                            peru_U_sil_hc_comp, peru_U_sil_km),
+      "Feijao T53" = list(feijao_53_sil_hc_ward, feijao_53_sil_hc_avg,
+                         feijao_53_sil_hc_comp, feijao_53_sil_km),
+      "Feijao T155" = list(feijao_155_sil_hc_ward, feijao_155_sil_hc_avg,
+                          feijao_155_sil_hc_comp, feijao_155_sil_km)
+    ),
+    function(models) {
+      bind_rows(
+        Map(
+          function(df, method) {
+            df %>% mutate(Algorithm = method)
+          },
+          models,
+          c("HC Ward", "HC Average", "HC Complete", "K-means")
+        )
+      )
+    }
+  ),
+  .id = "Dataset"
+) %>%
+  rename(
+    Silhouette = avg_silhouette_score
+  ) %>%
+  select(Dataset, Algorithm, k, Silhouette)
+
+# View the results
+print(stage1_silhouette)
+
+# Export CSV
+write.csv(
+  stage1_silhouette,
+  "../outputs/stage1_silhouette_scores.csv",
+  row.names = FALSE
+)
+```
+
+```{r}
+
+library(tidyr)
+
+stage1_k2_table <- stage1_silhouette %>%
+  filter(k == 2) %>%
+  mutate(Silhouette = round(Silhouette, 3)) %>%
+  pivot_wider(
+    names_from = Algorithm,
+    values_from = Silhouette
+  )
+
+print(stage1_k2_table)
+
+write.csv(
+  stage1_k2_table,
+  "../outputs/stage1_k2_summary.csv",
+  row.names = FALSE
+)
+
+```
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,6 @@
+"Dataset","k","HC Ward","HC Average","HC Complete","K-means"
+"Cadia",2,0.377,0.378,0.411,0.374
+"Peru Failed",2,0.436,0.418,0.398,0.432
+"Peru Unfailed",2,0.402,0.567,0.389,0.384
+"Feijao T53",2,0.417,0.412,0.41,0.419
+"Feijao T155",2,0.415,0.414,0.421,0.415

@@ -1,0 +1,13 @@
+"Site","Outcome","Window","Displacement","Velocity"
+"Cadia","Failed","W10",0.274,0.53
+"Cadia","Failed","W3",0.374,0.493
+"Cadia","Failed","W5",0.297,0.502
+"Cadia","Unfailed","W10",0.268,0.514
+"Cadia","Unfailed","W3",0.372,0.493
+"Cadia","Unfailed","W5",0.298,0.496
+"Peru","Failed","W10",0.287,0.53
+"Peru","Failed","W3",0.403,0.507
+"Peru","Failed","W5",0.31,0.503
+"Peru","Unfailed","W10",0.282,0.527
+"Peru","Unfailed","W3",0.38,0.504
+"Peru","Unfailed","W5",0.312,0.507

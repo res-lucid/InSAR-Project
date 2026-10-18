@@ -2202,6 +2202,21 @@ peru_failed$piecewise_km_4 <- peru_F_piecewise_km_4$cluster
 peru_failed$piecewise_km_5 <- peru_F_piecewise_km_5$cluster
 ```
 
+```{r}
+peru_unfailed$piecewise_km_2 <- peru_U_piecewise_km_2$cluster
+peru_unfailed$piecewise_km_3 <- peru_U_piecewise_km_3$cluster
+peru_unfailed$piecewise_km_4 <- peru_U_piecewise_km_4$cluster
+peru_unfailed$piecewise_km_5 <- peru_U_piecewise_km_5$cluster
+```
+
+```{r}
+write.csv(
+  peru_unfailed,
+  "peru_unfailed_piecewise_km.csv",
+  row.names = FALSE
+)
+```
+
 
 ```{r}
 cadia_piecewise_km_db
@@ -2250,6 +2265,8 @@ write.csv(
   row.names = FALSE
 )
 ```
+
+
 
 ## 4. Internal Velocity
 

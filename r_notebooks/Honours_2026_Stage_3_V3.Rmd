@@ -896,7 +896,7 @@ threshold_long_cadia_F$Threshold <- factor(
 ```
 
 ```{r}
-ggplot(
+p_cadia_threshold_F <- ggplot(
   threshold_long_cadia_F,
   aes(
     x = Date,
@@ -906,6 +906,14 @@ ggplot(
   )
 ) +
   geom_line(linewidth = 0.9) +
+  scale_x_date(
+    date_breaks = "3 months",
+    date_labels = "%b %Y"
+  ) +
+  scale_y_continuous(
+    limits = c(0, 100),
+    breaks = seq(0, 100, 25)
+  ) +
   labs(
     title = "Cadia - Expanding Window Threshold Sensitivity",
     x = "Date",
@@ -913,8 +921,9 @@ ggplot(
     colour = "Threshold",
     linetype = "Threshold"
   ) +
-  ylim(0, 100) +
-  theme_minimal()
+  theme_minimal(base_size = 15)
+
+print(p_cadia_threshold_F)
 ```
 
 ```{r}
@@ -1229,7 +1238,7 @@ threshold_long_cadia_south$Threshold <- factor(
 
 ```{r}
 # Plot
-ggplot(
+p_cadia_threshold_U <- ggplot(
   threshold_long_cadia_south,
   aes(
     x = Date,
@@ -1239,15 +1248,24 @@ ggplot(
   )
 ) +
   geom_line(linewidth = 0.9) +
+  scale_x_date(
+    date_breaks = "3 months",
+    date_labels = "%b %Y"
+  ) +
+  scale_y_continuous(
+    limits = c(0, 100),
+    breaks = seq(0, 100, 25)
+  ) +
   labs(
     title = "Cadia South - Expanding Window Threshold Sensitivity",
     x = "Date",
-    y = "Points classified as deformation (%)",
+    y = "Points with Status 1 (%)",
     colour = "Threshold",
     linetype = "Threshold"
   ) +
-  ylim(0, 100) +
-  theme_minimal()
+  theme_minimal(base_size = 15)
+
+print(p_cadia_threshold_U)
 ```
 
 ```{r}
@@ -1313,6 +1331,25 @@ write.csv(
   row.names = FALSE
 )
 ```
+
+```{r}
+ggsave(
+  "../outputs/cadia_failed_threshold_sensitivity.png",
+  plot = p_cadia_threshold_F,
+  width = 11,
+  height = 7,
+  dpi = 300
+)
+
+ggsave(
+  "../outputs/cadia_south_threshold_sensitivity.png",
+  plot = p_cadia_threshold_U,
+  width = 11,
+  height = 7,
+  dpi = 300
+)
+```
+
 
 ### 3.3 Peru Failed Site
 
@@ -1750,7 +1787,7 @@ threshold_long_peru_F$Threshold <- factor(
 ```{r}
 # plots
 
-ggplot(
+p_peru_threshold_F <- ggplot(
   threshold_long_peru_F,
   aes(
     x = Date,
@@ -1760,15 +1797,24 @@ ggplot(
   )
 ) +
   geom_line(linewidth = 0.9) +
+  scale_x_date(
+    date_breaks = "3 months",
+    date_labels = "%b %Y"
+  ) +
   labs(
     title = "Peru Failed - Expanding Window Threshold Sensitivity",
     x = "Date",
-    y = "Points classified as deformation (%)",
+    y = "Points with Status 1 (%)",
     colour = "Threshold",
     linetype = "Threshold"
   ) +
-  ylim(0, 100) +
-  theme_minimal()
+  scale_y_continuous(
+    limits = c(0, 100),
+    breaks = seq(0, 100, 25)
+  ) +
+  theme_minimal(base_size = 15)
+
+print(p_peru_threshold_F)
 ```
 
 ```{r}
@@ -1857,7 +1903,7 @@ threshold_long_peru_U$Threshold <- factor(
 ```
 
 ```{r}
-ggplot(
+p_peru_threshold_U <- ggplot(
   threshold_long_peru_U,
   aes(
     x = Date,
@@ -1867,15 +1913,24 @@ ggplot(
   )
 ) +
   geom_line(linewidth = 0.9) +
+  scale_x_date(
+    date_breaks = "3 months",
+    date_labels = "%b %Y"
+  ) +
   labs(
     title = "Peru Unfailed - Expanding Window Threshold Sensitivity",
     x = "Date",
-    y = "Points classified as deformation (%)",
+    y = "Points with Status 1 (%)",
     colour = "Threshold",
     linetype = "Threshold"
   ) +
-  ylim(0, 100) +
-  theme_minimal()
+  scale_y_continuous(
+    limits = c(0, 100),
+    breaks = seq(0, 100, 25)
+  ) +
+  theme_minimal(base_size = 15)
+
+print(p_peru_threshold_U)
 ```
 
 ```{r}
@@ -1896,6 +1951,24 @@ ggplot(
   ) +
   theme_minimal()
 ```
+```{r}
+ggsave(
+  "../outputs/peru_failed_threshold_sensitivity.png",
+  plot = p_peru_threshold_F,
+  width = 11,
+  height = 7,
+  dpi = 300
+)
+
+ggsave(
+  "../outputs/peru_unfailed_threshold_sensitivity.png",
+  plot = p_peru_threshold_U,
+  width = 11,
+  height = 7,
+  dpi = 300
+)
+```
+
 
 ```{r}
 # Compare failed vs unfailed directly at -5 mm
@@ -1941,6 +2014,51 @@ ggplot(
   ylim(0, 100) +
   theme_minimal()
 ```
+
+```{r}
+p_peru <- ggplot(
+  comparison_peru,
+  aes(
+    x = Date,
+    y = Percent_Flagged,
+    colour = Site
+  )
+) +
+  geom_line(linewidth = 1) +
+  scale_x_date(
+    date_breaks = "3 months",
+    date_labels = "%b %Y"
+  ) +
+  scale_colour_manual(
+    values = c(
+      "Failed" = "#F8766D",
+      "Unfailed" = "#00BFC4"
+    )
+  ) +
+  scale_y_continuous(
+    limits = c(0, 100),
+    breaks = seq(0, 100, 25)
+  ) +
+  labs(
+    title = "Peru Failed vs Unfailed - Threshold = -5 mm",
+    x = "Date",
+    y = "Points with Status 1 (%)",
+    colour = "Site"
+  ) +
+  theme_minimal(base_size = 15)
+
+print(p_peru)
+
+# Export
+ggsave(
+  "../outputs/peru_failed_vs_unfailed_threshold5.png",
+  plot = p_peru,
+  width = 11,
+  height = 7,
+  dpi = 300
+)
+```
+
 
 ```{r}
 negative_median_F <- apply(
@@ -3034,9 +3152,9 @@ plot_status_comparison <- function(
   unfailed_status,
   title_text
 ) {
-  
+
   status_df <- bind_rows(
-    
+
     # Failed site
     data.frame(
       Date = as.Date(
@@ -3049,7 +3167,7 @@ plot_status_comparison <- function(
       ) * 100,
       Site = "Failed"
     ),
-    
+
     # Unfailed site
     data.frame(
       Date = as.Date(
@@ -3063,8 +3181,7 @@ plot_status_comparison <- function(
       Site = "Unfailed"
     )
   )
-  
-  
+
   ggplot(
     status_df,
     aes(
@@ -3074,14 +3191,33 @@ plot_status_comparison <- function(
     )
   ) +
     geom_line(linewidth = 1) +
-    ylim(0, 100) +
+
+    # Consistent month-year formatting
+    scale_x_date(
+      date_breaks = "3 months",
+      date_labels = "%b %Y"
+    ) +
+
+    scale_colour_manual(
+      values = c(
+        "Failed" = "#F8766D",
+        "Unfailed" = "#00BFC4"
+      )
+    ) +
+
+    scale_y_continuous(
+      limits = c(0, 100),
+      breaks = seq(0, 100, 25)
+    ) +
+
     labs(
       title = title_text,
       x = "Date",
       y = "Points with Status 1 (%)",
       colour = "Site"
     ) +
-    theme_minimal()
+
+    theme_minimal(base_size = 15)
 }
 ```
 
@@ -3135,6 +3271,7 @@ plot_status_comparison(
   "Cadia Sliding K-means - W10 (-5 mm)"
 )
 ```
+
 ```{r}
 # W5 displacement (-4 mm)
 p_cadia_w5 <- plot_status_comparison(
@@ -3159,6 +3296,7 @@ p_cadia_w10 <- plot_status_comparison(
 
 p_cadia_w10
 ```
+
 ```{r}
 ggsave(
   "../outputs/cadia_sliding_w5_displacement.png",
@@ -3177,36 +3315,145 @@ ggsave(
 )
 ```
 
-
 ```{r}
-plot_status_comparison(
+# Peru W3 displacement (-3 mm)
+p_peru_w3 <- plot_status_comparison(
   peru_F_w3,
   peru_U_w3,
   peru_F_w3_status,
   peru_U_w3_status,
   "Peru Sliding K-means - W3 (-3 mm)"
 )
-```
 
-```{r}
-plot_status_comparison(
+# Peru W5 displacement (-4 mm)
+p_peru_w5 <- plot_status_comparison(
   peru_F_w5,
   peru_U_w5,
   peru_F_w5_status,
   peru_U_w5_status,
   "Peru Sliding K-means - W5 (-4 mm)"
 )
-```
 
-```{r}
-plot_status_comparison(
+# Peru W10 displacement (-5 mm)
+p_peru_w10 <- plot_status_comparison(
   peru_F_w10,
   peru_U_w10,
   peru_F_w10_status,
   peru_U_w10_status,
   "Peru Sliding K-means - W10 (-5 mm)"
 )
+
+p_peru_w3
+p_peru_w5
+p_peru_w10
 ```
+
+
+```{r}
+ggsave(
+  "../outputs/peru_sliding_w3_displacement.png",
+  plot = p_peru_w3,
+  width = 10,
+  height = 7,
+  dpi = 300
+)
+
+ggsave(
+  "../outputs/peru_sliding_w5_displacement.png",
+  plot = p_peru_w5,
+  width = 10,
+  height = 7,
+  dpi = 300
+)
+
+ggsave(
+  "../outputs/peru_sliding_w10_displacement.png",
+  plot = p_peru_w10,
+  width = 10,
+  height = 7,
+  dpi = 300
+)
+```
+
+```{r}
+# editing axes and re-exporting
+
+# Consistent Cadia x-axis
+cadia_axis <- scale_x_date(
+  limits = as.Date(c("2016-10-01", "2018-03-01")),
+  date_breaks = "3 months",
+  date_labels = "%b %Y"
+)
+
+p_cadia_w3 <- p_cadia_w3 + cadia_axis
+p_cadia_w5 <- p_cadia_w5 + cadia_axis
+p_cadia_w10 <- p_cadia_w10 + cadia_axis
+
+
+# Consistent Peru x-axis
+peru_axis <- scale_x_date(
+  limits = as.Date(c("2017-10-01", "2019-07-01")),
+  date_breaks = "3 months",
+  date_labels = "%b %Y"
+)
+
+p_peru_w3 <- p_peru_w3 + peru_axis
+p_peru_w5 <- p_peru_w5 + peru_axis
+p_peru_w10 <- p_peru_w10 + peru_axis
+
+
+# Display updated plots
+p_cadia_w3
+p_cadia_w5
+p_cadia_w10
+
+p_peru_w3
+p_peru_w5
+p_peru_w10
+```
+```{r}
+# CADIA
+
+ggsave(
+  "../outputs/cadia_displacement_status_w3.png",
+  plot = p_cadia_w3,
+  width = 10, height = 7, dpi = 300
+)
+
+ggsave(
+  "../outputs/cadia_sliding_w5_displacement.png",
+  plot = p_cadia_w5,
+  width = 10, height = 7, dpi = 300
+)
+
+ggsave(
+  "../outputs/cadia_sliding_w10_displacement.png",
+  plot = p_cadia_w10,
+  width = 10, height = 7, dpi = 300
+)
+
+
+# PERU
+
+ggsave(
+  "../outputs/peru_sliding_w3_displacement.png",
+  plot = p_peru_w3,
+  width = 10, height = 7, dpi = 300
+)
+
+ggsave(
+  "../outputs/peru_sliding_w5_displacement.png",
+  plot = p_peru_w5,
+  width = 10, height = 7, dpi = 300
+)
+
+ggsave(
+  "../outputs/peru_sliding_w10_displacement.png",
+  plot = p_peru_w10,
+  width = 10, height = 7, dpi = 300
+)
+```
+
 
 #### 4.5.5 Exporting
 
@@ -4184,6 +4431,19 @@ compare_velocity_sites(
 )
 ```
 
+```{r}
+compare_velocity_sites(
+  cadia_F_vel_w3,
+  cadia_S_vel_w3,
+  cadia_F_vel_w3_thresh,
+  cadia_S_vel_w3_thresh,
+  threshold = -20,
+  title_text =
+    "Cadia Regression Velocity - W3 (-20 mm/year)"
+)
+```
+
+
 #### 5.1.2 Status plots
 
 ```{r}
@@ -4340,6 +4600,7 @@ plot_status_comparison(
   "Peru Regression Velocity - W10 (-15 mm/year)"
 )
 ```
+
 
 
 #### 5.1.3 Exporting
@@ -5031,138 +5292,193 @@ dev.off()
 Status plots:
 
 ```{r}
-# -------------------------
-# CADIA FINAL STATUS PLOTS
-# threshold = -20 mm/year
-# -------------------------
+# CADIA REGRESSION-BASED VELOCITY
 
-png(
-  "../outputs/sliding_window_plots/cadia_velocity_status_w3.png",
-  width = plot_width,
-  height = plot_height,
-  res = plot_res
+p_cadia_vel_w3 <- plot_status_comparison(
+  cadia_F_vel_w3,
+  cadia_S_vel_w3,
+  cadia_F_vel_w3_status,
+  cadia_S_vel_w3_status,
+  ""
 )
 
-print(
-  plot_status_comparison(
-    cadia_F_vel_w3,
-    cadia_S_vel_w3,
-    cadia_F_vel_w3_status,
-    cadia_S_vel_w3_status,
-    "Cadia Regression Velocity - W3 (-20 mm/year)"
-  )
+p_cadia_vel_w5 <- plot_status_comparison(
+  cadia_F_vel_w5,
+  cadia_S_vel_w5,
+  cadia_F_vel_w5_status,
+  cadia_S_vel_w5_status,
+  ""
 )
 
-dev.off()
-
-
-png(
-  "../outputs/sliding_window_plots/cadia_velocity_status_w5.png",
-  width = plot_width,
-  height = plot_height,
-  res = plot_res
+p_cadia_vel_w10 <- plot_status_comparison(
+  cadia_F_vel_w10,
+  cadia_S_vel_w10,
+  cadia_F_vel_w10_status,
+  cadia_S_vel_w10_status,
+  ""
 )
 
-print(
-  plot_status_comparison(
-    cadia_F_vel_w5,
-    cadia_S_vel_w5,
-    cadia_F_vel_w5_status,
-    cadia_S_vel_w5_status,
-    "Cadia Regression Velocity - W5 (-20 mm/year)"
-  )
-)
 
-dev.off()
+# PERU REGRESSION-BASED VELOCITY
 
+p_peru_vel_w3 <- plot_status_comparison(
+  peru_F_vel_w3,
+  peru_U_vel_w3,
+  peru_F_vel_w3_status,
+  peru_U_vel_w3_status,
+  ""
+) +
+  theme(legend.position = "none")
 
-png(
-  "../outputs/sliding_window_plots/cadia_velocity_status_w10.png",
-  width = plot_width,
-  height = plot_height,
-  res = plot_res
-)
+p_peru_vel_w5 <- plot_status_comparison(
+  peru_F_vel_w5,
+  peru_U_vel_w5,
+  peru_F_vel_w5_status,
+  peru_U_vel_w5_status,
+  ""
+) +
+  theme(legend.position = "none")
 
-print(
-  plot_status_comparison(
-    cadia_F_vel_w10,
-    cadia_S_vel_w10,
-    cadia_F_vel_w10_status,
-    cadia_S_vel_w10_status,
-    "Cadia Regression Velocity - W10 (-20 mm/year)"
-  )
-)
-
-dev.off()
+p_peru_vel_w10 <- plot_status_comparison(
+  peru_F_vel_w10,
+  peru_U_vel_w10,
+  peru_F_vel_w10_status,
+  peru_U_vel_w10_status,
+  ""
+) +
+  theme(legend.position = "none")
 ```
 
 ```{r}
-# Peru
+# Peru regression-based velocity plots
+# Threshold = -15 mm/year
 
-# -------------------------
-# PERU FINAL STATUS PLOTS
-# threshold = -15 mm/year
-# -------------------------
+p_peru_vel_w3 <- plot_status_comparison(
+  peru_F_vel_w3,
+  peru_U_vel_w3,
+  peru_F_vel_w3_status,
+  peru_U_vel_w3_status,
+  "Peru Regression Velocity - W3 (-15 mm/year)"
+) +
+  labs(
+    title = "Peru Regression Velocity - W3 (-15 mm/year)"
+  ) +
+  theme(legend.position = "right")
 
-png(
-  "../outputs/sliding_window_plots/peru_velocity_status_w3.png",
-  width = plot_width,
-  height = plot_height,
-  res = plot_res
+
+p_peru_vel_w5 <- plot_status_comparison(
+  peru_F_vel_w5,
+  peru_U_vel_w5,
+  peru_F_vel_w5_status,
+  peru_U_vel_w5_status,
+  "Peru Regression Velocity - W5 (-15 mm/year)"
+) +
+  labs(
+    title = "Peru Regression Velocity - W5 (-15 mm/year)"
+  ) +
+  theme(legend.position = "right")
+
+
+p_peru_vel_w10 <- plot_status_comparison(
+  peru_F_vel_w10,
+  peru_U_vel_w10,
+  peru_F_vel_w10_status,
+  peru_U_vel_w10_status,
+  "Peru Regression Velocity - W10 (-15 mm/year)"
+) +
+  labs(
+    title = "Peru Regression Velocity - W10 (-15 mm/year)"
+  ) +
+  theme(legend.position = "right")
+
+
+# Re-export all three
+
+ggsave(
+  "../outputs/peru_velocity_status_w3.png",
+  plot = p_peru_vel_w3,
+  width = 10, height = 7, dpi = 300, bg = "white"
 )
 
-print(
-  plot_status_comparison(
-    peru_F_vel_w3,
-    peru_U_vel_w3,
-    peru_F_vel_w3_status,
-    peru_U_vel_w3_status,
-    "Peru Regression Velocity - W3 (-15 mm/year)"
-  )
+ggsave(
+  "../outputs/peru_velocity_status_w5.png",
+  plot = p_peru_vel_w5,
+  width = 10, height = 7, dpi = 300, bg = "white"
 )
 
-dev.off()
-
-
-png(
-  "../outputs/sliding_window_plots/peru_velocity_status_w5.png",
-  width = plot_width,
-  height = plot_height,
-  res = plot_res
+ggsave(
+  "../outputs/peru_velocity_status_w10.png",
+  plot = p_peru_vel_w10,
+  width = 10, height = 7, dpi = 300, bg = "white"
 )
-
-print(
-  plot_status_comparison(
-    peru_F_vel_w5,
-    peru_U_vel_w5,
-    peru_F_vel_w5_status,
-    peru_U_vel_w5_status,
-    "Peru Regression Velocity - W5 (-15 mm/year)"
-  )
-)
-
-dev.off()
-
-
-png(
-  "../outputs/sliding_window_plots/peru_velocity_status_w10.png",
-  width = plot_width,
-  height = plot_height,
-  res = plot_res
-)
-
-print(
-  plot_status_comparison(
-    peru_F_vel_w10,
-    peru_U_vel_w10,
-    peru_F_vel_w10_status,
-    peru_U_vel_w10_status,
-    "Peru Regression Velocity - W10 (-15 mm/year)"
-  )
-)
-
-dev.off()
 ```
+
+
+```{r}
+# Cadia
+ggsave(
+  "../outputs/cadia_velocity_status_w3_2.png",
+  p_cadia_vel_w3,
+  width = 10, height = 7, dpi = 300
+)
+
+ggsave(
+  "../outputs/cadia_velocity_status_w5_2.png",
+  p_cadia_vel_w5,
+  width = 10, height = 7, dpi = 300
+)
+
+ggsave(
+  "../outputs/cadia_velocity_status_w10_2.png",
+  p_cadia_vel_w10,
+  width = 10, height = 7, dpi = 300
+)
+
+# Peru
+ggsave(
+  "../outputs/peru_velocity_status_w3.png",
+  p_peru_vel_w3,
+  width = 10, height = 7, dpi = 300
+)
+
+ggsave(
+  "../outputs/peru_velocity_status_w5.png",
+  p_peru_vel_w5,
+  width = 10, height = 7, dpi = 300
+)
+
+ggsave(
+  "../outputs/peru_velocity_status_w10.png",
+  p_peru_vel_w10,
+  width = 10, height = 7, dpi = 300
+)
+```
+
+```{r}
+# Consistent Cadia x-axis
+cadia_axis <- scale_x_date(
+  limits = as.Date(c("2016-10-01", "2018-03-01")),
+  date_breaks = "3 months",
+  date_labels = "%b %Y"
+)
+
+p_cadia_vel_w3 <- p_cadia_vel_w3 + cadia_axis
+p_cadia_vel_w5 <- p_cadia_vel_w5 + cadia_axis
+p_cadia_vel_w10 <- p_cadia_vel_w10 + cadia_axis
+
+
+# Consistent Peru x-axis
+peru_axis <- scale_x_date(
+  limits = as.Date(c("2017-10-01", "2019-07-01")),
+  date_breaks = "3 months",
+  date_labels = "%b %Y"
+)
+
+p_peru_vel_w3 <- p_peru_vel_w3 + peru_axis
+p_peru_vel_w5 <- p_peru_vel_w5 + peru_axis
+p_peru_vel_w10 <- p_peru_vel_w10 + peru_axis
+```
+
 
 ## 6. K = 3 Sliding Window
 
@@ -5605,6 +5921,138 @@ ggsave("../outputs/sliding_window_plots/k3/cadia_S_k3_w10.png",
        p_S_w10_k3, width = 10, height = 7, dpi = 300, bg = "white")
 ```
 
+Extra exporting:
+
+```{r}
+# FINAL FORMATTING FOR ALL STAGE 3 SLIDING WINDOW PLOTS
+
+library(ggplot2)
+
+# Consistent text formatting
+final_theme <- theme_minimal(base_size = 15) +
+  theme(
+    plot.title = element_blank(),       # Remove individual plot titles
+    axis.title = element_text(size = 16),
+    axis.text = element_text(size = 14),
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 14),
+    legend.position = "right"
+  )
+
+
+# Consistent Cadia x-axis
+cadia_axis <- scale_x_date(
+  limits = as.Date(c("2016-10-01", "2018-03-01")),
+  date_breaks = "3 months",
+  date_labels = "%b %Y"
+)
+
+
+# Consistent Peru x-axis
+peru_axis <- scale_x_date(
+  limits = as.Date(c("2017-10-01", "2019-07-01")),
+  date_breaks = "3 months",
+  date_labels = "%b %Y"
+)
+
+
+# CADIA - Displacement
+p_cadia_w3 <- p_cadia_w3 +
+  cadia_axis + final_theme
+
+p_cadia_w5 <- p_cadia_w5 +
+  cadia_axis + final_theme
+
+p_cadia_w10 <- p_cadia_w10 +
+  cadia_axis + final_theme
+
+
+# PERU - Displacement
+p_peru_w3 <- p_peru_w3 +
+  peru_axis + final_theme
+
+p_peru_w5 <- p_peru_w5 +
+  peru_axis + final_theme
+
+p_peru_w10 <- p_peru_w10 +
+  peru_axis + final_theme
+
+
+# CADIA - Regression-based velocity
+p_cadia_vel_w3 <- p_cadia_vel_w3 +
+  cadia_axis + final_theme
+
+p_cadia_vel_w5 <- p_cadia_vel_w5 +
+  cadia_axis + final_theme
+
+p_cadia_vel_w10 <- p_cadia_vel_w10 +
+  cadia_axis + final_theme
+
+
+# PERU - Regression-based velocity
+p_peru_vel_w3 <- p_peru_vel_w3 +
+  peru_axis + final_theme
+
+p_peru_vel_w5 <- p_peru_vel_w5 +
+  peru_axis + final_theme
+
+p_peru_vel_w10 <- p_peru_vel_w10 +
+  peru_axis + final_theme
+```
+```{r}
+# FINAL EXPORTS
+
+plots_to_export <- list(
+
+  # Cadia displacement
+  cadia_displacement_w3  = p_cadia_w3,
+  cadia_displacement_w5  = p_cadia_w5,
+  cadia_displacement_w10 = p_cadia_w10,
+
+  # Peru displacement
+  peru_displacement_w3  = p_peru_w3,
+  peru_displacement_w5  = p_peru_w5,
+  peru_displacement_w10 = p_peru_w10,
+
+  # Cadia velocity
+  cadia_velocity_w3  = p_cadia_vel_w3,
+  cadia_velocity_w5  = p_cadia_vel_w5,
+  cadia_velocity_w10 = p_cadia_vel_w10,
+
+  # Peru velocity
+  peru_velocity_w3  = p_peru_vel_w3,
+  peru_velocity_w5  = p_peru_vel_w5,
+  peru_velocity_w10 = p_peru_vel_w10
+)
+
+
+# Create output folder
+dir.create(
+  "../outputs/stage3_final_plots",
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+
+
+# Export all plots
+for (plot_name in names(plots_to_export)) {
+
+  ggsave(
+    filename = paste0(
+      "../outputs/stage3_final_plots/",
+      plot_name,
+      ".png"
+    ),
+    plot = plots_to_export[[plot_name]],
+    width = 10,
+    height = 7,
+    dpi = 300,
+    bg = "white"
+  )
+}
+```
+
+
 ## 7. Silhouette Scores
 
 Expanding Window Approach:
@@ -5752,4 +6200,55 @@ summary(peru_U_vel_w5$silhouette)
 summary(peru_U_vel_w10$silhouette)
 ```
 
+```{r}
+write.csv(
+  expanding_silhouette_table,
+  "../outputs/stage_3_expanding_silhouette_table.csv",
+  row.names = FALSE
+)
+```
+
+```{r}
+# Convert displacement table to long format
+displacement_long <- silhouette_table_k2 %>%
+  pivot_longer(
+    cols = c(W3, W5, W10),
+    names_to = "Window",
+    values_to = "Displacement"
+  )
+
+# Separate site and outcome in velocity table
+velocity_long <- velocity_silhouette_table %>%
+  mutate(
+    Outcome = ifelse(
+      grepl("Unfailed", Site),
+      "Unfailed",
+      "Failed"
+    ),
+    Site = ifelse(
+      grepl("Cadia", Site),
+      "Cadia",
+      "Peru"
+    )
+  ) %>%
+  rename(Velocity = Mean_Silhouette)
+
+# Combine tables
+combined_silhouette_table <- displacement_long %>%
+  left_join(
+    velocity_long,
+    by = c("Site", "Outcome", "Window")
+  ) %>%
+  arrange(Site, Outcome, Window)
+
+# Display
+print(combined_silhouette_table)
+
+# Export
+write.csv(
+  combined_silhouette_table,
+  "../outputs/sliding_silhouette_table.csv",
+  row.names = FALSE
+)
+```
 

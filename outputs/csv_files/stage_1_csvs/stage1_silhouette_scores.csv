@@ -1,0 +1,81 @@
+"Dataset","Algorithm","k","Silhouette"
+"Cadia","HC Ward",2,0.37730963203549
+"Cadia","HC Ward",3,0.302564293476768
+"Cadia","HC Ward",4,0.255570302930978
+"Cadia","HC Ward",5,0.227416889266149
+"Cadia","HC Average",2,0.377956463436887
+"Cadia","HC Average",3,0.320032287650628
+"Cadia","HC Average",4,0.28959310305732
+"Cadia","HC Average",5,0.252649419925862
+"Cadia","HC Complete",2,0.410641975786182
+"Cadia","HC Complete",3,0.314928170799631
+"Cadia","HC Complete",4,0.233829049535997
+"Cadia","HC Complete",5,0.211767722254979
+"Cadia","K-means",2,0.373728328408047
+"Cadia","K-means",3,0.323149844565282
+"Cadia","K-means",4,0.25515251243498
+"Cadia","K-means",5,0.203318114747301
+"Peru Failed","HC Ward",2,0.436308307951418
+"Peru Failed","HC Ward",3,0.340244525680128
+"Peru Failed","HC Ward",4,0.260668800730457
+"Peru Failed","HC Ward",5,0.215975328914923
+"Peru Failed","HC Average",2,0.417915138232668
+"Peru Failed","HC Average",3,0.374152471938802
+"Peru Failed","HC Average",4,0.281149241235771
+"Peru Failed","HC Average",5,0.279944927614139
+"Peru Failed","HC Complete",2,0.397826010739069
+"Peru Failed","HC Complete",3,0.294597265271475
+"Peru Failed","HC Complete",4,0.287287407176524
+"Peru Failed","HC Complete",5,0.215540348313659
+"Peru Failed","K-means",2,0.431825688189762
+"Peru Failed","K-means",3,0.357288143954985
+"Peru Failed","K-means",4,0.306073527407324
+"Peru Failed","K-means",5,0.255043057810127
+"Peru Unfailed","HC Ward",2,0.402164114264679
+"Peru Unfailed","HC Ward",3,0.319558161996835
+"Peru Unfailed","HC Ward",4,0.291800735424359
+"Peru Unfailed","HC Ward",5,0.260465361826702
+"Peru Unfailed","HC Average",2,0.566797503760685
+"Peru Unfailed","HC Average",3,0.374450309582866
+"Peru Unfailed","HC Average",4,0.333873473429844
+"Peru Unfailed","HC Average",5,0.2883492355597
+"Peru Unfailed","HC Complete",2,0.389267223379252
+"Peru Unfailed","HC Complete",3,0.330175634244805
+"Peru Unfailed","HC Complete",4,0.272142137710851
+"Peru Unfailed","HC Complete",5,0.261081496638528
+"Peru Unfailed","K-means",2,0.384240290259642
+"Peru Unfailed","K-means",3,0.349757614313944
+"Peru Unfailed","K-means",4,0.281602184251359
+"Peru Unfailed","K-means",5,0.236550091259907
+"Feijao T53","HC Ward",2,0.416632121532886
+"Feijao T53","HC Ward",3,0.324621219437053
+"Feijao T53","HC Ward",4,0.271768335606581
+"Feijao T53","HC Ward",5,0.187230476949405
+"Feijao T53","HC Average",2,0.412439006633145
+"Feijao T53","HC Average",3,0.326057269532751
+"Feijao T53","HC Average",4,0.252706079126257
+"Feijao T53","HC Average",5,0.220110099040646
+"Feijao T53","HC Complete",2,0.410089066595961
+"Feijao T53","HC Complete",3,0.334167104138989
+"Feijao T53","HC Complete",4,0.276025625862869
+"Feijao T53","HC Complete",5,0.204366359195763
+"Feijao T53","K-means",2,0.418552649813644
+"Feijao T53","K-means",3,0.312165012701014
+"Feijao T53","K-means",4,0.271290065190212
+"Feijao T53","K-means",5,0.219653794369516
+"Feijao T155","HC Ward",2,0.415112215778646
+"Feijao T155","HC Ward",3,0.276526932946249
+"Feijao T155","HC Ward",4,0.243053737337037
+"Feijao T155","HC Ward",5,0.21441374570656
+"Feijao T155","HC Average",2,0.414139917332925
+"Feijao T155","HC Average",3,0.330456718501886
+"Feijao T155","HC Average",4,0.27765468921887
+"Feijao T155","HC Average",5,0.220634068035956
+"Feijao T155","HC Complete",2,0.420580978342672
+"Feijao T155","HC Complete",3,0.343640187934068
+"Feijao T155","HC Complete",4,0.271781807474478
+"Feijao T155","HC Complete",5,0.213785310757858
+"Feijao T155","K-means",2,0.414639854896808
+"Feijao T155","K-means",3,0.317201375151703
+"Feijao T155","K-means",4,0.267864154541087
+"Feijao T155","K-means",5,0.213612222453255
